@@ -1,45 +1,325 @@
-import { Sparkles } from "lucide-react";
+import React from "react";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { Sparkles, Search, MapPin } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 
-export default function Home() {
-  return (
-    <div>
-      <header className="border-b bg-white">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-xl bg-orange-500 text-white grid place-items-center">
-              <Sparkles size={18} />
-            </div>
-            <b>HireSpark</b>
-          </div>
-          <nav className="flex items-center gap-4 text-sm">
-            <a href="/jobs">Jobs</a>
-            <a href="/companies">Companies</a>
-            <a href="/career-kit">Career Kit</a>
-            <a href="/alerts">Alerts</a>
-          </nav>
-          <div className="flex gap-2">
-            <a href="/sign-in"><Button variant="ghost">Sign in</Button></a>
-            <a href="/sign-up"><Button>Get Job Alerts</Button></a>
-          </div>
-        </div>
-      </header>
+/*
+  Single-file React app (App.jsx) that reproduces the HireSpark-like UI shown in your screenshots.
+  - Uses Tailwind utility classes
+  - Uses shadcn-like UI components (Button, Card) which you already referenced
+  - Drop this file into your src/ (or split into components as you prefer)
 
-      <main className="max-w-6xl mx-auto px-4 py-10">
-        <Card className="rounded-3xl shadow-sm">
-          <CardHeader><CardTitle className="text-xl">Welcome to HireSpark</CardTitle></CardHeader>
+  Notes:
+  - This is a presentational UI with sample data. Replace sample arrays with live API data later.
+  - If some shadcn components in your project differ in props, adapt accordingly.
+*/
+
+const sampleJobs = [
+  {
+    id: 1,
+    title: "Associate Product Designer",
+    company: "PixelPath",
+    location: "Gurugram, IN",
+    tags: ["Figma", "Prototyping", "UX"],
+    posted: "1d ago",
+    type: "Full-time",
+    experiance: "1-2 yrs",
+  },
+  {
+    id: 2,
+    title: "Business Operations Trainee",
+    company: "MercuryOps",
+    location: "Pune, IN",
+    tags: ["Excel", "Communication", "CRM"],
+    posted: "New",
+    type: "Apprenticeship",
+    experiance: "Fresher",
+  },
+  {
+    id: 3,
+    title: "Junior Data Analyst",
+    company: "QuantLeaf",
+    location: "Bengaluru, IN",
+    tags: ["SQL", "Excel", "Tableau"],
+    posted: "2h ago",
+    type: "Full-time",
+    experiance: "0-2 yrs",
+  },
+  {           
+    id: 4,
+    title: "Software Engineer Intern",
+    company: "CloudMints",
+    location: "Remote (IN)",
+    tags: ["JavaScript", "React", "API"],
+    posted: "Today",
+    type: "Internship",
+    experiance: "Student",
+  },
+];
+
+function Header() {
+  return (
+    <header className="border-b border-slate-800 bg-slate-900 text-white">
+      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-xl bg-orange-500 text-white grid place-items-center">
+            <Sparkles size={18} />
+          </div>
+          <b className="text-lg">HireSpark</b>
+        </div>
+
+        <nav className="hidden md:flex items-center gap-6 text-sm text-slate-300">
+          <Link to="/" className="hover:text-white">Home</Link>
+          <Link to="/jobs" className="hover:text-white">Jobs</Link>
+          <Link to="/companies" className="hover:text-white">Companies</Link>
+          <Link to="/career-kit" className="hover:text-white">Career Kit</Link>
+          <Link to="/why" className="hover:text-white">Why HireSpark</Link>
+        </nav>
+
+        <div className="flex gap-3">
+          <Link to="/sign-in"><Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800">Sign in</Button></Link>
+          <Link to="/sign-up"><Button className="bg-orange-500 hover:bg-orange-600 text-white">Get Job Alerts</Button></Link>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function Hero() {
+  return (
+    <section className="max-w-6xl mx-auto px-4 py-12 grid md:grid-cols-2 gap-8 items-center">
+      <div>
+        <div className="inline-flex items-center gap-2 bg-orange-50 text-orange-700 px-3 py-1 rounded-full text-sm mb-6">Early-career only: Students & 0-2 yrs</div>
+        <h1 className="text-5xl leading-tight font-extrabold text-slate-900 mb-6">Find legit internships & entry-level jobs — <span className="text-orange-600">no spam</span>, just opportunities</h1>
+        <p className="text-slate-600 mb-6">Discover remote, hybrid, and in-office roles curated for students and freshers. Apply fast with a smart profile and skill-based search.</p>
+        <div className="flex gap-4">
+          <Link to="/jobs"><Button className="shadow">Find Your First Job</Button></Link>
+          <Link to="/sign-up"><Button variant="secondary">Create Free Profile</Button></Link>
+        </div>
+
+        <div className="mt-8 flex gap-3 flex-wrap text-sm text-slate-600">
+          <span className="px-3 py-1 rounded-full bg-slate-50">Remote</span>
+          <span className="px-3 py-1 rounded-full bg-slate-50">Hybrid</span>
+          <span className="px-3 py-1 rounded-full bg-slate-50">Office</span>
+        </div>
+      </div>
+
+      <aside>
+        <Card className="rounded-2xl shadow-sm">
           <CardContent>
-            <p className="text-slate-700 mb-4">
-              Find internships & entry-level jobs (0–2 yrs). Remote, hybrid, and office roles—curated for students & freshers.
-            </p>
-            <div className="flex gap-3">
-              <a href="/jobs"><Button>Find Jobs</Button></a>
-              <a href="/sign-up"><Button variant="secondary">Create Free Profile</Button></a>
+            <div className="text-lg font-medium mb-3">Search jobs</div>
+            <div className="flex gap-2 items-center">
+              <div className="flex items-center gap-2 border rounded-md px-3 py-2 w-full">
+                <Search size={16} />
+                <input className="outline-none w-full text-sm" placeholder="Role, skill or company" />
+              </div>
+              <Button>Search</Button>
+            </div>
+
+            <div className="mt-4 text-sm text-slate-600 grid grid-cols-3 gap-2">
+              <button className="text-left underline">Software</button>
+              <button className="text-left underline">Data</button>
+              <button className="text-left underline">Design</button>
+              <button className="text-left underline">Marketing</button>
+              <button className="text-left underline">Operations</button>
+              <button className="text-left underline">Finance</button>
             </div>
           </CardContent>
         </Card>
-      </main>
+      </aside>
+    </section>
+  );
+}
+
+function WhyHireSpark() {
+  return (
+    <section className="max-w-6xl mx-auto px-4 py-12">
+      <div className="grid md:grid-cols-2 gap-8 items-start">
+        <div>
+          <h2 className="text-4xl font-extrabold mb-4">How HireSpark is different</h2>
+          <p className="text-slate-600 mb-6">We focus only on students & freshers—and we verify listings to keep out spam. Career resources help you apply smarter and get hired faster.</p>
+
+          <div className="space-y-4">
+            <Card className="rounded-2xl bg-[#0F172B] text-white">
+              <CardContent>
+                <div className="font-semibold">Higher-quality early-career listings</div>
+                <div className="text-sm text-slate-200 opacity-90 mt-1">Only internships and 0–2 year roles, hand-checked to reduce junk.</div>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-2xl bg-[#0F172B] text-white">
+              <CardContent>
+                <div className="font-semibold">Unlimited career resources</div>
+                <div className="text-sm text-slate-200 opacity-90 mt-1">Resume templates, interview prep, and skill guides tailored for freshers.</div>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-2xl bg-[#0F172B] text-white">
+              <CardContent>
+                <div className="font-semibold">Save time with smart apply</div>
+                <div className="text-sm text-slate-200 opacity-90 mt-1">Skill-based profiles, alerts, and one-click apply on select roles.</div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <aside>
+          <Card className="rounded-2xl shadow-sm p-6">
+            <CardHeader>
+              <CardTitle>Popular searches</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="grid grid-cols-2 gap-2 text-sm text-slate-700">
+                <li>Internships</li>
+                <li>Remote Fresher Jobs</li>
+                <li>Software (0–2 yrs)</li>
+                <li>Data Analyst</li>
+                <li>UI/UX Designer</li>
+                <li>Business Analyst</li>
+                <li>Marketing Associate</li>
+                <li>Customer Support</li>
+              </ul>
+            </CardContent>
+          </Card>
+        </aside>
+      </div>
+    </section>
+  );
+}
+
+function JobCard({ job }) {
+  return (
+    <div className="border rounded-2xl p-6 bg-white shadow-sm">
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="text-lg font-semibold">{job.title}</div>
+          <div className="text-sm text-slate-500">{job.company} • {job.location}</div>
+        </div>
+        <div className="text-sm text-orange-600">{job.posted}</div>
+      </div>
+
+      <div className="mt-4 flex gap-3 flex-wrap">
+        <span className="px-3 py-1 bg-slate-50 rounded-full text-sm">{job.type}</span>
+        <span className="px-3 py-1 bg-slate-50 rounded-full text-sm">{job.experiance}</span>
+      </div>
+
+      <div className="mt-4 flex items-center gap-2 flex-wrap">
+        {job.tags.map((t, i) => (
+          <span key={i} className="px-2 py-1 text-xs rounded-md border">{t}</span>
+        ))}
+      </div>
+
+      <div className="mt-6 flex items-center justify-between">
+        <Button className="px-6">Quick Apply</Button>
+        <Link to={`/jobs/${job.id}`} className="text-slate-900 hover:text-orange-600">View Details</Link>
+      </div>
+    </div>
+  );
+}
+
+function JobsListing() {
+  return (
+    <main className="max-w-6xl mx-auto px-4 py-12">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold">Featuring fresh internships & entry-level jobs</h2>
+        <Link to="/jobs" className="px-4 py-2 border border-orange-500 text-orange-600 rounded-full hover:bg-orange-50">Browse all jobs</Link>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        {sampleJobs.map((j) => (
+          <JobCard key={j.id} job={j} />
+        ))}
+      </div>
+
+      <div className="mt-10 flex justify-center">
+        <Button className="px-8 bg-orange-500 hover:bg-orange-600 text-white">Find Your Next Role</Button>
+      </div>
+
+      <div className="mt-14">
+        <h3 className="text-xl font-semibold mb-4">What our members are saying</h3>
+        <div className="grid md:grid-cols-3 gap-6">
+          <Card className="rounded-2xl p-6">
+            <CardContent>
+              <div className="text-slate-700">"HireSpark showed only early-career roles and helped me find my internship."</div>
+            </CardContent>
+          </Card>
+          <Card className="rounded-2xl p-6">
+            <CardContent>
+              <div className="text-slate-700">"Filters for 0–2 yrs and skill-based search saved me hours."</div>
+            </CardContent>
+          </Card>
+          <Card className="rounded-2xl p-6">
+            <CardContent>
+              <div className="text-slate-700">"Quick apply made the whole process easy and fast."</div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="mt-12 bg-slate-900 border-t border-slate-800 text-slate-300">
+      <div className="max-w-6xl mx-auto px-4 py-12 grid md:grid-cols-3 gap-6">
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-9 w-9 rounded-xl bg-orange-500 text-white grid place-items-center"><Sparkles size={18} /></div>
+            <div className="font-bold">HireSpark</div>
+          </div>
+          <div className="text-sm text-slate-400">Helping students & freshers find early-career roles.</div>
+        </div>
+
+        <div>
+          <div className="font-semibold mb-2">Product</div>
+          <ul className="text-sm text-slate-400 space-y-1">
+            <li>Jobs</li>
+            <li>Companies</li>
+            <li>Career Kit</li>
+          </ul>
+        </div>
+
+        <div>
+          <div className="font-semibold mb-2">Company</div>
+          <ul className="text-sm text-slate-600 space-y-1">
+            <li>About</li>
+            <li>Blog</li>
+            <li>Contact</li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="border-t border-slate-800 py-6 text-center text-sm text-slate-400">© {new Date().getFullYear()} HireSpark — Built with ❤️</div>
+    </footer>
+  );
+}
+
+export default function App() {
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      <Header />
+
+      <Routes>
+        <Route path="/" element={
+          <>
+            <Hero />
+            <WhyHireSpark />
+            <JobsListing />
+          </>
+        } />
+
+        <Route path="/jobs" element={<JobsListing />} />
+        <Route path="/why" element={<WhyHireSpark />} />
+        <Route path="/companies" element={<div className="max-w-6xl mx-auto px-4 py-12">Companies list (placeholder)</div>} />
+        <Route path="/career-kit" element={<div className="max-w-6xl mx-auto px-4 py-12">Career Kit (placeholder)</div>} />
+        <Route path="/sign-in" element={<div className="max-w-6xl mx-auto px-4 py-12">Sign in (placeholder)</div>} />
+        <Route path="/sign-up" element={<div className="max-w-6xl mx-auto px-4 py-12">Sign up (placeholder)</div>} />
+        <Route path="/jobs/:id" element={<div className="max-w-6xl mx-auto px-4 py-12">Job Details (placeholder)</div>} />
+      </Routes>
+
+      <Footer />
     </div>
   );
 }
