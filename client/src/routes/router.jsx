@@ -33,19 +33,19 @@ const router = createBrowserRouter([
   { path: "/alerts", element: <Alerts /> },
   { path: "/jobs", element: <Jobs /> },
   { path: "/jobs/:id", element: <JobDetail /> },
-
+// auth
   { path: "/sign-in", element: <SignIn /> },
   { path: "/sign-up", element: <SignUp /> },
   { path: "/forgot", element: <Forgot /> },
+// recruiter
   {path: "/recruiter-profile", element: <RecruiterProfile />},
   {path: "/create-job", element: <RecruiterCreateJob />},
   { path: "/dashboard", element: <Dashboard /> },
+  // user dashboard
   {path: "/dashboard/profile", element: <UserProfile />},
   {path: "/dashboard/saved", element: <Saved />},
   {path: "/dashboard/applied", element: <Applied />},
   {path: "/dashboard/alerts", element: <AlertsManage />},
-  {path: "/dashboard", element: <Dashboard />},
-  
   
 {
     path: "/dashboard",
