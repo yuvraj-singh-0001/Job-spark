@@ -10,7 +10,7 @@ import JobDetail from "../modules/user/jobs/details.jsx";
 // recruiter pages 
 import RecruiterCreateJob  from "../modules/recruiter/jobs/create-job.jsx";
 import RecruiterProfile from "../modules/recruiter/dashboard/recruiter-profile.jsx";
-
+import TalentHire from "../modules/recruiter/recruter-premier/talent-hire.jsx";
 // auth
 import SignIn from "../modules/auth/SignIn.jsx";
 import SignUp from "../modules/auth/SignUp.jsx";
@@ -22,9 +22,8 @@ import UserProfile from "../modules/user/Dashboard/user-Profile.jsx";
 import Saved from "../modules/user/Dashboard/user-Saved.jsx";
 import Applied from "../modules/user/Dashboard/user-Applied.jsx";
 import AlertsManage from "../modules/user/Dashboard/user-Alerts.jsx";
-
 import ProtectedRoute from "../protected/ProtectedRoute.jsx";
-import { Import } from "lucide-react";
+
 
 const router = createBrowserRouter([
   { path: "/", element: <Home /> },
@@ -41,6 +40,8 @@ const router = createBrowserRouter([
   {path: "/recruiter-profile", element: <RecruiterProfile />},
   {path: "/create-job", element: <RecruiterCreateJob />},
   { path: "/dashboard", element: <Dashboard /> },
+  // premier talent hire
+  {path: "/talent-hire", element: <TalentHire />},
   // user dashboard
   {path: "/dashboard/profile", element: <UserProfile />},
   {path: "/dashboard/saved", element: <Saved />},
