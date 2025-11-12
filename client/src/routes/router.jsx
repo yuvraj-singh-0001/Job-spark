@@ -17,13 +17,14 @@ import SignUp from "../modules/auth/SignUp.jsx";
 import Forgot from "../modules/auth/Forgot.jsx";
 
 // dashboard (protected)
-import Dashboard from "../modules/user/Dashboard/Index.jsx";
+import Dashboard from "../modules/user/Dashboard/user-Index.jsx";
 import UserProfile from "../modules/user/Dashboard/user-Profile.jsx";
 import Saved from "../modules/user/Dashboard/user-Saved.jsx";
 import Applied from "../modules/user/Dashboard/user-Applied.jsx";
 import AlertsManage from "../modules/user/Dashboard/user-Alerts.jsx";
 
 import ProtectedRoute from "../protected/ProtectedRoute.jsx";
+import { Import } from "lucide-react";
 
 const router = createBrowserRouter([
   { path: "/", element: <Home /> },
@@ -38,6 +39,14 @@ const router = createBrowserRouter([
   { path: "/forgot", element: <Forgot /> },
   {path: "/recruiter-profile", element: <RecruiterProfile />},
   {path: "/create-job", element: <RecruiterCreateJob />},
+  { path: "/dashboard", element: <Dashboard /> },
+  {path: "/dashboard/profile", element: <UserProfile />},
+  {path: "/dashboard/saved", element: <Saved />},
+  {path: "/dashboard/applied", element: <Applied />},
+  {path: "/dashboard/alerts", element: <AlertsManage />},
+  {path: "/dashboard", element: <Dashboard />},
+  
+  
 {
     path: "/dashboard",
     element: (
