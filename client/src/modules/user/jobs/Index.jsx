@@ -9,7 +9,7 @@ import {
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
-import Nav from "../nav";
+import Navbar from "../Navbar";
 
 export default function Jobs() {
   // ---------- ALL JOBS ----------
@@ -182,7 +182,7 @@ export default function Jobs() {
 
   return (
     <div>
-      <Nav />
+      <Navbar />
       <div className="max-w-6xl mx-auto px-4 py-10">
         <h1 className="text-3xl font-extrabold mb-2">Find Jobs</h1>
         <p className="text-slate-600 mb-6">

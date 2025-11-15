@@ -5,7 +5,7 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import Nav from "./nav";
+import Navbar from "./Navbar";
 
 export default function CareerKit() {
   const items = [
@@ -27,7 +27,7 @@ export default function CareerKit() {
   ];
   return (
     <div>
-      <Nav />
+      <Navbar />
       <div className="max-w-6xl mx-auto px-4 py-10">
         <h1 className="text-3xl font-extrabold mb-6">Career Kit</h1>
         <div className="grid md:grid-cols-3 gap-5">

@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-import Nav from "./nav";
+import Navbar from "./Navbar";
 
 const sampleJobs = [
   {
@@ -56,7 +56,7 @@ const sampleJobs = [
 
 function Hero() {
   return (
-    <section className="max-w-6xl mx-auto px-4 py-12 grid md:grid-cols-2 gap-8 items-center mb-14">
+    <section className="max-w-6xl mx-auto px-4 py-16 grid md:grid-cols-2 gap-8 items-center mb-6">
       <div>
         <h1 className="text-5xl leading-tight font-extrabold text-slate-900 mb-6">
           Find legit internships & entry-level jobs —{" "}
@@ -77,7 +77,7 @@ function Hero() {
       </div>
 
       <aside>
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-2xl shadow-xl">
           <CardContent className="bg-white rounded-2xl">
             <div className="text-lg font-medium mb-3">Search jobs</div>
             <div className="flex gap-2 items-center">
@@ -179,11 +179,11 @@ function JobsTableRow({ job }) {
       <td className="px-4 py-3">{job.type}</td>
       <td className="px-4 py-3">{job.experiance}</td>
       <td className="px-4 py-3">
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex flex-wrap gap-2 max-w-[180px]">
           {job.tags.map((t, i) => (
             <span
               key={i}
-              className="px-2 py-1 text-xs rounded border bg-slate-50"
+              className="px-2 py-1 text-xs rounded border bg-slate-50 whitespace-nowrap"
             >
               {t}
             </span>
@@ -194,12 +194,12 @@ function JobsTableRow({ job }) {
       <td className="px-4 py-3">
         <div className="flex flex-col gap-2">
           <Button className="px-4 py-2">Quick Apply</Button>
-          {/* <Link
+          <Link
             to={`/jobs/${job.id}`}
             className="text-slate-900 hover:text-orange-600 text-sm"
           >
             View
-          </Link> */}
+          </Link>
         </div>
       </td>
     </tr>
@@ -298,7 +298,7 @@ function Footer() {
 export default function Home() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <Nav />
+      <Navbar />
       <Hero />
       <JobsListing />
       <WhyHireSpark />
