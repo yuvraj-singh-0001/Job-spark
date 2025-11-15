@@ -2,9 +2,9 @@ import { Sparkles, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/button"; // <-- adjust path if needed
 
-export default function Nav() {
+export default function Navbar() {
   return (
-    <header className="border-b border-slate-800 bg-slate-900 text-white">
+    <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-900 text-white">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
         
         {/* Logo */}
@@ -27,7 +27,7 @@ export default function Nav() {
         {/* Buttons */}
         <div className="flex gap-3">
           <Link to="/sign-in">
-            <Button variant="ghost" className="text-slate-300 hover:bg-slate-800">
+            <Button variant="ghost" className="text-white hover:bg-slate-800">
               Sign in
             </Button>
           </Link>
