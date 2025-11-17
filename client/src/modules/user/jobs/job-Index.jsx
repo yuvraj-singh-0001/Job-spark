@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Building2,
   MapPin,
@@ -38,15 +38,18 @@ export default function Jobs() {
   const handleSearch = () => {
     let data = jobList;
 
-    if (role.trim() !== "")
+    const roleTrim = role.trim().toLowerCase();
+    const locationTrim = location.trim().toLowerCase();
+
+    if (roleTrim !== "")
       data = data.filter((job) =>
-        job.title.toLowerCase().includes(role.toLowerCase()) ||
-        job.tags.join(" ").toLowerCase().includes(role.toLowerCase())
+        job.title.toLowerCase().includes(roleTrim) ||
+        job.tags.join(" ").toLowerCase().includes(roleTrim)
       );
 
-    if (location.trim() !== "")
+    if (locationTrim !== "")
       data = data.filter((job) =>
-        job.loc.toLowerCase().includes(location.toLowerCase())
+        job.loc.toLowerCase().includes(locationTrim)
       );
 
     if (exp && exp !== "Experience")
@@ -56,13 +59,24 @@ export default function Jobs() {
       data = data.filter((job) => job.mode.toLowerCase().includes(mode.toLowerCase()));
 
     setFiltered(data);
-    setPage(1); // reset pagination
+    setPage(1); // reset pagination to first page on new filter
   };
+
+  // run search automatically whenever any filter changes
+  useEffect(() => {
+    handleSearch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role, location, exp, mode]); // no jobList dependency since it's static here
 
   // ---------- PAGINATION ----------
   const pageSize = 4;
   const [page, setPage] = useState(1);
   const totalPages = Math.ceil(filtered.length / pageSize);
+
+  // clamp page if filtered changes (prevents out-of-range page)
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages || 1);
+  }, [filtered, totalPages, page]);
 
   const paginated = filtered.slice(
     (page - 1) * pageSize,
@@ -70,15 +84,14 @@ export default function Jobs() {
   );
 
   return (
-    <div>
-    <div className="max-w-6xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-extrabold mb-2">Find Jobs</h1>
-      <p className="text-slate-600 mb-6">
+    <div className="max-w-6xl mx-auto px-4 py-6">
+      <h1 className="text-2xl md:text-3xl font-extrabold mb-1">Find Jobs</h1>
+      <p className="text-slate-600 mb-4">
         Internships and entry-level roles for students & 0–2 yrs.
       </p>
 
-      {/* FILTERS */}
-      <div className="grid md:grid-cols-6 gap-3 bg-white p-4 rounded-2xl border mb-6">
+      {/* FILTERS (more compact) */}
+      <div className="grid md:grid-cols-6 gap-2 bg-white p-3 rounded-2xl border mb-4">
         <Input
           placeholder="Role or skill"
           value={role}
@@ -114,124 +127,147 @@ export default function Jobs() {
           <option>Office</option>
         </select>
 
-        <Button onClick={handleSearch}>Search</Button>
+        {/* optional: keep a visible Search button but it's not required */}
+        <Button onClick={handleSearch} className="hidden md:inline-flex">
+          Search
+        </Button>
       </div>
 
-      {/* TABLE */}
+      {/* TABLE (compact paddings) */}
       <div className="overflow-x-auto rounded-2xl border bg-white">
-  <table className="w-full text-sm">
-    <thead className="bg-slate-100 text-slate-700">
-      <tr>
-        <th className="px-4 py-3 text-left whitespace-nowrap">Job Title</th>
-        <th className="px-4 py-3 text-left whitespace-nowrap">Company</th>
-        <th className="px-4 py-3 text-left whitespace-nowrap">Location</th>
-        <th className="px-4 py-3 text-left whitespace-nowrap">Type</th>
-        <th className="px-4 py-3 text-left whitespace-nowrap">Mode</th>
-        <th className="px-4 py-3 text-left whitespace-nowrap">Experience</th>
-        <th className="px-4 py-3 text-left whitespace-nowrap">Tags</th>
-        <th className="px-4 py-3 text-left whitespace-nowrap">Actions</th>
-      </tr>
-    </thead>
+        <table className="w-full text-sm">
+          <thead className="bg-slate-100 text-slate-700">
+            <tr>
+              <th className="px-3 py-2 text-left whitespace-nowrap">Job Title</th>
+              <th className="px-3 py-2 text-left whitespace-nowrap">Company</th>
+              <th className="px-3 py-2 text-left whitespace-nowrap">Location</th>
+              <th className="px-3 py-2 text-left whitespace-nowrap">Type</th>
+              <th className="px-3 py-2 text-left whitespace-nowrap">Mode</th>
+              <th className="px-3 py-2 text-left whitespace-nowrap">Experience</th>
+              <th className="px-3 py-2 text-left whitespace-nowrap">Tags</th>
+              <th className="px-3 py-2 text-left whitespace-nowrap">Actions</th>
+            </tr>
+          </thead>
 
-    <tbody>
-      {paginated.length === 0 ? (
-        <tr>
-          <td colSpan="8" className="text-center py-5 text-slate-500">
-            No jobs found
-          </td>
-        </tr>
-      ) : (
-        paginated.map((r) => (
-          <tr
-            key={r.id}
-            className="border-b hover:bg-slate-50 transition"
-          >
-            <td className="px-4 py-3 font-medium align-middle whitespace-nowrap">
-              {r.title}
-            </td>
+          <tbody>
+            {paginated.length === 0 ? (
+              <tr>
+                <td colSpan="8" className="text-center py-4 text-slate-500">
+                  No jobs found
+                </td>
+              </tr>
+            ) : (
+              paginated.map((r) => (
+                <tr
+                  key={r.id}
+                  className="border-b hover:bg-slate-50 transition"
+                >
+                  <td className="px-3 py-2 font-medium align-middle whitespace-nowrap">
+                    {r.title}
+                  </td>
 
-            <td className="px-4 py-3 align-middle whitespace-nowrap">
-              <div className="flex items-center gap-1">
-                <Building2 size={14} /> {r.company}
-              </div>
-            </td>
+                  <td className="px-3 py-2 align-middle whitespace-nowrap">
+                    <div className="flex items-center gap-1">
+                      <Building2 size={14} /> {r.company}
+                    </div>
+                  </td>
 
-            <td className="px-4 py-3 align-middle whitespace-nowrap">
-              <div className="flex items-center gap-1">
-                <MapPin size={14} /> {r.loc}
-              </div>
-            </td>
+                  <td className="px-3 py-2 align-middle whitespace-nowrap">
+                    <div className="flex items-center gap-1">
+                      <MapPin size={14} /> {r.loc}
+                    </div>
+                  </td>
 
-            <td className="px-4 py-3 align-middle whitespace-nowrap">
-              <div className="flex items-center gap-1">
-                <Briefcase size={14} /> {r.type}
-              </div>
-            </td>
+                  <td className="px-3 py-2 align-middle whitespace-nowrap">
+                    <div className="flex items-center gap-1">
+                      <Briefcase size={14} /> {r.type}
+                    </div>
+                  </td>
 
-            <td className="px-4 py-3 align-middle whitespace-nowrap">
-              <div className="flex items-center gap-1">
-                <Clock size={14} /> {r.mode}
-              </div>
-            </td>
+                  <td className="px-3 py-2 align-middle whitespace-nowrap">
+                    <div className="flex items-center gap-1">
+                      <Clock size={14} /> {r.mode}
+                    </div>
+                  </td>
 
-            <td className="px-4 py-3 align-middle whitespace-nowrap">
-              <div className="flex items-center gap-1">
-                <GraduationCap size={14} /> {r.exp}
-              </div>
-            </td>
+                  <td className="px-3 py-2 align-middle whitespace-nowrap">
+                    <div className="flex items-center gap-1">
+                      <GraduationCap size={14} /> {r.exp}
+                    </div>
+                  </td>
 
-            <td className="px-4 py-3 align-middle">
-              <div className="flex flex-wrap gap-1">
-                {r.tags.map((t) => (
-                  <Badge
-                    key={t}
-                    variant="outline"
-                    className="rounded-full text-xs"
-                  >
-                    {t}
-                  </Badge>
-                ))}
-              </div>
-            </td>
+                  <td className="px-3 py-2 align-middle">
+                    <div className="flex flex-wrap gap-1">
+                      {r.tags.map((t) => (
+                        <Badge
+                          key={t}
+                          variant="outline"
+                          className="rounded-full text-xs"
+                        >
+                          {t}
+                        </Badge>
+                      ))}
+                    </div>
+                  </td>
 
-            <td className="px-4 py-3 align-middle whitespace-nowrap">
-              <div className="flex gap-2">
-                <a href={`/jobs/${r.id}`} className="flex-1">
-                  <Button variant="secondary" className="w-full text-xs">
-                    View
-                  </Button>
-                </a>
-                <Button className="flex-1 text-xs">Apply</Button>
-              </div>
-            </td>
-          </tr>
-        ))
-      )}
-    </tbody>
-  </table>
-</div>
-
-      {/* PAGINATION */}
-      <div className="flex justify-center items-center gap-3 mt-6">
-        <Button variant="outline" disabled={page === 1} onClick={() => setPage(page - 1)}>
-          Previous
-        </Button>
-
-        {[...Array(totalPages)].map((_, i) => (
-          <Button
-            key={i}
-            variant={page === i + 1 ? "default" : "outline"}
-            onClick={() => setPage(i + 1)}
-          >
-            {i + 1}
-          </Button>
-        ))}
-
-        <Button variant="outline" disabled={page === totalPages} onClick={() => setPage(page + 1)}>
-          Next
-        </Button>
+                  <td className="px-3 py-2 align-middle whitespace-nowrap">
+                    <div className="flex gap-2">
+                      <a href={`/jobs/${r.id}`} className="flex-1">
+                        <Button variant="secondary" className="w-full text-xs">
+                          View
+                        </Button>
+                      </a>
+                      <Button className="flex-1 text-xs">Apply</Button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
-    </div>
+
+      {/* PAGINATION (compact) */}
+      <div className="flex justify-center items-center gap-2 mt-4">
+        <button
+          className="rounded-md border px-3 py-1 text-sm disabled:opacity-50"
+          disabled={page === 1}
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+        >
+          Previous
+        </button>
+
+        {/* page numbers */}
+        {totalPages > 0 ? (
+          Array.from({ length: totalPages }).map((_, i) => {
+            const pageNum = i + 1;
+            const isActive = page === pageNum;
+            return (
+              <button
+                key={pageNum}
+                onClick={() => setPage(pageNum)}
+                className={`px-3 py-1 text-sm rounded-md border focus:outline-none ${
+                  isActive
+                    ? "bg-slate-800 text-white border-slate-800"
+                    : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })
+        ) : (
+          <span className="text-sm text-slate-500">0</span>
+        )}
+
+        <button
+          className="rounded-md border px-3 py-1 text-sm disabled:opacity-50"
+          disabled={page === totalPages || totalPages === 0}
+          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 }
