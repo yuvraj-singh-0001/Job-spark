@@ -5,10 +5,10 @@ import Home from "../modules/user/Home.jsx";
 import Companies from "../modules/user/Companies.jsx";
 import CareerKit from "../modules/user/CareerKit.jsx";
 import Alerts from "../modules/user/alerts.jsx";
-import Jobs from "../modules/user/Jobs/Index.jsx";
-import JobDetail from "../modules/user/jobs/details.jsx";
+import Jobs from "../modules/user/jobs/job-Index.jsx";
+import JobDetail from "../modules/user/jobs/job-details.jsx";
 // recruiter pages 
-import RecruiterCreateJob  from "../modules/recruiter/jobs/create-job.jsx";
+import RecruiterCreateJob  from "../modules/recruiter/hire-jobs/create-job.jsx";
 import RecruiterProfile from "../modules/recruiter/dashboard/recruiter-profile.jsx";
 import TalentHire from "../modules/recruiter/recruter-premier/talent-hire.jsx";
 // auth
