@@ -11,10 +11,11 @@ function signToken(payload) {
 // POST /api/auth/signup
 async function signUp(req, res) {
   try {
-    const { username, email, password } = req.body || {};
+    const { username, email, password, role: inputRole } = req.body || {};
     if (!username || !email || !password) {
       return res.status(400).json({ message: 'username, email and password are required' });
     }
+    const role = (inputRole === 'recruiter' ? 'recruiter' : 'user');
 
     const conn = await pool.getConnection();
     try {
@@ -28,12 +29,12 @@ async function signUp(req, res) {
 
       const passwordHash = await bcrypt.hash(password, 10);
       const [result] = await conn.execute(
-        'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
-        [username, email, passwordHash]
+        'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
+        [username, email, passwordHash, role]
       );
 
-      const user = { id: result.insertId, username, email };
-      const token = signToken({ sub: user.id, username: user.username });
+      const user = { id: result.insertId, username, email, role };
+      const token = signToken({ sub: user.id, username: user.username, role: user.role });
 
       const isProd = process.env.NODE_ENV === 'production';
       res.cookie('token', token, {

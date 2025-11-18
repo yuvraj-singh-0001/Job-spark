@@ -8,6 +8,7 @@ export default function SignUp() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("user");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -18,10 +19,10 @@ export default function SignUp() {
     setMessage("");
     setError("");
     try {
-      const { data } = await api.post("/auth/signup", { username, email, password });
+      const { data } = await api.post("/auth/signup", { username, email, password, role });
       setMessage(data?.message || "Signup successful");
-      // Optional: redirect after a short delay
-      // setTimeout(() => (window.location.href = "/"), 800);
+      // Auto-login: server sets auth cookie; redirect based on role
+      window.location.href = role === "recruiter" ? "/recruiter-profile" : "/dashboard";
     } catch (err) {
       setError(err?.response?.data?.message || err.message || "Signup failed");
     } finally {
@@ -70,6 +71,29 @@ export default function SignUp() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <label className="flex items-center gap-2 p-2 border rounded-xl">
+                      <input
+                        type="radio"
+                        name="role"
+                        value="user"
+                        checked={role === "user"}
+                        onChange={(e) => setRole(e.target.value)}
+                      />
+                      <span>User</span>
+                    </label>
+                    <label className="flex items-center gap-2 p-2 border rounded-xl">
+                      <input
+                        type="radio"
+                        name="role"
+                        value="recruiter"
+                        checked={role === "recruiter"}
+                        onChange={(e) => setRole(e.target.value)}
+                      />
+                      <span>Recruiter</span>
+                    </label>
+                  </div>
 
                   <Button
                     type="submit"

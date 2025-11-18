@@ -1,6 +1,6 @@
 import { Sparkles, Search } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Button } from "../../components/ui/button"; // <-- adjust path if needed
+import { Button } from "./ui/button"; // <-- adjust path if needed
 
 export default function Navbar() {
   return (

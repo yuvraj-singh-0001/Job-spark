@@ -19,7 +19,7 @@ async function signIn(req, res) {
     const conn = await pool.getConnection();
     try {
       const [rows] = await conn.execute(
-        'SELECT id, username, email, password_hash FROM users WHERE email = ? OR username = ? LIMIT 1',
+        'SELECT id, username, email, role, password_hash FROM users WHERE email = ? OR username = ? LIMIT 1',
         [identifier, identifier]
       );
       if (!rows.length) {
@@ -32,8 +32,8 @@ async function signIn(req, res) {
         return res.status(401).json({ message: 'Invalid credentials' });
       }
 
-      const user = { id: userRow.id, username: userRow.username, email: userRow.email };
-      const token = signToken({ sub: user.id, username: user.username });
+      const user = { id: userRow.id, username: userRow.username, email: userRow.email, role: userRow.role };
+      const token = signToken({ sub: user.id, username: user.username, role: user.role });
 
       const isProd = process.env.NODE_ENV === 'production';
       res.cookie('token', token, {

@@ -7,22 +7,24 @@ import CareerKit from "../modules/user/CareerKit.jsx";
 import Alerts from "../modules/user/alerts.jsx";
 import Jobs from "../modules/user/jobs/job-Index.jsx";
 import JobDetail from "../modules/user/jobs/job-details.jsx";
-import Footer from "../modules/user/footer.jsx";
+import Footer from "../components/footer.jsx";
 // recruiter pages 
 import RecruiterCreateJob  from "../modules/recruiter/hire-jobs/create-job.jsx";
 import RecruiterProfile from "../modules/recruiter/dashboard/recruiter-profile.jsx";
 import TalentHire from "../modules/recruiter/recruter-premier/talent-hire.jsx";
+import JobPosted from "../modules/recruiter/dashboard/job-posted.jsx";
+import RecruiterDashboard from "../modules/recruiter/dashboard/recruiter-index.jsx";
 // auth
 import SignIn from "../modules/auth/SignIn.jsx";
 import SignUp from "../modules/auth/SignUp.jsx";
 import Forgot from "../modules/auth/Forgot.jsx";
 
 // dashboard (protected)
-import Dashboard from "../modules/user/Dashboard/user-Index.jsx";
-import UserProfile from "../modules/user/Dashboard/user-Profile.jsx";
-import Saved from "../modules/user/Dashboard/user-Saved.jsx";
-import Applied from "../modules/user/Dashboard/user-Applied.jsx";
-import AlertsManage from "../modules/user/Dashboard/user-Alerts.jsx";
+import Dashboard from "../modules/user/User-Dashboard/user-Index.jsx";
+import UserProfile from "../modules/user/User-Dashboard/user-Profile.jsx";
+import Saved from "../modules/user/User-Dashboard/user-Saved.jsx";
+import Applied from "../modules/user/User-Dashboard/user-Applied.jsx";
+import AlertsManage from "../modules/user/User-Dashboard/user-Alerts.jsx";
 import ProtectedRoute from "../protected/ProtectedRoute.jsx";
 
 
@@ -42,6 +44,8 @@ const router = createBrowserRouter([
   {path: "/recruiter-profile", element: <RecruiterProfile />},
   {path: "/create-job", element: <RecruiterCreateJob />},
   { path: "/dashboard", element: <Dashboard /> },
+  {path: "/job-posted", element: <JobPosted />},
+  {path: "/recruiter-dashboard", element: <RecruiterDashboard />},
   // premier talent hire
   {path: "/talent-hire", element: <TalentHire />},
   // user dashboard

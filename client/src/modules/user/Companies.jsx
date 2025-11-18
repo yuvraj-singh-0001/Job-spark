@@ -6,7 +6,7 @@ import {
 } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
-import Navbar from "./Navbar";
+import Navbar from "../../components/Navbar";
 
 export default function Companies() {
   const data = [

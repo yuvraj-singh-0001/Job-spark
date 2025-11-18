@@ -25,8 +25,8 @@ export default function SignIn() {
       const data = await res.json();
       if (!res.ok) throw new Error(data?.message || "Login failed");
       setMessage(data?.message || "Login successful");
-      // Optional: redirect after login
-      // setTimeout(() => (window.location.href = "/"), 500);
+      const role = data?.user?.role || "user";
+      window.location.href = role === "recruiter" ? "/recruiter-profile" : "/dashboard";
     } catch (err) {
       setError(err.message);
     } finally {
