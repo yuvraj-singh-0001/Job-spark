@@ -1,6 +1,8 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 
-// user pages
+// ------------------------------
+// User (public) pages
+// ------------------------------
 import Home from "../modules/user/Home.jsx";
 import Companies from "../modules/user/Companies.jsx";
 import CareerKit from "../modules/user/CareerKit.jsx";
@@ -8,55 +10,104 @@ import Alerts from "../modules/user/alerts.jsx";
 import Jobs from "../modules/user/jobs/job-Index.jsx";
 import JobDetail from "../modules/user/jobs/job-details.jsx";
 import Footer from "../components/ui/footer.jsx";
-// recruiter pages 
-import RecruiterCreateJob  from "../modules/recruiter/hire-jobs/create-job.jsx";
+
+// ------------------------------
+// Recruiter pages (protected)
+// ------------------------------
+import RecruiterCreateJob from "../modules/recruiter/hire-jobs/create-job.jsx";
 import TalentHire from "../modules/recruiter/recruter-premier/talent-hire.jsx";
 import RecruiterProfile from "../modules/recruiter/recruiter-dashboard/recruiter-profile.jsx";
 import JobPosted from "../modules/recruiter/recruiter-dashboard/job-posted.jsx";
 import RecruiterDashboard from "../modules/recruiter/recruiter-dashboard/recruiter-index.jsx";
 import EditUser from "../modules/recruiter/manage-user/edit-user.jsx";
-// auth
+
+// ------------------------------
+// Authentication pages
+// ------------------------------
 import SignIn from "../modules/auth/SignIn.jsx";
 import SignUp from "../modules/auth/SignUp.jsx";
 import Forgot from "../modules/auth/Forgot.jsx";
 
-//  users dashboard (protected)
+// ------------------------------
+// User dashboard (protected)
+// ------------------------------
 import Dashboard from "../modules/user/User-Dashboard/user-Index.jsx";
 import UserProfile from "../modules/user/User-Dashboard/user-Profile.jsx";
 import Saved from "../modules/user/User-Dashboard/user-Saved.jsx";
 import Applied from "../modules/user/User-Dashboard/user-Applied.jsx";
 import AlertsManage from "../modules/user/User-Dashboard/user-Alerts.jsx";
+
 import ProtectedRoute from "../protected/ProtectedRoute.jsx";
 
-
+/**
+ * Application Router
+ * -------------------
+ */
 const router = createBrowserRouter([
-  { path: "/", element: <Home /> },
+  // Redirect root → /home
+  { path: "/", element: <Navigate to="/home" replace /> },
+
+  // Public User Pages
+  { path: "/home", element: <Home /> },
   { path: "/companies", element: <Companies /> },
   { path: "/career-kit", element: <CareerKit /> },
   { path: "/alerts", element: <Alerts /> },
   { path: "/jobs", element: <Jobs /> },
   { path: "/jobs/:id", element: <JobDetail /> },
   { path: "/footer", element: <Footer /> },
-// simple 
-  // auth
+
+  // Authentication
   { path: "/sign-in", element: <SignIn /> },
   { path: "/sign-up", element: <SignUp /> },
   { path: "/forgot", element: <Forgot /> },
-// recruiter
-  {path: "recruiter-profile", element: <RecruiterProfile />},
-  {path: "create-job", element: <RecruiterCreateJob />},
-  {path: "job-posted", element: <JobPosted />},
-  {path: "recruiter-dashboard", element: <RecruiterDashboard />},
-  {path: "edit-user/:id", element: <EditUser />},
-  // premier talent hire
-  {path: "/talent-hire", element: <TalentHire />},
-  // user dashboard
-  {path: "/dashboard/profile", element: <UserProfile />},
-  {path: "/dashboard/saved", element: <Saved />},
-  {path: "/dashboard/applied", element: <Applied />},
-  {path: "/dashboard/alerts", element: <AlertsManage />},
- 
-{
+
+  // Recruiter (protected + role-based)
+  {
+    path: "recruiter-profile",
+    element: (
+      <ProtectedRoute roles={["recruiter"]}>
+        <RecruiterProfile />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "create-job",
+    element: (
+      <ProtectedRoute roles={["recruiter"]}>
+        <RecruiterCreateJob />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "job-posted",
+    element: (
+      <ProtectedRoute roles={["recruiter"]}>
+        <JobPosted />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "recruiter-dashboard",
+    element: (
+      <ProtectedRoute roles={["recruiter"]}>
+        <RecruiterDashboard />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "edit-user/:id",
+    element: (
+      <ProtectedRoute roles={["recruiter"]}>
+        <EditUser />
+      </ProtectedRoute>
+    ),
+  },
+
+  // Premier Talent Hire (public for now)
+  { path: "/talent-hire", element: <TalentHire /> },
+
+  // User Dashboard (protected)
+  {
     path: "/dashboard",
     element: (
       <ProtectedRoute>
@@ -96,8 +147,9 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
-  
- 
+
+  // Catch-all
+  { path: "*", element: <Navigate to="/sign-in" replace /> },
 ]);
 
 export default router;
