@@ -14,6 +14,7 @@ import TalentHire from "../modules/recruiter/recruter-premier/talent-hire.jsx";
 import RecruiterProfile from "../modules/recruiter/recruiter-dashboard/recruiter-profile.jsx";
 import JobPosted from "../modules/recruiter/recruiter-dashboard/job-posted.jsx";
 import RecruiterDashboard from "../modules/recruiter/recruiter-dashboard/recruiter-index.jsx";
+import EditUser from "../modules/recruiter/manage-user/edit-user.jsx";
 // auth
 import SignIn from "../modules/auth/SignIn.jsx";
 import SignUp from "../modules/auth/SignUp.jsx";
@@ -46,6 +47,7 @@ const router = createBrowserRouter([
   {path: "create-job", element: <RecruiterCreateJob />},
   {path: "job-posted", element: <JobPosted />},
   {path: "recruiter-dashboard", element: <RecruiterDashboard />},
+  {path: "edit-user/:id", element: <EditUser />},
   // premier talent hire
   {path: "/talent-hire", element: <TalentHire />},
   // user dashboard
