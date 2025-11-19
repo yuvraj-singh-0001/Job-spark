@@ -40,7 +40,7 @@ const router = createBrowserRouter([
   { path: "/jobs", element: <Jobs /> },
   { path: "/jobs/:id", element: <JobDetail /> },
   { path: "/footer", element: <Footer /> },
-
+// simple 
   // auth
   { path: "/sign-in", element: <SignIn /> },
   { path: "/sign-up", element: <SignUp /> },
