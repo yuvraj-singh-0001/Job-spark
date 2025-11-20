@@ -1,14 +1,41 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
+import api from "../../components/apiconfig/apiconfig.jsx";
 
 export default function SignIn() {
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+    setError("");
+    try {
+      const { data } = await api.post("/auth/login", { identifier, password });
+      setMessage(data?.message || "Login successful");
+
+      // backend should set an HTTP-only cookie; no localStorage usage
+      navigate("/home", { replace: true });
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || "Login failed";
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4 py-12">
-      {/* Outer rounded pale background like the screenshot */}
       <div className="w-full max-w-6xl rounded-2xl bg-[#eefcfb] p-8 md:p-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          {/* Left marketing column */}
           <div className="px-4 md:px-8">
             <h1 className="text-4xl md:text-5xl font-extrabold leading-tight text-slate-800">
               Talk to HR directly &amp;
@@ -18,7 +45,6 @@ export default function SignIn() {
             <p className="mt-4 text-lg text-slate-500">Get local jobs in your city!</p>
           </div>
 
-          {/* Right form card */}
           <div className="flex justify-center">
             <Card className="w-full max-w-md rounded-2xl shadow-lg">
               <CardHeader className="px-8 pt-8">
@@ -27,38 +53,46 @@ export default function SignIn() {
               </CardHeader>
 
               <CardContent className="px-8 pb-8 space-y-4">
-                <Input
-                  className="rounded-xl border p-3 text-sm placeholder:text-slate-400"
-                  placeholder="Email"
-                />
-                <Input
-                  className="rounded-xl border p-3 text-sm"
-                  placeholder="Password"
-                  type="password"
-                />
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <Input
+                    className="rounded-xl border p-3 text-sm placeholder:text-slate-400"
+                    placeholder="Email or Username"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                  />
+                  <Input
+                    className="rounded-xl border p-3 text-sm"
+                    placeholder="Password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
 
-                <div className="flex items-center justify-between text-sm">
-                  <label className="inline-flex items-center gap-2 text-slate-700">
-                    <input type="checkbox" className="rounded" />
-                    <span>Remember me</span>
-                  </label>
-                  <a href="/forgot" className="text-slate-700 hover:underline">
-                    Forgot password?
-                  </a>
-                </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <label className="inline-flex items-center gap-2 text-slate-700">
+                      <input type="checkbox" className="rounded" />
+                      <span>Remember me</span>
+                    </label>
+                    <a href="/forgot" className="text-slate-700 hover:underline">
+                      Forgot password?
+                    </a>
+                  </div>
 
-                {/* Primary sign-in button (pill style) */}
-                <Button className="w-full rounded-full py-3 text-white shadow-md bg-emerald-600 ">
-                  Sign In
-                </Button>
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full rounded-full py-3 text-white shadow-md bg-emerald-600 "
+                  >
+                    {loading ? "Please wait..." : "Sign In"}
+                  </Button>
+                </form>
 
-                {/* Secondary / social button */}
-                <Button
-                  variant="secondary"
-                  className="w-full rounded-xl py-3 border border-slate-200 bg-white hover:shadow-sm"
-                >
-                  Continue with Google
-                </Button>
+                {message && (
+                  <p className="text-green-600 text-sm text-center">{message}</p>
+                )}
+                {error && (
+                  <p className="text-red-600 text-sm text-center">{error}</p>
+                )}
 
                 <p className="text-sm text-center text-slate-600">
                   No account?{" "}

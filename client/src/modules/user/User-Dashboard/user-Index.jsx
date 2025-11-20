@@ -3,7 +3,7 @@ import { Card, CardContent } from "../../../components/ui/card";
 export default function Dashboard() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-extrabold mb-4">Your Dashboard</h1>
+      <h1 className="text-3xl font-extrabold mb-4">user Dashboard</h1>
       <div className="flex flex-wrap gap-2 mb-6">
         <a className="px-3 py-1 rounded-full bg-slate-100" href="/dashboard">Overview</a>
         <a className="px-3 py-1 rounded-full bg-slate-100" href="/dashboard/profile">Profile</a>
