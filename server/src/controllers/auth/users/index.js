@@ -45,6 +45,6 @@ router.post('/login', signIn);
 router.get('/authcheck', requireAuth, authCheck);
 
 // Alias if you want cleaner endpoint:
-// router.get('/me', requireAuth, authCheck);
+router.get('/me', requireAuth, authCheck);
 
 module.exports = router;

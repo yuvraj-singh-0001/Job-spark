@@ -1,7 +1,8 @@
 // Home.jsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, Sparkles } from "lucide-react";
+import api from "../../components/apiconfig/apiconfig";
+import { Search } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import {
   Card,
@@ -12,39 +13,10 @@ import {
 import Navbar from "../../components/ui/Navbar";
 import Footer from "../../components/ui/footer";
 
-const sampleJobs = [
+// fallback sample while loading or in case of error (small)
+const fallbackJobs = [
   {
-    id: 1,
-    title: "Associate Product Designer",
-    company: "PixelPath",
-    location: "Gurugram, IN",
-    tags: ["Figma", "Prototyping", "UX"],
-    posted: "1d ago",
-    type: "Full-time",
-    experiance: "1-2 yrs",
-  },
-  {
-    id: 2,
-    title: "Business Operations Trainee",
-    company: "MercuryOps",
-    location: "Pune, IN",
-    tags: ["Excel", "Communication", "CRM"],
-    posted: "New",
-    type: "Apprenticeship",
-    experiance: "Fresher",
-  },
-  {
-    id: 3,
-    title: "Junior Data Analyst",
-    company: "QuantLeaf",
-    location: "Bengaluru, IN",
-    tags: ["SQL", "Excel", "Tableau"],
-    posted: "2h ago",
-    type: "Full-time",
-    experiance: "0-2 yrs",
-  },
-  {
-    id: 4,
+    id: "s1",
     title: "Software Engineer Intern",
     company: "CloudMints",
     location: "Remote (IN)",
@@ -54,6 +26,25 @@ const sampleJobs = [
     experiance: "Student",
   },
 ];
+
+function timeAgo(iso) {
+  if (!iso) return "";
+  const created = new Date(iso);
+  const now = new Date();
+  const diff = Math.floor((now - created) / 1000); // seconds
+
+  if (diff < 60) return `${diff}s ago`;
+  const mins = Math.floor(diff / 60);
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  const years = Math.floor(months / 12);
+  return `${years}y ago`;
+}
 
 function Hero() {
   return (
@@ -174,21 +165,44 @@ function WhyHireSpark() {
 function JobsTableRow({ job }) {
   return (
     <tr className="border-b">
-      <td className="px-4 py-3 font-semibold">{job.title}</td>
+      <td className="px-4 py-3 font-semibold">
+        <div className="flex items-center gap-3">
+          {job.logoPath ? (
+            // adjust public URL path if needed (e.g. /uploads/logos/xxx)
+            <img
+              src={job.logoPath.startsWith("http") ? job.logoPath : `/${job.logoPath}`}
+              alt={`${job.company} logo`}
+              className="w-10 h-10 rounded-md object-cover"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-md bg-slate-200 flex items-center justify-center text-xs">
+              {job.company?.[0] || "C"}
+            </div>
+          )}
+          <div>
+            <div className="font-semibold">{job.title}</div>
+            <div className="text-xs text-slate-500">{job.company}</div>
+          </div>
+        </div>
+      </td>
       <td className="px-4 py-3">{job.company}</td>
       <td className="px-4 py-3">{job.location}</td>
       <td className="px-4 py-3">{job.type}</td>
       <td className="px-4 py-3">{job.experiance}</td>
       <td className="px-4 py-3">
         <div className="flex flex-wrap gap-2 max-w-[170px]">
-          {job.tags.map((t, i) => (
-            <span
-              key={i}
-              className="px-2 py-1 text-xs rounded border bg-slate-50 whitespace-nowrap"
-            >
-              {t}
-            </span>
-          ))}
+          {job.tags && job.tags.length ? (
+            job.tags.map((t, i) => (
+              <span
+                key={i}
+                className="px-2 py-1 text-xs rounded border bg-slate-50 whitespace-nowrap"
+              >
+                {t}
+              </span>
+            ))
+          ) : (
+            <span className="text-xs text-slate-400">No tags</span>
+          )}
         </div>
       </td>
       <td className="px-4 py-3 text-orange-600">{job.posted}</td>
@@ -197,7 +211,7 @@ function JobsTableRow({ job }) {
           <Button className="px-4 py-2 whitespace-nowrap">Quick Apply</Button>
           <Link
             to={`/jobs/${job.id}`}
-            className="text-slate-900 hover:text-orange-600 text-sm border px-3 py-2 rounded-xl bg-slate-100 hover:bg-"
+            className="text-slate-900 hover:text-orange-600 text-sm border px-3 py-2 rounded-xl bg-slate-100"
           >
             View
           </Link>
@@ -208,6 +222,48 @@ function JobsTableRow({ job }) {
 }
 
 function JobsListing() {
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetchJobs() {
+      try {
+        setLoading(true);
+        const { data } = await api.get("/jobs", { params: { limit: 8 } });
+        if (!mounted) return;
+        if (data.ok && Array.isArray(data.jobs)) {
+          const mapped = data.jobs.map((j) => ({
+            id: j.id,
+            title: j.title,
+            company: j.company,
+            location: j.location || "Remote",
+            tags: j.tags || [],
+            posted: timeAgo(j.createdAt),
+            type: j.type,
+            experiance: j.experiance || j.experience || j.experiance,
+            logoPath: j.logoPath,
+          }));
+          setJobs(mapped);
+        } else {
+          setJobs(fallbackJobs);
+        }
+      } catch (err) {
+        console.error("Failed to fetch jobs:", err);
+        setError(err.message || "Failed to fetch jobs");
+        setJobs(fallbackJobs);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    fetchJobs();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <main className="max-w-7xl mx-auto px-10 py-12">
       <div className="flex items-center justify-between mb-8">
@@ -238,9 +294,27 @@ function JobsListing() {
           </thead>
 
           <tbody>
-            {sampleJobs.map((job) => (
-              <JobsTableRow key={job.id} job={job} />
-            ))}
+            {loading ? (
+              <tr>
+                <td colSpan={8} className="p-10 text-center text-slate-500">
+                  Loading jobs...
+                </td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td colSpan={8} className="p-10 text-center text-rose-600">
+                  {error}
+                </td>
+              </tr>
+            ) : jobs.length ? (
+              jobs.map((job) => <JobsTableRow key={job.id} job={job} />)
+            ) : (
+              <tr>
+                <td colSpan={8} className="p-10 text-center text-slate-500">
+                  No jobs found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -253,8 +327,6 @@ function JobsListing() {
     </main>
   );
 }
-
-
 
 export default function Home() {
   return (
