@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Building2,
   MapPin,
@@ -12,129 +12,38 @@ import { Input } from "../../../components/ui/input";
 import Navbar from "../../../components/ui/Navbar";
 
 export default function Jobs() {
-  // ---------- ALL JOBS ----------
-  const jobList = [
-    {
-      id: 101,
-      title: "Junior Backend Developer",
-      company: "BlueOrbit",
-      loc: "Remote (IN)",
-      mode: "Remote",
-      exp: "0–2 yrs",
-      type: "Full-time",
-      tags: ["Python", "Django", "REST"],
-    },
-    {
-      id: 102,
-      title: "Data Analyst Intern",
-      company: "MetricLoop",
-      loc: "Mumbai, IN",
-      mode: "Hybrid",
-      exp: "Student",
-      type: "Internship",
-      tags: ["SQL", "Excel", "PowerBI"],
-    },
-    {
-      id: 103,
-      title: "Frontend Developer",
-      company: "WebHive",
-      loc: "Delhi, IN",
-      mode: "Office",
-      exp: "1 yr",
-      type: "Full-time",
-      tags: ["React", "CSS", "Tailwind"],
-    },
-    {
-      id: 104,
-      title: "Software QA Intern",
-      company: "TestLoop",
-      loc: "Bengaluru, IN",
-      mode: "Hybrid",
-      exp: "Student",
-      type: "Internship",
-      tags: ["Selenium", "Manual Testing"],
-    },
-    {
-      id: 105,
-      title: "Node.js Developer",
-      company: "NextDigit",
-      loc: "Pune, IN",
-      mode: "Remote",
-      exp: "0–2 yrs",
-      type: "Full-time",
-      tags: ["Node.js", "MongoDB"],
-    },
-    {
-      id: 106,
-      title: "Cloud Associate Intern",
-      company: "SkyNet",
-      loc: "Hyderabad, IN",
-      mode: "Office",
-      exp: "Student",
-      type: "Internship",
-      tags: ["AWS", "Linux"],
-    },
-    {
-      id: 107,
-      title: "Junior UI/UX Designer",
-      company: "PixelCraft",
-      loc: "Remote",
-      mode: "Remote",
-      exp: "0–1 yr",
-      type: "Part-time",
-      tags: ["Figma", "UI/UX"],
-    },
-    {
-      id: 108,
-      title: "Marketing Intern",
-      company: "BrandBoost",
-      loc: "Mumbai, IN",
-      mode: "Office",
-      exp: "Student",
-      type: "Internship",
-      tags: ["SEO", "Content"],
-    },
-    {
-      id: 109,
-      title: "React Native Developer",
-      company: "AppSpark",
-      loc: "Remote (IN)",
-      mode: "Remote",
-      exp: "0–2 yrs",
-      type: "Full-time",
-      tags: ["React Native", "Mobile"],
-    },
-    {
-      id: 110,
-      title: "Cyber Security Intern",
-      company: "SecureIT",
-      loc: "Bengaluru, IN",
-      mode: "Hybrid",
-      exp: "Student",
-      type: "Internship",
-      tags: ["Security", "Linux"],
-    },
-    {
-      id: 111,
-      title: "Backend Intern",
-      company: "TechZen",
-      loc: "Pune, IN",
-      mode: "Remote",
-      exp: "Student",
-      type: "Internship",
-      tags: ["Node.js", "API"],
-    },
-    {
-      id: 112,
-      title: "Junior Java Developer",
-      company: "CodeSphere",
-      loc: "Delhi, IN",
-      mode: "Office",
-      exp: "0–2 yrs",
-      type: "Full-time",
-      tags: ["Java", "Spring"],
-    },
-  ];
+  const [jobList, setJobList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const api = (await import("../../../components/apiconfig/apiconfig")).default;
+        const { data } = await api.get('/jobs', { params: { limit: 100 } });
+        if (!alive) return;
+        if (data.ok && Array.isArray(data.jobs)) {
+          setJobList(data.jobs.map(j => ({
+            id: j.id,
+            title: j.title,
+            company: j.company,
+            loc: j.location,
+            mode: j.type,
+            exp: j.experiance,
+            type: j.type,
+            tags: j.tags || [],
+          })));
+        } else {
+          setJobList([]);
+        }
+      } catch (err) {
+        console.error('Failed to load jobs:', err);
+        setError(err.message || 'Failed to load jobs');
+      } finally { if (alive) setLoading(false); }
+    })();
+    return () => { alive = false; };
+  }, []);
 
   // ---------- FILTER STATES ----------
   const [role, setRole] = useState("");
