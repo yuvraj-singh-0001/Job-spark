@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
+import Navbar from "../../../components/ui/Navbar";
 
 export default function AlertsManage() {
   const alerts = [
@@ -8,7 +9,10 @@ export default function AlertsManage() {
     { id: 2, q: "Data analyst", loc: "Bengaluru", exp: "0–2 yrs", freq: "Daily", active: false },
   ];
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10">
+    <div className="min-h-screen flex flex-col">
+          {/* 🟦 Navbar at the top */}
+          <Navbar />
+     <div className="max-w-6xl mx-auto px-4 py-10">
       <h1 className="text-3xl font-extrabold mb-4">Job Alerts</h1>
       <Card className="rounded-2xl mb-6">
         <CardHeader><CardTitle>Create alert</CardTitle></CardHeader>
@@ -39,6 +43,7 @@ export default function AlertsManage() {
           </Card>
         ))}
       </div>
+    </div>
     </div>
   );
 }
