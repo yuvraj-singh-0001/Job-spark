@@ -3,6 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../apiconfig/apiconfig.jsx';
 
+// Import your Navbar - adjust path to your project
+import Navbar from '../../components/ui/Navbar.jsx'; // <- change path if different
+
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -46,17 +49,23 @@ export default function Profile() {
   const loginTime = user.loginAt ? new Date(user.loginAt).toLocaleString() : '-';
 
   return (
-    <div className="max-w-md mx-auto p-6">
-      <h2 className="text-xl mb-3">Profile</h2>
-      <div className="mb-2"><strong>ID:</strong> {user.id}</div>
-      <div className="mb-2"><strong>Username:</strong> {user.username}</div>
-      <div className="mb-2"><strong>Name:</strong> {user.name || '-'}</div>
-      <div className="mb-2"><strong>Role:</strong> {user.role || '-'}</div>
-      <div className="mb-4"><strong>Logged in at:</strong> {loginTime}</div>
+    <div className="min-h-screen flex flex-col">
+      {/* Navbar at top — pass user or handlers if navbar expects them */}
+      <Navbar user={user} onLogout={handleLogout} />
 
-      <div className="flex gap-3">
-        <button onClick={handleLogout} className="px-4 py-2 bg-red-600 rounded text-white">Logout</button>
-      </div>
+      {/* Main content */}
+      <main className="max-w-md mx-auto p-6 mt-6">
+        <h2 className="text-xl mb-3">Profile</h2>
+        <div className="mb-2"><strong>ID:</strong> {user.id}</div>
+        <div className="mb-2"><strong>Username:</strong> {user.username}</div>
+        <div className="mb-2"><strong>Name:</strong> {user.name || '-'}</div>
+        <div className="mb-2"><strong>Role:</strong> {user.role || '-'}</div>
+        <div className="mb-4"><strong>Logged in at:</strong> {loginTime}</div>
+
+        <div className="flex gap-3">
+          <button onClick={handleLogout} className="px-4 py-2 bg-red-600 rounded text-white">Logout</button>
+        </div>
+      </main>
     </div>
   );
 }
