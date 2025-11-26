@@ -5,6 +5,7 @@ const getjobdetails = require("../../api/jobs/get-jobdetails");
 const postapplications = require("../../api/jobs/apply/applications");
 const router = express.Router();
 
+
 // Mount at root so when main router uses router.use('/jobs', thisRouter):
 //   GET / maps to /api/jobs (list jobs)
 //   GET /:id maps to /api/jobs/:id (single job)
