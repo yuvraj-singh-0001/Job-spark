@@ -5,3 +5,4 @@ const recruiterProfile = require("../../../api/profile/recruiter/recruiter-put")
 
 router.use(express.json());
 router.put('/recruiter', requireAuth, recruiterProfile);
+module.exports = router;

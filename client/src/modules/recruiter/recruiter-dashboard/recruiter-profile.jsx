@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
+import api from "../../../components/apiconfig/apiconfig";
 
 /**
- * RecruiterProfileForm
- * - GETs existing profile from /api/recruiter/profile (if available)
- * - PUTs updates to /api/recruiter/profile
+ * RecruiterProfileForm (axios-based)
  *
- * Note:
- * - The server should protect these endpoints with requireAuth middleware
- *   which sets req.user from the JWT cookie.
- * - fetch uses credentials:'include' to send cookies for same-origin auth.
+ * Uses:
+ *   api.get('/recruiter/profile')  -> GET /api/recruiter/profile
+ *   api.put('/profile/recruiter') -> PUT /api/profile/recruiter
+ *
+ * Notes:
+ * - api already has baseURL = .../api and withCredentials = true
+ * - Adjust endpoint strings if your backend routes differ.
  */
 export default function RecruiterProfileForm() {
   const [loading, setLoading] = useState(true);
@@ -30,8 +32,11 @@ export default function RecruiterProfileForm() {
   const validate = () => {
     const errs = [];
     if (!form.company_name || form.company_name.trim().length < 2) errs.push("Company name is required.");
-    if (form.company_website && !/^https?:\/\//i.test(form.company_website) && !/^[\w-]+\.[\w-.]+/.test(form.company_website)) {
-      // allow plain domains or full urls, but don't be strict
+    if (
+      form.company_website &&
+      !/^https?:\/\//i.test(form.company_website) &&
+      !/^[\w-]+\.[\w-.]+/.test(form.company_website)
+    ) {
       errs.push("Please provide a valid company website or leave it blank.");
     }
     if (!form.city) errs.push("City is required.");
@@ -43,48 +48,52 @@ export default function RecruiterProfileForm() {
     let mounted = true;
     async function fetchProfile() {
       try {
-        // GET existing recruiter profile (server route)
-        const res = await fetch("/api/recruiter/profile", {
-          method: "GET",
-          credentials: "include",
-          headers: { "Accept": "application/json" }
-        });
-
+        // axios handles baseURL and withCredentials for you
+        const res = await api.get("/recruiter/profile");
         if (!mounted) return;
-        if (res.ok) {
-          const data = await res.json();
-          // expect data.recruiter or data.profile based on your API; handle both
-          const recruiter = data.recruiter || data.profile || data;
-          if (recruiter) {
-            setForm((f) => ({
-              ...f,
-              company_name: recruiter.company_name ?? "",
-              company_website: recruiter.company_website ?? "",
-              company_type: recruiter.company_type ?? "company",
-              address_line1: recruiter.address_line1 ?? "",
-              address_line2: recruiter.address_line2 ?? "",
-              city: recruiter.city ?? "",
-              state: recruiter.state ?? "",
-              country: recruiter.country ?? "",
-              pincode: recruiter.pincode ?? ""
-            }));
-          }
-        } else if (res.status === 401) {
-          // not authenticated — you may want to redirect or show message
-          setMessage({ type: "error", text: "You must be signed in to edit your recruiter profile." });
-        } else {
-          // no profile yet or other error — keep defaults
+        // axios returns data in res.data
+        const data = res.data || {};
+        const recruiter = data.recruiter || data.profile || data;
+        if (recruiter) {
+          setForm((f) => ({
+            ...f,
+            company_name: recruiter.company_name ?? "",
+            company_website: recruiter.company_website ?? "",
+            company_type: recruiter.company_type ?? "company",
+            address_line1: recruiter.address_line1 ?? "",
+            address_line2: recruiter.address_line2 ?? "",
+            city: recruiter.city ?? "",
+            state: recruiter.state ?? "",
+            country: recruiter.country ?? "",
+            pincode: recruiter.pincode ?? ""
+          }));
         }
       } catch (err) {
-        console.error("Fetch recruiter profile error:", err);
-        setMessage({ type: "error", text: "Failed to load profile." });
+        // axios errors expose err.response when server responded
+        if (err.response) {
+          const status = err.response.status;
+          if (status === 401) {
+            setMessage({ type: "error", text: "You must be signed in to edit your recruiter profile." });
+          } else if (status === 404) {
+            // No profile yet — that's fine; keep defaults
+          } else {
+            console.error("Fetch recruiter profile error (server):", err.response.data || err.response);
+            setMessage({ type: "error", text: "Failed to load profile (server error)." });
+          }
+        } else {
+          // network or other error
+          console.error("Fetch recruiter profile error (network):", err);
+          setMessage({ type: "error", text: "Failed to load profile (network error)." });
+        }
       } finally {
         if (mounted) setLoading(false);
       }
     }
 
     fetchProfile();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const handleChange = (e) => {
@@ -104,43 +113,47 @@ export default function RecruiterProfileForm() {
 
     setSaving(true);
     try {
-      const res = await fetch("/api/recruiter/profile", {
-        method: "PUT",
-        credentials: "include", // send cookies for jwt auth
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify(form)
-      });
+      // Use axios instance; endpoint is relative to baseURL (which already ends with /api)
+      const res = await api.put("/profile/recruiter", form);
 
-      const payload = await res.json();
+      // axios returns data in res.data
+      const payload = res.data || {};
 
-      if (res.ok) {
-        setMessage({ type: "success", text: payload.message || "Profile saved successfully." });
-        // If API returns recruiter object, update form with any normalized values
-        if (payload.recruiter) {
-          const r = payload.recruiter;
-          setForm((f) => ({
-            ...f,
-            company_name: r.company_name ?? f.company_name,
-            company_website: r.company_website ?? f.company_website,
-            company_type: r.company_type ?? f.company_type,
-            address_line1: r.address_line1 ?? f.address_line1,
-            address_line2: r.address_line2 ?? f.address_line2,
-            city: r.city ?? f.city,
-            state: r.state ?? f.state,
-            country: r.country ?? f.country,
-            pincode: r.pincode ?? f.pincode
-          }));
-        }
-      } else {
-        // server responded with an error
-        setMessage({ type: "error", text: payload.message || "Failed to save profile." });
+      setMessage({ type: "success", text: payload.message || "Profile saved successfully." });
+
+      if (payload.recruiter) {
+        const r = payload.recruiter;
+        setForm((f) => ({
+          ...f,
+          company_name: r.company_name ?? f.company_name,
+          company_website: r.company_website ?? f.company_website,
+          company_type: r.company_type ?? f.company_type,
+          address_line1: r.address_line1 ?? f.address_line1,
+          address_line2: r.address_line2 ?? f.address_line2,
+          city: r.city ?? f.city,
+          state: r.state ?? f.state,
+          country: r.country ?? f.country,
+          pincode: r.pincode ?? f.pincode
+        }));
       }
     } catch (err) {
-      console.error("Save recruiter profile error:", err);
-      setMessage({ type: "error", text: "Network or server error while saving profile." });
+      if (err.response) {
+        // server returned non-2xx
+        const status = err.response.status;
+        const serverMsg = err.response.data?.message || err.response.data || null;
+        console.warn("Save failed:", status, err.response.data);
+        if (status === 400) {
+          setMessage({ type: "error", text: serverMsg || "Invalid input. Please review fields." });
+        } else if (status === 401) {
+          setMessage({ type: "error", text: "Unauthorized. Please login and try again." });
+        } else {
+          setMessage({ type: "error", text: serverMsg || "Failed to save profile (server error)." });
+        }
+      } else {
+        // network error or no response
+        console.error("Save recruiter profile error (network):", err);
+        setMessage({ type: "error", text: "Network or server error while saving profile." });
+      }
     } finally {
       setSaving(false);
     }
@@ -151,16 +164,14 @@ export default function RecruiterProfileForm() {
       <div className="max-w-3xl mx-auto">
         <h2 className="text-lg font-semibold mb-4">Recruiter - Company Profile</h2>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white rounded-xl shadow-md border border-gray-100 p-6"
-        >
+        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-md border border-gray-100 p-6">
           {message && (
             <div
               className={
                 "mb-4 px-4 py-2 rounded " +
-                (message.type === "success" ? "bg-green-50 border border-green-200 text-green-700" :
-                  "bg-red-50 border border-red-200 text-red-700")
+                (message.type === "success"
+                  ? "bg-green-50 border border-green-200 text-green-700"
+                  : "bg-red-50 border border-red-200 text-red-700")
               }
             >
               {message.text}
@@ -238,7 +249,9 @@ export default function RecruiterProfileForm() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">City <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-medium mb-2">
+                    City <span className="text-red-500">*</span>
+                  </label>
                   <input
                     name="city"
                     value={form.city}
@@ -261,7 +274,9 @@ export default function RecruiterProfileForm() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Address line 1 <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium mb-2">
+                  Address line 1 <span className="text-red-500">*</span>
+                </label>
                 <input
                   name="address_line1"
                   value={form.address_line1}
@@ -313,8 +328,7 @@ export default function RecruiterProfileForm() {
                   type="submit"
                   disabled={saving}
                   className={
-                    "px-6 py-2 rounded-full shadow text-white " +
-                    (saving ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:brightness-95")
+                    "px-6 py-2 rounded-full shadow text-white " + (saving ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:brightness-95")
                   }
                 >
                   {saving ? "Saving..." : "Save Profile"}
