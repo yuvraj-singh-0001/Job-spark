@@ -1,6 +1,3 @@
-// server.clean.structured.js
-// Clean, modular and defensive Express server bootstrap
-
 require('dotenv').config();
 
 const express = require('express');
@@ -43,11 +40,13 @@ function createApp() {
   app.use(express.urlencoded({ extended: true }));
 
   // --- Health check ---
-  app.get('/health', (req, res) => {
+  // Move this to /api/health to match frontend expectations
+  app.get('/api/health', (req, res) => {
     res.status(200).json({
       status: 'OK',
       environment: config.env,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      message: 'Server is running properly!'
     });
   });
 
@@ -56,30 +55,32 @@ function createApp() {
   app.use('/api', routes);
 
   // --- API 404 handler ---
-  // Avoid using path patterns like '/api/*' which may break with certain path-to-regexp versions.
-  // Instead detect requests whose path starts with '/api/' and return 404.
   app.use((req, res, next) => {
     if (req.path && req.path.startsWith('/api/')) {
-      return res.status(404).json({ error: 'Endpoint not found', path: req.originalUrl });
+      return res.status(404).json({ 
+        success: false,
+        error: 'Endpoint not found', 
+        path: req.originalUrl,
+        message: 'The requested API endpoint does not exist'
+      });
     }
     return next();
   });
 
-  // --- Static assets (optional) ---
-  // Uncomment and update the build path if you serve a frontend from the same server
-  // const clientBuildPath = path.join(__dirname, 'client', 'build');
-  // app.use(express.static(clientBuildPath));
-
   // --- Error handling ---
-  // This error handler should be last - it catches errors forwarded via next(err)
   app.use((err, req, res, next) => {
     console.error('Unhandled error:', err && err.stack ? err.stack : err);
 
     if (err && err.message === 'Not allowed by CORS') {
-      return res.status(403).json({ error: 'CORS policy violation', message: 'Origin not allowed' });
+      return res.status(403).json({ 
+        success: false,
+        error: 'CORS policy violation', 
+        message: 'Origin not allowed' 
+      });
     }
 
     const payload = {
+      success: false,
       error: 'Internal server error'
     };
 
@@ -101,7 +102,7 @@ if (require.main === module) {
     console.log('\n🚀 Server running successfully!');
     console.log(`📍 Port: ${config.port}`);
     console.log(`🌍 Environment: ${config.env}`);
-    console.log(`📊 Health check: http://localhost:${config.port}/health\n`);
+    console.log(`📊 Health check: http://localhost:${config.port}/api/health\n`);
   });
 
   // Graceful shutdown
