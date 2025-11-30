@@ -157,7 +157,7 @@ export default function JobDetail() {
       setApplying(false);
     }
   };
-
+// Render
   if (loading) return <div className="p-6">Loading job...</div>;
   if (error) return <div className="p-6 text-red-600">{error}</div>;
   if (!job) return <div className="p-6">Job not found</div>;

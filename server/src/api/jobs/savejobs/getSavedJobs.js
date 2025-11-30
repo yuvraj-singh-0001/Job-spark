@@ -4,9 +4,9 @@ const getSavedJobs = async (req, res) => {
   const connection = await pool.getConnection();
   try {
     const userId = req.user.id;
-    console.log('Fetching saved jobs for user:', userId);
+  
 
-    // Use the exact column names from your jobs table
+    // Use the exact column names from my jobs table
     const [rows] = await connection.execute(`
       SELECT 
         sj.job_id,
@@ -30,9 +30,7 @@ const getSavedJobs = async (req, res) => {
       ORDER BY sj.saved_at DESC
     `, [userId]);
 
-    console.log('Found saved jobs:', rows.length);
-
-    // Process the jobs to match your frontend format
+    // Process the jobs to match my frontend format
     const processedJobs = rows.map(job => {
       // Calculate experience string (same as your getjobs API)
       let experience = 'Not specified';
@@ -46,7 +44,7 @@ const getSavedJobs = async (req, res) => {
         experience = `${job.min_experience}-${job.max_experience} yrs`;
       }
 
-      // Build location (same as your getjobs API)
+      // Build location (same as my getjobs API)
       const location = job.city + (job.locality ? `, ${job.locality}` : '');
 
       return {

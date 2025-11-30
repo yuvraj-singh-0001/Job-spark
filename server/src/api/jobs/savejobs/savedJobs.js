@@ -4,7 +4,7 @@ const saveJob = async (req, res) => {
   const connection = await pool.getConnection();
   try {
     const userId = req.user.id;
-    const { job_id } = req.params; // Make sure this uses req.params
+    const { job_id } = req.params; 
 
     if (!job_id) {
       return res.status(400).json({ success: false, message: 'Job ID is required' });

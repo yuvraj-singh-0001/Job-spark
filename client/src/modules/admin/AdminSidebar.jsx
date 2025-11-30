@@ -1,4 +1,3 @@
-// src/modules/admin/AdminSidebar.jsx
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { LayoutDashboard, Briefcase, User, Users, Menu } from "lucide-react";
@@ -6,7 +5,7 @@ import { LayoutDashboard, Briefcase, User, Users, Menu } from "lucide-react";
 const AdminSidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
   const location = useLocation();
-
+// Define menu items
   const menuItems = [
     { title: "Dashboard", icon: <LayoutDashboard />, path: "/admin" },
     { title: "Jobs", icon: <Briefcase />, path: "/admin/jobs" },

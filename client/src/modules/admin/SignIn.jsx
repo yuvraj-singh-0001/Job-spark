@@ -24,7 +24,7 @@ export default function AdminSignIn() {
       [e.target.name]: e.target.value,
     });
   };
-
+// Handle form submission
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);

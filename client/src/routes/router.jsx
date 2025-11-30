@@ -36,7 +36,7 @@ import AdminDashboard from "../modules/admin/AdminDashboard.jsx";
 import AdminUsers from "../modules/admin/AdminUsers.jsx";
 import AdminRecruiters from "../modules/admin/AdminRecruiters.jsx";
 import AdminJobs from "../modules/admin/AdminJobs.jsx";
-
+// Define application routes
 const router = createBrowserRouter([
   {
     path: "/",

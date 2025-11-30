@@ -10,7 +10,7 @@ export default function Saved() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-
+// Fetch saved jobs from the backend API
   const fetchSavedJobs = async () => {
     try {
       setLoading(true);
