@@ -24,9 +24,13 @@ async function getRecruiterProfile(req, res) {
       });
     }
 
+    // Add verified field for frontend compatibility
+    const recruiterData = rows[0];
+    recruiterData.verified = recruiterData.status === 'approved' ? 1 : 0;
+
     return res.json({
       success: true,
-      recruiter: rows[0]
+      recruiter: recruiterData
     });
 
   } catch (err) {

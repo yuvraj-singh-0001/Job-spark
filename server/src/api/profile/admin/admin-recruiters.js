@@ -14,7 +14,7 @@ const getAdminRecruiters = async (req, res) => {
         rp.state,
         rp.country,
         rp.pincode,
-        rp.verified,
+        rp.status,
         rp.verification_notes,
         rp.created_at,
         rp.updated_at,
@@ -25,9 +25,15 @@ const getAdminRecruiters = async (req, res) => {
       ORDER BY rp.created_at DESC
     `);
 
+    // Map status to verified for frontend compatibility
+    const recruitersWithVerified = recruiters.map(recruiter => ({
+      ...recruiter,
+      verified: recruiter.status === 'approved' ? 1 : 0  // Add verified field (1 or 0)
+    }));
+
     res.json({
       success: true,
-      recruiters: recruiters || []
+      recruiters: recruitersWithVerified || []
     });
   } catch (error) {
     console.error('Admin get recruiters error:', error);

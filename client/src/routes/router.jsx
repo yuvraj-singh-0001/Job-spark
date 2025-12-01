@@ -28,7 +28,7 @@ import Saved from "../modules/user/User-Dashboard/user-Saved.jsx";
 import Applied from "../modules/user/User-Dashboard/user-Applied.jsx";
 import AlertsManage from "../modules/user/User-Dashboard/user-Alerts.jsx";
 
-// Import Admin Components (you'll need to create these)
+// Import Admin Components
 import AdminLayout from "../modules/admin/AdminLayout.jsx";
 import AdminSignIn from "../modules/admin/SignIn.jsx";
 import AdminSignUp from "../modules/admin/SignUp.jsx";
@@ -36,6 +36,9 @@ import AdminDashboard from "../modules/admin/AdminDashboard.jsx";
 import AdminUsers from "../modules/admin/AdminUsers.jsx";
 import AdminRecruiters from "../modules/admin/AdminRecruiters.jsx";
 import AdminJobs from "../modules/admin/AdminJobs.jsx";
+import PendingRecruiters from "../modules/admin/PendingRecruiters.jsx";
+import VerifiedRecruiters from "../modules/admin/VerifiedRecruiters.jsx";
+
 // Define application routes
 const router = createBrowserRouter([
   {
@@ -181,6 +184,9 @@ const router = createBrowserRouter([
       { path: "users", element: <AdminUsers /> },
       { path: "recruiters", element: <AdminRecruiters /> },
       { path: "jobs", element: <AdminJobs /> },
+      // MOVE THESE INSIDE THE ADMIN LAYOUT
+      { path: "pending-recruiters", element: <PendingRecruiters /> },
+      { path: "verified-recruiters", element: <VerifiedRecruiters /> },
     ],
   },
 ]);

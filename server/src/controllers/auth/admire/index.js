@@ -7,6 +7,7 @@ const { requireAdminAuth } = require('../../../middlewares/adminAuth');
 const getAdminUsers = require('../../../api/profile/admin/admin-users');
 const getAdminRecruiters = require('../../../api/profile/admin/admin-recruiters');
 const getAdminJobs = require('../../../api/profile/admin/admin-jobs');
+const verifyRecruiter = require('../../../api/profile/admin/admin-verify-recruiter');
 
 // Admin Register
 router.post('/register', adminRegister);
@@ -19,6 +20,7 @@ router.post('/logout', adminLogout);
 router.get('/users', requireAdminAuth, getAdminUsers);
 router.get('/recruiters', requireAdminAuth, getAdminRecruiters);
 router.get('/jobs', requireAdminAuth, getAdminJobs);
+router.put('/recruiters/:recruiterId/verify', requireAdminAuth, verifyRecruiter);
 
 
 module.exports = router;
