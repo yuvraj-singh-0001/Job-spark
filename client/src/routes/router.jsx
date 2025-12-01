@@ -38,6 +38,11 @@ import AdminRecruiters from "../modules/admin/AdminRecruiters.jsx";
 import AdminJobs from "../modules/admin/AdminJobs.jsx";
 import PendingRecruiters from "../modules/admin/PendingRecruiters.jsx";
 import VerifiedRecruiters from "../modules/admin/VerifiedRecruiters.jsx";
+import PendingJobs from "../modules/admin/PendingJobs.jsx";
+import ApprovedJobs from "../modules/admin/ApprovedJobs.jsx";
+//import RejectedJobs from "../modules/admin/";
+import ClosedJobs from "../modules/admin/ClosedJobs.jsx";
+import RejectedJobs from "../modules/admin/RejectedJobs.jsx";
 
 // Define application routes
 const router = createBrowserRouter([
@@ -187,6 +192,10 @@ const router = createBrowserRouter([
       // MOVE THESE INSIDE THE ADMIN LAYOUT
       { path: "pending-recruiters", element: <PendingRecruiters /> },
       { path: "verified-recruiters", element: <VerifiedRecruiters /> },
+      { path: "pending-jobs", element: <PendingJobs /> },
+      { path: "approved-jobs", element: <ApprovedJobs /> },
+      { path: "closed-jobs", element: <ClosedJobs /> },
+      {path: "rejected-jobs", element: <RejectedJobs />},
     ],
   },
 ]);
