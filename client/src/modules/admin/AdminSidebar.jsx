@@ -1,16 +1,18 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Briefcase, User, Users, Menu } from "lucide-react";
+import { LayoutDashboard, Briefcase, User, Users, Menu, Clock, CheckCircle } from "lucide-react";
 
 const AdminSidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
   const location = useLocation();
-// Define menu items
+
+  // Define menu items
   const menuItems = [
     { title: "Dashboard", icon: <LayoutDashboard />, path: "/admin" },
     { title: "Jobs", icon: <Briefcase />, path: "/admin/jobs" },
     { title: "Users", icon: <User />, path: "/admin/users" },
-    { title: "Recruiters", icon: <Users />, path: "/admin/recruiters" },
+    { title: "Pending Recruiters", icon: <Clock />, path: "/admin/pending-recruiters" },
+    { title: "Verified Recruiters", icon: <CheckCircle />, path: "/admin/verified-recruiters" },
   ];
 
   return (
@@ -21,9 +23,8 @@ const AdminSidebar = () => {
       {/* Top Section */}
       <div className="flex items-center justify-between p-4 border-b">
         <h1
-          className={`text-xl font-bold transition-all duration-300 ${
-            isOpen ? "opacity-100" : "opacity-0 hidden"
-          }`}
+          className={`text-xl font-bold transition-all duration-300 ${isOpen ? "opacity-100" : "opacity-0 hidden"
+            }`}
         >
           Admin Panel
         </h1>
@@ -47,18 +48,16 @@ const AdminSidebar = () => {
                 to={item.path}
                 className={`flex items-center gap-4 px-4 py-3 rounded-lg cursor-pointer
                 transition-all duration-200
-                ${
-                  isActive
+                ${isActive
                     ? "bg-blue-600 text-white"
                     : "text-gray-700 hover:bg-gray-100"
-                }
+                  }
               `}
               >
                 <span className="text-lg flex-shrink-0">{item.icon}</span>
                 <span
-                  className={`${
-                    isOpen ? "block" : "hidden"
-                  } text-md font-medium whitespace-nowrap`}
+                  className={`${isOpen ? "block" : "hidden"
+                    } text-md font-medium whitespace-nowrap`}
                 >
                   {item.title}
                 </span>
