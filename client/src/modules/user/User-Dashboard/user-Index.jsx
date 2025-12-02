@@ -76,7 +76,7 @@ export default function Dashboard() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard Overview</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Applicant Dashbaord/Da</h1>
               <p className="text-lg text-gray-600">Welcome back! Here's your job search overview.</p>
             </div>
             <div className="flex items-center space-x-4">
