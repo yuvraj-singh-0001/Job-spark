@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../components/apiconfig/apiconfig";
 import {
@@ -79,8 +79,35 @@ function timeAgo(iso) {
   return `${years}y ago`;
 }
 
+// SIMPLE SCROLL FADE-IN HOOK
+function useFadeInOnScroll() {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  return [ref, visible];
+}
+
 // SEARCH + FILTER CHIPS + AUTOCOMPLETE
 function Hero() {
+  const [sectionRef, sectionVisible] = useFadeInOnScroll();
   const [searchTerm, setSearchTerm] = useState("");
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState("");
@@ -145,7 +172,12 @@ function Hero() {
   };
 
   return (
-    <section className="relative bg-white">
+    <section
+      ref={sectionRef}
+      className={`relative bg-white transition-all duration-1000 ease-out ${
+        sectionVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+      }`}
+    >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-10 md:py-12 lg:py-16 lg:min-h-[calc(100vh-120px)] grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
         {/* Left copy */}
         <div className="space-y-5">
@@ -303,9 +335,6 @@ function Hero() {
                       Clear
                     </Button>
                   </div>
-                  <p className="text-[11px] text-slate-500">
-                    Popular: Delivery, Warehouse, Back Office, Work from home
-                  </p>
                 </div>
               </form>
               </CardContent>
@@ -456,6 +485,7 @@ function JobCard({ job }) {
 }
 
 function FeaturedJobs() {
+  const [sectionRef, sectionVisible] = useFadeInOnScroll();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -495,7 +525,12 @@ function FeaturedJobs() {
   }, []);
 
   return (
-    <section className="bg-white">
+    <section
+      ref={sectionRef}
+      className={`bg-white transition-all duration-1000 ease-out ${
+        sectionVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+      }`}
+    >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-12 md:py-16">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
@@ -563,6 +598,7 @@ function FeaturedJobs() {
 
 // HOW IT WORKS – TABS
 function HowItWorks() {
+  const [sectionRef, sectionVisible] = useFadeInOnScroll();
   const [tab, setTab] = useState("seekers");
   const seekerSteps = [
     { title: "Search", desc: "Find jobs by city, role or skill." },
@@ -579,7 +615,13 @@ function HowItWorks() {
   const steps = tab === "seekers" ? seekerSteps : recruiterSteps;
 
   return (
-    <section style={{ backgroundColor: LIGHT_GREY_BG }}>
+    <section
+      ref={sectionRef}
+      style={{ backgroundColor: LIGHT_GREY_BG }}
+      className={`transition-all duration-1000 ease-out ${
+        sectionVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+      }`}
+    >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-12 md:py-16">
         <div className="max-w-2xl mb-8">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-2">
@@ -640,6 +682,7 @@ function HowItWorks() {
 
 // CATEGORIES
 function Categories() {
+  const [sectionRef, sectionVisible] = useFadeInOnScroll();
   const navigate = useNavigate();
 
   const handleClick = (categoryId) => {
@@ -647,7 +690,12 @@ function Categories() {
   };
 
   return (
-    <section className="bg-slate-50">
+    <section
+      ref={sectionRef}
+      className={`bg-slate-50 transition-all duration-1000 ease-out ${
+        sectionVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+      }`}
+    >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-12 md:py-16">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
@@ -694,6 +742,7 @@ function Categories() {
 
 // WHY CHOOSE US
 function WhyChooseUs() {
+  const [sectionRef, sectionVisible] = useFadeInOnScroll();
   const items = [
     {
       title: "Simple job search",
@@ -722,7 +771,12 @@ function WhyChooseUs() {
   ];
 
   return (
-    <section className="bg-white">
+    <section
+      ref={sectionRef}
+      className={`bg-white transition-all duration-1000 ease-out ${
+        sectionVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+      }`}
+    >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-12 md:py-16">
         <div className="max-w-2xl mb-8">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-2">
