@@ -1,7 +1,21 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../components/apiconfig/apiconfig";
-import { Search, MapPin, Clock, Briefcase } from "lucide-react";
+import {
+  Search,
+  MapPin,
+  Clock,
+  Briefcase,
+  Building2,
+  Users,
+  CheckCircle2,
+  ChevronRight,
+  ArrowRight,
+  UserPlus,
+  Send,
+} from "lucide-react";
+import { FcGoogle } from "react-icons/fc";
+import SignInModal from "../auth/SignInModal";
 import { Button } from "../../components/ui/button";
 import {
   Card,
@@ -10,27 +24,48 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 
-// Home Page Component for JobSpark
+// THEME CONSTANTS
+const PRIMARY_BLUE = "#0066CC";
+const LIGHT_GREY_BG = "#F5F5F5";
+const CTA_GREEN = "#28A745";
+
+// SIMPLE FALLBACK DATA
 const fallbackJobs = [
   {
     id: "s1",
-    title: "Software Engineer Intern",
+    title: "Senior Frontend Engineer",
     company: "CloudMints",
-    location: "Remote (IN)",
-    skills: ["JavaScript", "React", "API"],
+    location: "Remote",
+    salary: "₹18L – ₹28L",
+    type: "Full-time",
     posted: "Today",
-    type: "Internship",
-    experience: "Student",
+  },
+  {
+    id: "s2",
+    title: "Product Marketing Manager",
+    company: "LaunchPad",
+    location: "Bengaluru",
+    salary: "₹12L – ₹18L",
+    type: "Full-time",
+    posted: "2d ago",
   },
 ];
 
-// Utility function to convert ISO date to "time ago" format
+const jobCategories = [
+  { id: "it", label: "IT & Software", count: 324, icon: <Briefcase size={22} /> },
+  { id: "marketing", label: "Marketing", count: 142, icon: <Send size={22} /> },
+  { id: "sales", label: "Sales", count: 210, icon: <ArrowRight size={22} /> },
+  { id: "healthcare", label: "Healthcare", count: 98, icon: <Users size={22} /> },
+  { id: "finance", label: "Finance", count: 176, icon: <Building2 size={22} /> },
+  { id: "design", label: "Design & Creative", count: 87, icon: <UserPlus size={22} /> },
+];
+
+// UTIL
 function timeAgo(iso) {
   if (!iso) return "";
   const created = new Date(iso);
   const now = new Date();
   const diff = Math.floor((now - created) / 1000);
-
   if (diff < 60) return `${diff}s ago`;
   const mins = Math.floor(diff / 60);
   if (mins < 60) return `${mins}m ago`;
@@ -44,270 +79,403 @@ function timeAgo(iso) {
   return `${years}y ago`;
 }
 
-// Hero Section Component
+// SEARCH + FILTER CHIPS + AUTOCOMPLETE
 function Hero() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [location, setLocation] = useState("");
+  const [category, setCategory] = useState("");
+  const [experience, setExperience] = useState("");
+  const [chips, setChips] = useState([]);
+  const [activeField, setActiveField] = useState("title");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loginRole, setLoginRole] = useState("candidate");
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
   const navigate = useNavigate();
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      // Navigate to jobs page with search query
-      navigate(`/jobs?search=${encodeURIComponent(searchQuery.trim())}`);
-    }
+  const suggestions = useMemo(
+    () => [
+      "Frontend Developer",
+      "Backend Developer",
+      "Full Stack Engineer",
+      "Product Manager",
+      "Marketing Manager",
+      "Data Analyst",
+      "UI/UX Designer",
+    ],
+    []
+  );
+
+  const filteredSuggestions = useMemo(() => {
+    if (!searchTerm.trim()) return [];
+    const lower = searchTerm.toLowerCase();
+    return suggestions.filter((s) => s.toLowerCase().includes(lower)).slice(0, 5);
+  }, [searchTerm, suggestions]);
+
+  const addChip = (label, field) => {
+    if (!label) return;
+    const value = label.trim();
+    if (!value) return;
+    const key = `${field}:${value}`;
+    if (chips.some((c) => c.key === key)) return;
+    setChips((prev) => [...prev, { key, field, value }]);
   };
 
-  // Main Hero Section JSX
+  const removeChip = (key) => {
+    setChips((prev) => prev.filter((c) => c.key !== key));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (searchTerm) params.set("q", searchTerm);
+    if (location) params.set("location", location);
+    if (category) params.set("category", category);
+    if (experience) params.set("experience", experience);
+    chips.forEach((chip) => {
+      params.append(`chip_${chip.field}`, chip.value);
+    });
+    navigate(`/jobs?${params.toString()}`);
+  };
+
+  const handleSuggestionClick = (value) => {
+    setSearchTerm(value);
+    addChip(value, "title");
+    setShowSuggestions(false);
+  };
+
   return (
-    <section className="relative bg-gradient-to-br from-orange-50 to-white border-b border-slate-200">
-   <div className="max-w-7xl mx-auto px-6 py-20 md:py-24 grid md:grid-cols-2 gap-16 items-center">
-  <div className="space-y-6">
-    
-    {/* Small Tag */}
-    <p className="text-sm font-semibold uppercase tracking-wide text-orange-600">
-      Early Career Opportunities
-    </p>
-
-    {/* Main Heading */}
-    <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-slate-900 leading-tight">
-      Find legit internships & entry-level jobs —
-      <span className="text-orange-600"> no spam </span>,
-      just opportunities
+    <section className="relative bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 lg:py-24 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        {/* Left copy */}
+        <div className="space-y-5">
+          <p className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-blue-600 bg-blue-50 border border-blue-100 rounded-full px-3 py-1 w-fit">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+            Jobs for you. Talent for companies.
+          </p>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
+            Find local & remote jobs{" "}
+            <span className="text-blue-600">in minutes</span>
     </h1>
+          <p className="text-sm sm:text-base text-slate-600 max-w-xl">
+            Search by city, role or skill. Apply in a few taps. No confusing
+            steps.
+          </p>
 
-    {/* Description */}
-    <p className="text-lg md:text-xl text-slate-600 leading-relaxed max-w-2xl">
-      Discover remote, hybrid, and in-office roles curated for students and freshers. 
-      Apply fast with a smart profile and skill-based search.
-    </p>
-
-    {/* Buttons */}
-    <div className="flex flex-wrap gap-4">
-      <Link to="/jobs">
-        <Button className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-4 text-lg font-semibold shadow-lg">
-          Explore Jobs
-        </Button>
-      </Link>
-
-      <Link to="/sign-up">
-        <Button
-          variant="outline"
-          className="border-2 border-slate-300 text-slate-800 hover:bg-slate-50 px-8 py-4 text-lg font-semibold"
-        >
-          Join for Free
-        </Button>
-      </Link>
+          {/* Advanced search */}
+          <Card className="border border-slate-200 shadow-lg rounded-2xl">
+            <CardContent className="p-4 sm:p-5 space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <div className="grid md:grid-cols-4 gap-3">
+                  <div className="relative">
+                    <label className="text-xs font-semibold text-slate-500 mb-1 block">
+                      Job title or skill
+                    </label>
+                    <div className="flex items-center gap-2 border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50">
+                      <Search size={18} className="text-slate-400" />
+                      <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          setActiveField("title");
+                          setShowSuggestions(true);
+                        }}
+                        onFocus={() => {
+                          setActiveField("title");
+                          setShowSuggestions(true);
+                        }}
+                        placeholder="e.g. Delivery, Telecaller"
+                        className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+                      />
+                    </div>
+                    {showSuggestions && filteredSuggestions.length > 0 && (
+                      <div className="absolute z-20 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-lg text-sm max-h-52 overflow-auto">
+                        {filteredSuggestions.map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              handleSuggestionClick(s);
+                            }}
+                            className="w-full text-left px-3 py-2 hover:bg-slate-50"
+                          >
+                            {s}
+                          </button>
+                        ))}
     </div>
-
+                    )}
   </div>
 
-
-
-        <aside className="w-full">
-          <Card className="border border-slate-200 rounded-2xl shadow-xl bg-white">
-            <CardHeader className="pb-6">
-              <CardTitle className="text-lg font-bold text-slate-900">
-                Quick Job Search
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="flex gap-4 items-center">
-                <div className="flex items-center gap-4 border border-slate-300 rounded-xl px-5 py-4 w-full bg-slate-50 shadow-inner">
-                  <Search size={20} className="text-slate-500" />
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 mb-1 block">
+                      City / area
+                    </label>
+                    <div className="flex items-center gap-2 border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50">
+                      <MapPin size={18} className="text-slate-400" />
                   <input
-                    className="outline-none w-full text-lg text-slate-900 placeholder:text-slate-400 bg-transparent"
-                    placeholder="Search by role, skill, or company"
+                        type="text"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        onFocus={() => setActiveField("location")}
+                        placeholder="e.g. Delhi, Remote"
+                        className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
                   />
                 </div>
-                <Button className="bg-slate-900 hover:bg-slate-800 text-lg px-6 py-4 font-semibold shadow-lg">
-                  Search
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </aside>
       </div>
-    </section>
-  );
-}
 
-function WhyHireSpark() {
-  return (
-    <section className="bg-white border-t border-slate-200">
-      <div className="max-w-7xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-16 items-start">
-        <div className="space-y-8">
           <div>
-            <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6">
-              Why HireSpark Stands Out for Early Talent
-            </h2>
-            <p className="text-lg md:text-xl text-slate-600 leading-relaxed max-w-2xl">
-              Designed exclusively for students and freshers, we ensure every listing is vetted, spam-free, and focused on real career growth.
-            </p>
+                    <label className="text-xs font-semibold text-slate-500 mb-1 block">
+                      Category
+                    </label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      onFocus={() => setActiveField("category")}
+                      className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 text-sm outline-none text-slate-700"
+                    >
+                      <option value="">All categories</option>
+                      {jobCategories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.label}
+                        </option>
+                      ))}
+                    </select>
           </div>
 
-          <div className="space-y-6">
-            <Card className="border border-slate-200 rounded-2xl shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-r from-slate-50 to-white">
-              <CardContent className="py-6 px-8">
-                <div className="text-xl font-bold text-slate-900 mb-3">
-                  Premium Early-Career Listings
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 mb-1 block">
+                      Experience
+                    </label>
+                    <select
+                      value={experience}
+                      onChange={(e) => setExperience(e.target.value)}
+                      onFocus={() => setActiveField("experience")}
+                      className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 text-sm outline-none text-slate-700"
+                    >
+                      <option value="">Any</option>
+                      <option value="fresher">Fresher / Entry</option>
+                      <option value="mid">2–5 years</option>
+                      <option value="senior">5+ years</option>
+                    </select>
+                  </div>
                 </div>
-                <p className="text-base text-slate-600">
-                  Curated internships and 0–2 year roles with emphasis on authenticity and relevance.
-                </p>
+
+                {/* Filter chips */}
+                {chips.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {chips.map((chip) => (
+                      <button
+                        key={chip.key}
+                        type="button"
+                        onClick={() => removeChip(chip.key)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100 hover:bg-blue-100 transition-colors"
+                      >
+                        <span>{chip.value}</span>
+                        <span className="text-[10px] text-blue-500">✕</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex gap-3">
+                    <Button
+                      type="submit"
+                      className="flex-1 sm:flex-none sm:px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm hover:shadow-md transition-all"
+                      style={{ backgroundColor: PRIMARY_BLUE }}
+                    >
+                      Search Jobs
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        setSearchTerm("");
+                        setLocation("");
+                        setCategory("");
+                        setExperience("");
+                        setChips([]);
+                      }}
+                      variant="outline"
+                      className="hidden sm:inline-flex border-slate-200 text-slate-600 hover:bg-slate-50"
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Popular: Delivery, Warehouse, Back Office, Work from home
+                  </p>
+                </div>
+              </form>
               </CardContent>
             </Card>
 
-            <Card className="border border-slate-200 rounded-2xl shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-r from-slate-50 to-white">
-              <CardContent className="py-6 px-8">
-                <div className="text-xl font-bold text-slate-900 mb-3">
-                  Actionable Career Resources
-                </div>
-                <p className="text-base text-slate-600">
-                  Access resume builders, interview guides, and skill-building roadmaps tailored for beginners.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border border-slate-200 rounded-2xl shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-r from-slate-50 to-white">
-              <CardContent className="py-6 px-8">
-                <div className="text-xl font-bold text-slate-900 mb-3">
-                  Seamless Application Process
-                </div>
-                <p className="text-base text-slate-600">
-                  Use your profile for quick applies, get notifications, and enjoy streamlined flows for faster hiring.
-                </p>
-              </CardContent>
-            </Card>
+          {/* Dual CTAs */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link to="/post-job" className="flex-1">
+              <Button
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold shadow-md flex items-center justify-center gap-2 text-sm"
+                style={{ backgroundColor: CTA_GREEN }}
+              >
+                Post a Job
+                <ArrowRight size={16} />
+              </Button>
+            </Link>
+            <Link to="/jobs" className="flex-1">
+              <Button className="w-full bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-100 font-semibold flex items-center justify-center gap-2 text-sm">
+                Browse Jobs
+                <ChevronRight size={16} />
+              </Button>
+            </Link>
           </div>
         </div>
 
-        <aside>
-          <Card className="border border-slate-200 rounded-2xl shadow-xl bg-white">
-            <CardHeader className="pb-6">
-              <CardTitle className="text-xl font-bold text-slate-900">
-                Trending Searches
+        {/* Right login card */}
+        <div className="relative">
+          <div className="absolute -inset-4 bg-gradient-to-tr from-blue-50 via-sky-50 to-slate-50 rounded-3xl blur-2xl -z-10" />
+          <Card className="relative border border-slate-100 shadow-xl rounded-3xl overflow-hidden bg-white">
+            <CardHeader className="p-6 pb-3 border-b border-slate-100">
+              <p className="text-xs font-semibold text-blue-600 uppercase tracking-[0.2em]">
+                Sign in with Google
+              </p>
+              <CardTitle className="text-2xl font-bold text-slate-900">
+                Sign in as{" "}
+                {loginRole === "candidate" ? "Candidate" : "Recruiter"}
               </CardTitle>
+              <p className="text-sm text-slate-500">
+                Use your Google account to continue. No password needed.
+              </p>
             </CardHeader>
-            <CardContent className="pt-0 pb-8">
-              <ul className="grid grid-cols-2 gap-4 text-base text-slate-700">
-                <li className="hover:text-orange-600 cursor-pointer transition-colors">Internships</li>
-                <li className="hover:text-orange-600 cursor-pointer transition-colors">Remote Fresher Roles</li>
-                <li className="hover:text-orange-600 cursor-pointer transition-colors">Software (0–2 yrs)</li>
-                <li className="hover:text-orange-600 cursor-pointer transition-colors">Data Analyst</li>
-                <li className="hover:text-orange-600 cursor-pointer transition-colors">UI/UX Designer</li>
-                <li className="hover:text-orange-600 cursor-pointer transition-colors">Business Analyst</li>
-                <li className="hover:text-orange-600 cursor-pointer transition-colors">Marketing Associate</li>
-                <li className="hover:text-orange-600 cursor-pointer transition-colors">Customer Support</li>
-              </ul>
+            <CardContent className="p-6 space-y-4">
+              <div className="inline-flex rounded-2xl border border-slate-200 p-1 bg-slate-50 w-full">
+                {["candidate", "recruiter"].map((role) => (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => setLoginRole(role)}
+                    className={`flex-1 text-sm font-semibold rounded-xl py-2 transition-colors ${
+                      loginRole === role
+                        ? "bg-white shadow text-blue-700"
+                        : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    {role === "candidate" ? "Job seeker" : "Recruiter"}
+                  </button>
+                ))}
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setShowLoginModal(true)}
+                  className="w-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 font-medium rounded-2xl py-2.5 flex items-center justify-center gap-3"
+                >
+                  <FcGoogle size={20} />
+                  <span className="text-sm">Sign in with Google</span>
+                </button>
+
+                <p className="text-[11px] text-center text-slate-500">
+                  Currently signing in as{" "}
+                  <span className="font-semibold">
+                    {loginRole === "candidate" ? "Candidate" : "Recruiter"}
+                  </span>
+                  .
+                </p>
+              </div>
             </CardContent>
           </Card>
-        </aside>
+        </div>
       </div>
+      {showLoginModal && (
+        <SignInModal
+          role={loginRole === "candidate" ? "user" : "recruiter"}
+          onClose={() => setShowLoginModal(false)}
+        />
+      )}
     </section>
   );
 }
+
+// FEATURED JOB CARD
 function JobCard({ job }) {
   return (
-    <Card className="group border border-slate-200 rounded-2xl shadow-md hover:shadow-2xl hover:border-orange-200 transition-all duration-300 bg-white overflow-hidden cursor-pointer">
-      <CardContent className="p-6">
-        <div className="space-y-5">
-          {/* Header with logo placeholder */}
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-100 to-orange-50 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-              <Briefcase size={24} className="text-orange-600" />
+    <Card className="group border border-slate-200 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-200 bg-white overflow-hidden">
+      <CardContent className="p-5 space-y-4">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-700">
+            <Building2 size={20} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-xl font-bold text-slate-900 mb-1 group-hover:text-orange-600 transition-colors line-clamp-2">
-                {job.title.charAt(0).toUpperCase() + job.title.slice(1)}
+            <h3 className="text-base font-semibold text-slate-900 group-hover:text-blue-700 line-clamp-2">
+              {job.title}
               </h3>
-              <p className="text-base font-medium text-slate-600">{job.company}</p>
+            <p className="text-sm text-slate-600">{job.company}</p>
             </div>
           </div>
 
-          {/* Enhanced meta information */}
-          <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-600">
-            <div className="flex items-center gap-1.5">
-              <MapPin size={16} className="text-slate-400" />
-              <span>{job.location}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Briefcase size={16} className="text-slate-400" />
-              <span>{job.type}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Clock size={16} className="text-slate-400" />
-              <span>{job.posted}</span>
-            </div>
-          </div>
-
-          {/* Improved tags section */}
-          <div className="min-h-[32px]">
-            {job.tags && job.tags.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {job.tags.slice(0, 3).map((t, i) => (
-                  <span
-                    key={i}
-                    className="px-3 py-1.5 text-xs font-semibold rounded-full bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 transition-colors"
-                  >
-                    {t}
+        <div className="flex flex-wrap gap-2 text-xs text-slate-600">
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-slate-50 border border-slate-100">
+            <MapPin size={14} className="text-slate-400" />
+            {job.location}
+          </span>
+          {job.salary && (
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-slate-50 border border-slate-100">
+              ₹ {job.salary}
+            </span>
+          )}
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700">
+            <Briefcase size={14} className="text-blue-500" />
+            {job.type}
                   </span>
-                ))}
-                {job.tags.length > 3 && (
-                  <span className="px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-600">
-                    +{job.tags.length - 3} more
+          {job.posted && (
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-slate-50 border border-slate-100">
+              <Clock size={14} className="text-slate-400" />
+              {job.posted}
                   </span>
-                )}
-              </div>
-            ) : (
-              <span className="text-sm text-slate-400 italic">No skills listed</span>
             )}
           </div>
 
-          {/* Refined action buttons */}
-          <div className="flex gap-3 pt-2 border-t border-slate-100">
-            <Button className="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-2.5 font-semibold shadow-sm hover:shadow-md transition-all">
-              Apply Now
+        <div className="flex gap-2 pt-2">
+          <Button
+            className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold shadow-sm hover:shadow-md"
+            style={{ backgroundColor: CTA_GREEN }}
+          >
+            Quick Apply
             </Button>
             <Link
               to={`/jobs/${job.id}`}
-              className="flex-1 flex items-center justify-center text-slate-700 hover:text-orange-600 hover:bg-orange-50 border border-slate-300 hover:border-orange-300 py-2.5 rounded-lg font-semibold transition-all"
+            className="flex-1 inline-flex items-center justify-center text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-100 transition-colors"
             >
-              Details
+            View Details
             </Link>
-          </div>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-// Jobs Listing Component
-function JobsListing() {
+function FeaturedJobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     let mounted = true;
-
     async function fetchJobs() {
       try {
         setLoading(true);
         const { data } = await api.get("/jobs", { params: { limit: 8 } });
-
         if (!mounted) return;
-
-        if (data.ok && Array.isArray(data.jobs)) {
+        if (data?.ok && Array.isArray(data.jobs)) {
           const mapped = data.jobs.map((j) => ({
             id: j.id,
             title: j.title,
             company: j.company,
             location: j.location || "Remote",
-            skills: j.skills || [], // Use skills field
+            salary: j.salaryRange || j.salary || "",
+            type: j.type || "Full-time",
             posted: timeAgo(j.createdAt),
-            type: j.type,
-            experience: j.experience || j.experiance,
-            logoPath: j.logoPath,
           }));
           setJobs(mapped);
         } else {
@@ -320,81 +488,347 @@ function JobsListing() {
         setLoading(false);
       }
     }
-
     fetchJobs();
     return () => {
       mounted = false;
     };
   }, []);
 
-  // Jobs Listing JSX
   return (
-    <main className="bg-slate-50">
-      <div className="max-w-7xl mx-auto px-6 py-20">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-12">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900">
-            Featured Internships & Entry-Level Roles
+    <section className="bg-slate-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+              Latest jobs near you
           </h2>
+            <p className="text-sm sm:text-base text-slate-600 mt-1">
+              Simple cards with title, company and salary so you can decide quickly.
+            </p>
+          </div>
           <Link
             to="/jobs"
-            className="inline-flex items-center justify-center px-8 py-4 text-lg border-2 border-orange-500 text-orange-600 rounded-full hover:bg-orange-50 font-semibold transition-colors"
+            className="inline-flex items-center justify-center px-5 py-2.5 text-sm border border-blue-200 text-blue-700 rounded-full hover:bg-blue-50 font-semibold transition-colors"
           >
-            View All Jobs
+            View all jobs
+            <ChevronRight size={16} className="ml-1" />
           </Link>
         </div>
 
         {loading ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {Array.from({ length: 8 }).map((_, i) => (
-              <Card key={i} className="border border-slate-200 rounded-2xl shadow-lg animate-pulse">
-                <CardContent className="p-6 space-y-4">
-                  <div className="h-6 bg-slate-200 rounded"></div>
-                  <div className="h-4 bg-slate-200 rounded w-3/4"></div>
-                  <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+              <Card
+                key={i}
+                className="border border-slate-200 rounded-2xl shadow-sm animate-pulse bg-white"
+              >
+                <CardContent className="p-5 space-y-4">
+                  <div className="h-4 bg-slate-200 rounded w-2/3" />
+                  <div className="h-3 bg-slate-200 rounded w-1/3" />
                   <div className="flex gap-2">
-                    <div className="h-6 bg-slate-200 rounded-full w-16"></div>
-                    <div className="h-6 bg-slate-200 rounded-full w-20"></div>
+                    <div className="h-6 bg-slate-200 rounded-full w-16" />
+                    <div className="h-6 bg-slate-200 rounded-full w-20" />
                   </div>
-                  <div className="flex gap-3">
-                    <div className="h-10 bg-slate-200 rounded flex-1"></div>
-                    <div className="h-10 bg-slate-200 rounded flex-1"></div>
+                  <div className="flex gap-2">
+                    <div className="h-8 bg-slate-200 rounded flex-1" />
+                    <div className="h-8 bg-slate-200 rounded flex-1" />
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         ) : error ? (
-          <div className="text-center py-20">
-            <p className="text-2xl text-rose-600 font-semibold">{error}</p>
+          <div className="text-center py-10">
+            <p className="text-sm text-rose-600 font-semibold">
+              {error || "Could not load jobs right now."}
+            </p>
           </div>
         ) : jobs.length ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {jobs.map((job) => (
               <JobCard key={job.id} job={job} />
             ))}
           </div>
         ) : (
-          <div className="text-center py-20">
-            <p className="text-2xl text-slate-500 font-semibold">No jobs found.</p>
+          <div className="text-center py-10">
+            <p className="text-sm text-slate-500 font-semibold">
+              No jobs found at the moment. Check back soon.
+            </p>
           </div>
         )}
+      </div>
+    </section>
+  );
+}
 
-        <div className="mt-16 flex justify-center">
-          <Button className="px-10 py-4 bg-slate-900 hover:bg-slate-800 text-white text-lg font-semibold shadow-lg">
-            Discover Your Next Opportunity
-          </Button>
+// HOW IT WORKS – TABS
+function HowItWorks() {
+  const [tab, setTab] = useState("seekers");
+  const seekerSteps = [
+    { title: "Search", desc: "Find jobs by city, role or skill." },
+    { title: "Apply", desc: "Send your details in a few taps." },
+    { title: "Interview", desc: "Talk to the recruiter or company." },
+    { title: "Get hired", desc: "Join and start earning faster." },
+  ];
+  const recruiterSteps = [
+    { title: "Post job", desc: "Share your opening with basic details." },
+    { title: "Review", desc: "See matching candidates in one list." },
+    { title: "Interview", desc: "Call or message shortlisted profiles." },
+    { title: "Hire", desc: "Close the role and grow your team." },
+  ];
+  const steps = tab === "seekers" ? seekerSteps : recruiterSteps;
+
+  return (
+    <section style={{ backgroundColor: LIGHT_GREY_BG }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+        <div className="max-w-2xl mb-8">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-2">
+            How it works
+          </h2>
+          <p className="text-sm sm:text-base text-slate-600">
+            Same simple flow for job seekers and recruiters. No confusing steps.
+          </p>
+        </div>
+
+        <div className="mb-6 inline-flex rounded-full bg-white border border-slate-200 p-1">
+          <button
+            type="button"
+            onClick={() => setTab("seekers")}
+            className={`px-4 sm:px-6 py-1.5 text-xs sm:text-sm font-semibold rounded-full transition-colors ${
+              tab === "seekers"
+                ? "bg-blue-600 text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            For Job Seekers
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("recruiters")}
+            className={`px-4 sm:px-6 py-1.5 text-xs sm:text-sm font-semibold rounded-full transition-colors ${
+              tab === "recruiters"
+                ? "bg-blue-600 text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            For Recruiters
+          </button>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {steps.map((step, index) => (
+            <Card
+              key={step.title}
+              className="border border-slate-200 rounded-2xl bg-white shadow-sm"
+            >
+              <CardContent className="p-5 space-y-3">
+                <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">
+                  {index + 1}
+                </div>
+                <h3 className="text-sm font-semibold text-slate-900">
+                  {step.title}
+                </h3>
+                <p className="text-xs text-slate-600">{step.desc}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
-    </main>
+    </section>
+  );
+}
+
+// CATEGORIES
+function Categories() {
+  const navigate = useNavigate();
+
+  const handleClick = (categoryId) => {
+    navigate(`/jobs?category=${encodeURIComponent(categoryId)}`);
+  };
+
+  return (
+    <section className="bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+              Browse by category
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600 mt-1">
+              Tap a card to see jobs only from that category.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {jobCategories.map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => handleClick(cat.id)}
+              className="group text-left"
+            >
+              <Card className="h-full border border-slate-200 rounded-2xl shadow-sm group-hover:shadow-lg group-hover:-translate-y-1 transition-all bg-slate-50/60">
+                <CardContent className="p-5 flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-blue-700 border border-blue-100">
+                    {cat.icon}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-slate-900">
+                      {cat.label}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {cat.count.toLocaleString()} open roles
+                    </p>
+                  </div>
+                  <ChevronRight className="text-slate-300 group-hover:text-blue-500 transition-colors" />
+                </CardContent>
+              </Card>
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// WHY CHOOSE US
+function WhyChooseUs() {
+  const items = [
+    {
+      title: "Simple job search",
+      desc: "Clean cards and filters so you can decide quickly.",
+    },
+    {
+      title: "Smart filters",
+      desc: "Filter by city, category, salary range and more.",
+    },
+    {
+      title: "Verified companies",
+      desc: "We try to show jobs from trusted brands and partners.",
+    },
+    {
+      title: "Quick apply",
+      desc: "Save your basic details and reuse them for each job.",
+    },
+    {
+      title: "Profile & resume help",
+      desc: "Get simple tips to improve your profile and resume.",
+    },
+    {
+      title: "Alerts for new jobs",
+      desc: "Turn on alerts so you never miss a matching job.",
+    },
+  ];
+
+  return (
+    <section className="bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+        <div className="max-w-2xl mb-8">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-2">
+            Why people like using JobSpark
+          </h2>
+          <p className="text-sm sm:text-base text-slate-600">
+            Short steps, clear cards and simple language for every user.
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {items.map((item) => (
+            <Card
+              key={item.title}
+              className="border border-slate-200 rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all"
+            >
+              <CardContent className="p-5 space-y-3">
+                <CheckCircle2 className="text-green-600" />
+                <h3 className="text-sm font-semibold text-slate-900">
+                  {item.title}
+                </h3>
+                <p className="text-xs text-slate-600">{item.desc}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// CTA SECTION
+function DualCTA() {
+  return (
+    <section className="bg-gradient-to-r from-blue-600 via-blue-700 to-sky-600 text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
+        <div className="grid lg:grid-cols-2 gap-8 items-center">
+          <div className="space-y-3">
+            <p className="text-xs font-semibold tracking-[0.22em] uppercase text-blue-100">
+              Ready to get started?
+            </p>
+            <h2 className="text-2xl sm:text-3xl font-extrabold leading-tight">
+              One platform. Two journeys. Built for modern hiring.
+            </h2>
+            <p className="text-sm sm:text-base text-blue-100/80 max-w-xl">
+              Whether you’re scaling your team or planning your next move, JobSpark
+              keeps everything organised, fast, and human.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Card className="bg-white/5 border border-white/20 rounded-2xl shadow-lg">
+              <CardContent className="p-5 space-y-3">
+                <p className="text-xs font-semibold text-blue-100 uppercase">
+                  For recruiters
+                </p>
+                <h3 className="text-lg font-bold">Start hiring today</h3>
+                <p className="text-xs text-blue-100/80">
+                  Publish roles, manage applicants, and collaborate with your team.
+                </p>
+                <Link to="/post-job">
+                  <Button
+                    className="mt-2 w-full bg-white text-blue-700 hover:bg-blue-50 font-semibold flex items-center justify-center gap-1.5"
+                  >
+                    Start Hiring
+                    <ArrowRight size={16} />
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/5 border border-white/20 rounded-2xl shadow-lg">
+              <CardContent className="p-5 space-y-3">
+                <p className="text-xs font-semibold text-blue-100 uppercase">
+                  For candidates
+                </p>
+                <h3 className="text-lg font-bold">Upload your resume</h3>
+                <p className="text-xs text-blue-100/80">
+                  Build a profile once and apply to multiple roles in minutes.
+                </p>
+                <Link to="/profile/upload-resume">
+                  <Button className="mt-2 w-full bg-green-500 hover:bg-green-600 text-white font-semibold flex items-center justify-center gap-1.5">
+                    Upload Resume
+                    <ChevronRight size={16} />
+          </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 text-gray-900">
+    <div className="min-h-screen flex flex-col bg-white text-slate-900">
+      <main className="flex-1">
       <Hero />
-      <JobsListing />
-      <WhyHireSpark />
+        <Categories />
+        <FeaturedJobs />
+        <HowItWorks />
+        <WhyChooseUs />
+        <DualCTA />
+      </main>
     </div>
   );
 }
