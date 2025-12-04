@@ -7,7 +7,7 @@ import {
   GraduationCap,
   Bookmark,
   BookmarkCheck,
-  Tag,
+  Clock,
 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
@@ -20,6 +20,7 @@ export default function Jobs() {
   const [location, setLocation] = useState("");
   const [exp, setExp] = useState("");
   const [type, setType] = useState("");
+  const [mode, setMode] = useState("");
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -59,7 +60,7 @@ export default function Jobs() {
             experience: j.experience || j.experiance || j.exp || "",
             skills: j.skills || j.tags || [], // Use skills field
             salary: j.salary || "",
-            description: j.description || ""
+            description: j.description || "",
           }));
           setJobList(mapped);
           setFiltered(mapped);
@@ -134,15 +135,17 @@ export default function Jobs() {
       );
     }
 
-    if (exp && exp !== "Experience")
+    if (exp && exp !== "Experience") {
       data = data.filter((job) =>
-        (job.exp || "").toLowerCase().includes(exp.toLowerCase())
+        (job.experience || "").toLowerCase().includes(exp.toLowerCase())
       );
+    }
 
-    if (mode && mode !== "Work mode")
+    if (mode && mode !== "Work mode") {
       data = data.filter((job) =>
         (job.mode || "").toLowerCase().includes(mode.toLowerCase())
       );
+    }
 
     setFiltered(data);
     setPage(1);
@@ -319,7 +322,7 @@ export default function Jobs() {
                             <Building2 size={16} /> {r.company}
                           </span>
                           <span className="inline-flex items-center gap-1.5">
-                            <MapPin size={16} /> {r.loc}
+                            <MapPin size={16} /> {r.location}
                           </span>
                         </div>
                       </div>
@@ -332,14 +335,14 @@ export default function Jobs() {
                           <Clock size={14} /> {r.mode}
                         </span>
                         <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 border border-slate-200">
-                          <GraduationCap size={14} /> {r.exp}
+                          <GraduationCap size={14} /> {r.experience}
                         </span>
                       </div>
                     </div>
 
-                    {r.tags && r.tags.length > 0 && (
+                    {r.skills && r.skills.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mt-1">
-                        {r.tags.map((t) => (
+                        {r.skills.map((t) => (
                           <Badge
                             key={t}
                             variant="outline"
