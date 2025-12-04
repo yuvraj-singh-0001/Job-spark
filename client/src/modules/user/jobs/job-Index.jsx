@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import {
   Building2,
   MapPin,
   Briefcase,
-  Clock,
   GraduationCap,
+  Bookmark,
+  BookmarkCheck,
+  Tag,
 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
@@ -13,14 +16,24 @@ import api from "../../../components/apiconfig/apiconfig";
 
 export default function Jobs() {
   const [jobList, setJobList] = useState([]);
-
   const [role, setRole] = useState("");
   const [location, setLocation] = useState("");
   const [exp, setExp] = useState("");
-  const [mode, setMode] = useState("");
+  const [type, setType] = useState("");
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [savedStatus, setSavedStatus] = useState({});
+  
+  const locationHook = useLocation();
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(locationHook.search);
+    const searchQuery = searchParams.get('search') || '';
+    if (searchQuery) {
+      setRole(searchQuery);
+    }
+  }, [locationHook]);
 
   const pageSize = 6;
   const [page, setPage] = useState(1);
@@ -37,17 +50,21 @@ export default function Jobs() {
 
         if (data.ok && Array.isArray(data.jobs)) {
           const mapped = data.jobs.map((j) => ({
-            id: j.id,
-            title: j.title,
-            company: j.company,
-            loc: j.location,
-            mode: j.type,
-            exp: j.experiance,
-            type: j.type,
-            tags: j.tags || [],
+            id: j._id || j.id,
+            title: j.title || j.jobTitle || "",
+            company: j.company || j.companyName || "",
+            location: j.location || j.jobLocation || "",
+            type: j.type || j.jobType || "",
+            mode: j.mode || j.workMode || j.workType || "",
+            experience: j.experience || j.experiance || j.exp || "",
+            skills: j.skills || j.tags || [], // Use skills field
+            salary: j.salary || "",
+            description: j.description || ""
           }));
           setJobList(mapped);
           setFiltered(mapped);
+
+          await checkSavedStatusForJobs(mapped);
         }
       } catch (err) {
         setError((err && err.message) || "Something went wrong");
@@ -61,23 +78,61 @@ export default function Jobs() {
     };
   }, []);
 
+  const checkSavedStatusForJobs = async (jobs) => {
+    const status = {};
+    for (const job of jobs) {
+      try {
+        const response = await api.get(`/jobs/save/${job.id}`);
+        status[job.id] = response.data.isSaved;
+      } catch (error) {
+        console.error(`Error checking saved status for job ${job.id}:`, error);
+        status[job.id] = false;
+      }
+    }
+    setSavedStatus(status);
+  };
+
+  const toggleSaveJob = async (jobId, isCurrentlySaved) => {
+    try {
+      if (isCurrentlySaved) {
+        await api.delete(`/jobs/save/${jobId}`);
+        setSavedStatus(prev => ({ ...prev, [jobId]: false }));
+      } else {
+        await api.post(`/jobs/save/${jobId}`);
+        setSavedStatus(prev => ({ ...prev, [jobId]: true }));
+      }
+    } catch (error) {
+      console.error('Error toggling save:', error);
+      alert('Error saving job: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
   const handleSearch = () => {
-    let data = jobList;
+    if (jobList.length === 0) return;
+
+    let data = [...jobList];
 
     const roleTrim = role.trim().toLowerCase();
     const locationTrim = location.trim().toLowerCase();
 
-    if (roleTrim !== "")
-      data = data.filter(
-        (job) =>
-          job.title.toLowerCase().includes(roleTrim) ||
-          job.tags.join(" ").toLowerCase().includes(roleTrim)
-      );
+    if (roleTrim !== "") {
+      data = data.filter((job) => {
+        const titleMatch = job.title?.toLowerCase().includes(roleTrim) || false;
+        const companyMatch = job.company?.toLowerCase().includes(roleTrim) || false;
+        const skillsMatch = job.skills?.some(skill => 
+          skill?.toLowerCase().includes(roleTrim)
+        ) || false;
+        const descriptionMatch = job.description?.toLowerCase().includes(roleTrim) || false;
+        
+        return titleMatch || companyMatch || skillsMatch || descriptionMatch;
+      });
+    }
 
-    if (locationTrim !== "")
+    if (locationTrim !== "") {
       data = data.filter((job) =>
-        job.loc.toLowerCase().includes(locationTrim)
+        job.location?.toLowerCase().includes(locationTrim)
       );
+    }
 
     if (exp && exp !== "Experience")
       data = data.filter((job) =>
@@ -91,6 +146,15 @@ export default function Jobs() {
 
     setFiltered(data);
     setPage(1);
+    
+    const params = new URLSearchParams();
+    if (roleTrim) params.set('search', roleTrim);
+    if (locationTrim) params.set('location', locationTrim);
+    if (exp && exp !== "Experience") params.set('experience', exp);
+    if (type && type !== "Type") params.set('type', type);
+    
+    const newUrl = params.toString() ? `/jobs?${params.toString()}` : '/jobs';
+    window.history.replaceState({}, '', newUrl);
   };
 
   useEffect(() => {
@@ -101,7 +165,11 @@ export default function Jobs() {
   const totalPages = Math.ceil(filtered.length / pageSize) || 1;
 
   useEffect(() => {
-    if (page > totalPages) setPage(totalPages || 1);
+    if (page > totalPages && totalPages > 0) {
+      setPage(totalPages);
+    } else if (totalPages === 0) {
+      setPage(1);
+    }
   }, [filtered, totalPages, page]);
 
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);

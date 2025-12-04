@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-// Adjust this import to match where your apiconfig file lives in the frontend project
-// Example: import api from "../../components/apiconfig/apiconfig";
-import api from "../../../components/apiconfig/apiconfig";
+import api from "../../../components/apiconfig/apiconfig.jsx";
+import { Input } from "../../../components/ui/input";
+import { Button } from "../../../components/ui/button";
+import { Card, CardContent } from "../../../components/ui/card";
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
@@ -25,7 +26,6 @@ export default function ProfilePage() {
     portfolio_url: "",
   });
 
-  // local file selection for user convenience (not automatically uploaded)
   const [selectedResumeFile, setSelectedResumeFile] = useState(null);
 
   useEffect(() => {
@@ -35,29 +35,22 @@ export default function ProfilePage() {
   async function loadProfile() {
     setLoading(true);
     setError(null);
-    // Try to fetch existing profile (optional)
     try {
       const res = await api.get("/profile/user");
-
       if (res?.data?.success && res.data.user) {
         setUser(res.data.user);
         setForm(mapUserToForm(res.data.user));
       }
     } catch (err) {
-      // Non-fatal: keep user as null so frontend can create profile via PUT
-      console.warn("Could not load profile (GET /api/profile/user) — continuing:", err?.response?.status || err.message);
+      console.warn("Could not load profile:", err?.response?.status || err.message);
     } finally {
-      // After attempting profile fetch, always try authcheck to populate user_id
       try {
         const auth = await api.get('/auth/authcheck');
         const authUser = auth?.data?.user;
         if (authUser) {
           setForm((s) => (s.user_id ? s : { ...s, user_id: authUser.id || authUser.sub || s.user_id }));
         }
-      } catch (ignore) {
-        // Non-fatal: authcheck may fail if session expired; it's okay to proceed.
-      }
-
+      } catch (ignore) {}
       setLoading(false);
     }
   }
@@ -86,19 +79,10 @@ export default function ProfilePage() {
   function handleFileSelect(e) {
     const file = e.target.files?.[0] || null;
     setSelectedResumeFile(file);
-    // show filename in the resume_path field as a hint; actual upload depends on your backend
     setForm((s) => ({ ...s, resume_path: file ? file.name : s.resume_path }));
   }
 
   async function uploadResume(file) {
-    // Placeholder helper. By default your API expects `resume_path` string.
-    // If you implement a resume upload endpoint, send FormData here and return the uploaded file path/url.
-    // Example implementation (requires backend /api/profile/upload handling):
-    // const fd = new FormData(); fd.append('resume', file);
-    // const r = await api.post('/profile/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-    // return r.data?.path;
-
-    // For now, return the filename so your backend can store that string.
     return file ? file.name : null;
   }
 
@@ -108,7 +92,6 @@ export default function ProfilePage() {
     setError(null);
 
     try {
-      // If we don't have a user_id yet, do a final auth-check before attempting to save.
       let payloadUserId = form.user_id;
       if (!payloadUserId) {
         try {
@@ -116,7 +99,6 @@ export default function ProfilePage() {
           const authUser = auth?.data?.user;
           if (authUser) {
             payloadUserId = authUser.id || authUser.sub || payloadUserId;
-            // Update the form as well to reflect the auth user id
             setForm((s) => ({ ...s, user_id: payloadUserId }));
           } else {
             setError('Cannot save profile: missing user session. Please sign in again.');
@@ -129,11 +111,9 @@ export default function ProfilePage() {
           return;
         }
       }
+      
       let resumePathToSend = form.resume_path;
-
       if (selectedResumeFile) {
-        // Attempt to upload if user selected a new file. If your backend doesn't support file uploads,
-        // uploadResume will simply return file.name and we will send that to the API.
         resumePathToSend = await uploadResume(selectedResumeFile);
       }
 
@@ -157,6 +137,7 @@ export default function ProfilePage() {
         setUser(res.data.user || payload);
         setForm(mapUserToForm(res.data.user || payload));
         setIsEditing(false);
+        setSelectedResumeFile(null);
       } else {
         setError(res?.data?.message || "Unknown server response");
       }
@@ -178,59 +159,211 @@ export default function ProfilePage() {
     setSelectedResumeFile(null);
   }
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold">My Profile</h1>
-        <p className="text-sm text-gray-600 mt-1">View and edit your profile information.</p>
-      </header>
-
-      {loading ? (
-        <div className="p-6 bg-white rounded shadow text-center">Loading profile…</div>
-      ) : (
-        <div className="bg-white shadow rounded-lg overflow-hidden">
-          <div className="p-6">
-            {!isEditing ? (
-              <ProfileView user={user} onEdit={handleEditClick} />
-            ) : (
-              <form onSubmit={handleSave} className="space-y-6">
-                {error && (
-                  <div className="text-sm text-red-600">{error}</div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input label="Full name" name="full_name" value={form.full_name} onChange={handleChange} required />
-                  <Input label="Phone" name="phone" value={form.phone} onChange={handleChange} required />
-                  <Input label="City" name="city" value={form.city} onChange={handleChange} />
-                  <Input label="State" name="state" value={form.state} onChange={handleChange} />
-                  <Input label="Country" name="country" value={form.country} onChange={handleChange} />
-                  <Input label="Experience (years)" name="experience_years" value={form.experience_years} onChange={handleChange} type="number" min="0" />
-                  <Input label="Highest education" name="highest_education" value={form.highest_education} onChange={handleChange} />
-                  <Input label="LinkedIn URL" name="linkedin_url" value={form.linkedin_url} onChange={handleChange} />
-                  <Input label="Portfolio URL" name="portfolio_url" value={form.portfolio_url} onChange={handleChange} />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Resume (optional)</label>
-                  <div className="mt-1 flex items-center gap-4">
-                    <input type="file" accept=".pdf,.doc,.docx" onChange={handleFileSelect} />
-                    <div className="text-sm text-gray-600">{selectedResumeFile ? selectedResumeFile.name : (form.resume_path || 'No resume uploaded')}</div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <button type="submit" disabled={saving} className="px-4 py-2 bg-blue-600 text-white rounded shadow-sm hover:bg-blue-700 disabled:opacity-60">
-                    {saving ? 'Saving...' : 'Save profile'}
-                  </button>
-                  <button type="button" onClick={handleCancel} className="px-4 py-2 border rounded">
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            )}
+    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      {/* Card Header */}
+      <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">Profile Information</h3>
+            <p className="text-sm text-slate-600 mt-1">Update your professional details and contact information</p>
           </div>
+          {!isEditing && (
+            <Button
+              onClick={handleEditClick}
+              className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 text-sm"
+            >
+              Edit Profile
+            </Button>
+          )}
         </div>
-      )}
+      </div>
+
+      <CardContent className="p-6">
+        {!isEditing ? (
+          <ProfileView user={user} onEdit={handleEditClick} />
+        ) : (
+          <form onSubmit={handleSave} className="space-y-6">
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {error}
+              </div>
+            )}
+
+            {/* Personal Information */}
+            <div>
+              <h4 className="text-sm font-semibold text-slate-900 mb-4">Personal Information</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-2">Full Name *</label>
+                  <Input 
+                    name="full_name" 
+                    value={form.full_name} 
+                    onChange={handleChange} 
+                    required
+                    placeholder="Enter your full name"
+                    className="text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-2">Phone *</label>
+                  <Input 
+                    name="phone" 
+                    value={form.phone} 
+                    onChange={handleChange} 
+                    required
+                    placeholder="Enter your phone number"
+                    className="text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-2">Highest Education</label>
+                  <Input 
+                    name="highest_education" 
+                    value={form.highest_education} 
+                    onChange={handleChange}
+                    placeholder="e.g., Bachelor's Degree"
+                    className="text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-2">Experience (years)</label>
+                  <Input 
+                    name="experience_years" 
+                    value={form.experience_years} 
+                    onChange={handleChange} 
+                    type="number" 
+                    min="0"
+                    placeholder="Years of experience"
+                    className="text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Location Information */}
+            <div>
+              <h4 className="text-sm font-semibold text-slate-900 mb-4">Location Information</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-2">City</label>
+                  <Input 
+                    name="city" 
+                    value={form.city} 
+                    onChange={handleChange}
+                    placeholder="Enter your city"
+                    className="text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-2">State</label>
+                  <Input 
+                    name="state" 
+                    value={form.state} 
+                    onChange={handleChange}
+                    placeholder="Enter your state"
+                    className="text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-2">Country</label>
+                  <Input 
+                    name="country" 
+                    value={form.country} 
+                    onChange={handleChange}
+                    placeholder="Enter your country"
+                    className="text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Professional Links */}
+            <div>
+              <h4 className="text-sm font-semibold text-slate-900 mb-4">Professional Links</h4>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-2">LinkedIn URL</label>
+                  <Input 
+                    name="linkedin_url" 
+                    value={form.linkedin_url} 
+                    onChange={handleChange} 
+                    placeholder="https://linkedin.com/in/yourprofile"
+                    type="url"
+                    className="text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-2">Portfolio URL</label>
+                  <Input 
+                    name="portfolio_url" 
+                    value={form.portfolio_url} 
+                    onChange={handleChange} 
+                    placeholder="https://yourportfolio.com"
+                    type="url"
+                    className="text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Resume Section */}
+            <div>
+              <h4 className="text-sm font-semibold text-slate-900 mb-4">Resume Upload</h4>
+              <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 hover:border-slate-400 transition-colors bg-slate-50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 mr-3">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">
+                        {selectedResumeFile ? selectedResumeFile.name : (form.resume_path || 'No resume uploaded')}
+                      </p>
+                      <p className="text-xs text-slate-500">PDF, DOC, DOCX up to 10MB</p>
+                    </div>
+                  </div>
+                  <label className="cursor-pointer">
+                    <span className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm font-medium">
+                      Choose File
+                    </span>
+                    <input type="file" accept=".pdf,.doc,.docx" onChange={handleFileSelect} className="hidden" />
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-200">
+              <Button
+                type="button"
+                onClick={handleCancel}
+                variant="outline"
+                className="border-slate-300 text-slate-700 hover:bg-slate-50 px-4 py-2 text-sm"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={saving}
+                className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 text-sm font-medium"
+              >
+                {saving ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </form>
+        )}
+      </CardContent>
     </div>
   );
 }
@@ -238,83 +371,130 @@ export default function ProfilePage() {
 function ProfileView({ user, onEdit }) {
   if (!user) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-700 mb-4">No profile found. Create your profile to get started.</p>
-        <button onClick={onEdit} className="px-4 py-2 bg-green-600 text-white rounded">Create profile</button>
+      <div className="text-center py-8">
+        <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mx-auto mb-4">
+          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        </div>
+        <h3 className="text-lg font-semibold text-slate-900 mb-2">No Profile Found</h3>
+        <p className="text-slate-600 text-sm mb-4">Create your professional profile to get started</p>
+        <Button 
+          onClick={onEdit} 
+          className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 text-sm"
+        >
+          Create Profile
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div className="md:col-span-1">
-        <div className="p-4 border rounded">
-          <h2 className="font-semibold text-lg">{user.full_name}</h2>
-          <p className="text-sm text-gray-600">{user.highest_education || '—'}</p>
-          <p className="mt-3 text-sm text-gray-700">Phone: {user.phone}</p>
-          <p className="text-sm text-gray-700">Experience: {user.experience_years ?? 0} years</p>
+    <div className="space-y-6">
+      {/* User Info Card */}
+      <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-xl">
+            {user.full_name ? user.full_name.charAt(0).toUpperCase() : "U"}
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-slate-900 text-lg">{user.full_name}</h3>
+            <p className="text-slate-600 text-sm">{user.highest_education || "Add education"}</p>
+            <div className="flex items-center gap-4 mt-2 text-sm">
+              <span className="text-slate-700">{user.experience_years ?? 0} years experience</span>
+              <span className="text-slate-700">{user.phone || "No phone"}</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
-          <div className="mt-4 flex gap-2">
-            <button onClick={onEdit} className="px-3 py-1 bg-blue-600 text-white rounded text-sm">Edit</button>
+      {/* Info Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h4 className="text-sm font-semibold text-slate-900 mb-3">Personal Information</h4>
+          <div className="space-y-3">
+            <InfoItem label="Full Name" value={user.full_name} />
+            <InfoItem label="Phone" value={user.phone} />
+            <InfoItem label="Education" value={user.highest_education} />
+            <InfoItem label="Experience" value={user.experience_years ? `${user.experience_years} years` : null} />
           </div>
         </div>
 
-        <div className="mt-4 p-4 border rounded">
-          <h3 className="font-medium text-sm">Resume</h3>
-          {user.resume_path ? (
-            <a href={user.resume_path} target="_blank" rel="noreferrer" className="text-sm text-blue-600 underline">View resume</a>
-          ) : (
-            <p className="text-sm text-gray-600">Not uploaded</p>
-          )}
+        <div>
+          <h4 className="text-sm font-semibold text-slate-900 mb-3">Location Information</h4>
+          <div className="space-y-3">
+            <InfoItem label="City" value={user.city} />
+            <InfoItem label="State" value={user.state} />
+            <InfoItem label="Country" value={user.country} />
+          </div>
         </div>
       </div>
 
-      <div className="md:col-span-2">
-        <div className="p-4 border rounded mb-4">
-          <h3 className="font-medium">Contact & Location</h3>
-          <p className="text-sm text-gray-700 mt-2">City: {user.city || '—'}</p>
-          <p className="text-sm text-gray-700">State: {user.state || '—'}</p>
-          <p className="text-sm text-gray-700">Country: {user.country || '—'}</p>
-        </div>
-
-        <div className="p-4 border rounded">
-          <h3 className="font-medium">Links</h3>
-          <ul className="mt-2 space-y-2">
-            <li>
-              <strong className="mr-2">LinkedIn:</strong>
-              {user.linkedin_url ? (
-                <a href={user.linkedin_url} target="_blank" rel="noreferrer" className="text-blue-600 underline">{user.linkedin_url}</a>
-              ) : (
-                <span className="text-gray-600">—</span>
-              )}
-            </li>
-            <li>
-              <strong className="mr-2">Portfolio:</strong>
-              {user.portfolio_url ? (
-                <a href={user.portfolio_url} target="_blank" rel="noreferrer" className="text-blue-600 underline">{user.portfolio_url}</a>
-              ) : (
-                <span className="text-gray-600">—</span>
-              )}
-            </li>
-          </ul>
+      {/* Professional Links */}
+      <div>
+        <h4 className="text-sm font-semibold text-slate-900 mb-3">Professional Links</h4>
+        <div className="space-y-3">
+          <LinkItem 
+            label="LinkedIn" 
+            url={user.linkedin_url} 
+          />
+          <LinkItem 
+            label="Portfolio" 
+            url={user.portfolio_url} 
+          />
         </div>
       </div>
+
+      {/* Resume */}
+      {user.resume_path && (
+        <div className="border-t border-slate-200 pt-4">
+          <a 
+            href={user.resume_path} 
+            target="_blank" 
+            rel="noreferrer"
+            className="inline-flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            View Resume
+          </a>
+        </div>
+      )}
     </div>
   );
 }
 
-function Input({ label, name, value, onChange, type = "text", ...rest }) {
+function InfoItem({ label, value }) {
   return (
-    <label className="block">
-      <span className="text-sm font-medium text-gray-700">{label}</span>
-      <input
-        name={name}
-        value={value}
-        onChange={onChange}
-        type={type}
-        {...rest}
-        className="mt-1 block w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-offset-1"
-      />
-    </label>
+    <div className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
+      <span className="text-sm text-slate-600">{label}</span>
+      <span className="text-sm font-medium text-slate-900">{value || "—"}</span>
+    </div>
+  );
+}
+
+function LinkItem({ label, url }) {
+  if (!url) {
+    return (
+      <div className="flex items-center justify-between py-2 border-b border-slate-100">
+        <span className="text-sm text-slate-600">{label}</span>
+        <span className="text-sm text-slate-400">Not provided</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-between py-2 border-b border-slate-100">
+      <span className="text-sm text-slate-600">{label}</span>
+      <a 
+        href={url} 
+        target="_blank" 
+        rel="noreferrer"
+        className="text-sm text-blue-600 hover:text-blue-700 font-medium truncate max-w-[200px]"
+      >
+        {url}
+      </a>
+    </div>
   );
 }

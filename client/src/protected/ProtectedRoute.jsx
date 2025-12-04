@@ -1,24 +1,7 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import api from "../components/apiconfig/apiconfig.jsx";
+import api from "../components/apiconfig/apiconfig";
 
-/**
- * ProtectedRoute Component
- * -------------------------
- * Purpose:
- *   - Protect pages that require authentication.
- *   - Optionally restrict pages to specific roles (e.g., "recruiter").
- *
- * Props:
- *   - children → The page/component to render if authenticated.
- *   - roles → (optional) Array of allowed roles. Example: ["recruiter"].
- *
- * Flow:
- *   1. Check user session by calling GET /auth/authcheck.
- *   2. If not logged in → redirect to login page.
- *   3. If logged in but role is not allowed → redirect to correct dashboard.
- *   4. If logged in + valid role → render protected content.
- */
 export default function ProtectedRoute({ children, roles }) {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
@@ -41,16 +24,35 @@ export default function ProtectedRoute({ children, roles }) {
     };
   }, []);
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
+  // If user is not logged in, redirect to login
   if (!user) {
+    // For admin routes, redirect to admin signin
+    if (location.pathname.startsWith('/admin')) {
+      return <Navigate to="/admin/signin" replace state={{ from: location }} />;
+    }
     return <Navigate to="/sign-in" replace state={{ from: location }} />;
   }
 
   const role = user?.role;
+  
+  // Check if user has required role
   if (roles && roles.length > 0 && !roles.includes(role)) {
-    const fallback = role === "recruiter" ? "/recruiter-dashboard" : "/dashboard";
-    return <Navigate to={fallback} replace />;
+    // If user tries to access wrong role's pages, redirect them to appropriate page
+    if (role === "admin") {
+      return <Navigate to="/admin-dashboard" replace />;
+    } else if (role === "recruiter") {
+      return <Navigate to="/recruiter-dashboard" replace />;
+    } else {
+      return <Navigate to="/home" replace />;
+    }
   }
 
   // Authenticated + allowed role → Show protected content

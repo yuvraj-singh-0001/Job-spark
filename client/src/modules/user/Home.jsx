@@ -1,6 +1,5 @@
-// Home.jsx
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../../components/apiconfig/apiconfig";
 import { Search, MapPin, Clock, Briefcase } from "lucide-react";
 import { Button } from "../../components/ui/button";
@@ -11,19 +10,21 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 
+// Home Page Component for JobSpark
 const fallbackJobs = [
   {
     id: "s1",
     title: "Software Engineer Intern",
     company: "CloudMints",
     location: "Remote (IN)",
-    tags: ["JavaScript", "React", "API"],
+    skills: ["JavaScript", "React", "API"],
     posted: "Today",
     type: "Internship",
     experience: "Student",
   },
 ];
 
+// Utility function to convert ISO date to "time ago" format
 function timeAgo(iso) {
   if (!iso) return "";
   const created = new Date(iso);
@@ -43,7 +44,20 @@ function timeAgo(iso) {
   return `${years}y ago`;
 }
 
+// Hero Section Component
 function Hero() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      // Navigate to jobs page with search query
+      navigate(`/jobs?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  // Main Hero Section JSX
   return (
     <section className="relative bg-gradient-to-br from-orange-50 to-white border-b border-slate-200">
    <div className="max-w-7xl mx-auto px-6 py-20 md:py-24 grid md:grid-cols-2 gap-16 items-center">
@@ -267,6 +281,7 @@ function JobCard({ job }) {
   );
 }
 
+// Jobs Listing Component
 function JobsListing() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -288,7 +303,7 @@ function JobsListing() {
             title: j.title,
             company: j.company,
             location: j.location || "Remote",
-            tags: j.tags || [],
+            skills: j.skills || [], // Use skills field
             posted: timeAgo(j.createdAt),
             type: j.type,
             experience: j.experience || j.experiance,
@@ -312,6 +327,7 @@ function JobsListing() {
     };
   }, []);
 
+  // Jobs Listing JSX
   return (
     <main className="bg-slate-50">
       <div className="max-w-7xl mx-auto px-6 py-20">
@@ -375,7 +391,7 @@ function JobsListing() {
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 text-gray-900">
       <Hero />
       <JobsListing />
       <WhyHireSpark />

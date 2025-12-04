@@ -1,24 +1,15 @@
-// routes/recruiterProfile.js
 const pool = require('../../config/db');
 const ALLOWED_COMPANY_TYPES = ['company', 'consultancy', 'startup'];
+const ALLOWED_STATUSES = ['pending', 'approved', 'rejected'];
 
-/**
- * Handler: Create or update recruiter profile.
- * Attach to a route elsewhere, for example:
- *   router.put('/api/recruiter/profile', requireAuth, recruiterProfile)
- *
- * Expects req.user set by requireAuth middleware (preferred).
- * Falls back to req.body.user_id if authentication is not available (not recommended).
- */
 const recruiterProfile = async (req, res) => {
   let connection;
   try {
     connection = await pool.getConnection();
 
-    // Authenticated user id (preferred)
     const authUserId = req.user?.id;
     const {
-      user_id, // fallback if caller provides it
+      user_id,
       company_name,
       company_website,
       company_type,
@@ -28,7 +19,7 @@ const recruiterProfile = async (req, res) => {
       state,
       country,
       pincode,
-      verified, // optional boolean / 0|1
+      verified,  // Keep verified for frontend (0 or 1)
       verification_notes
     } = req.body;
 
@@ -36,11 +27,10 @@ const recruiterProfile = async (req, res) => {
     if (!finalUserId) {
       return res.status(401).json({
         success: false,
-        message: 'Unauthorized: missing authenticated user. Apply requireAuth or provide user_id in body.'
+        message: 'Unauthorized: missing authenticated user.'
       });
     }
 
-    // Basic validation
     if (!company_name) {
       return res.status(400).json({
         success: false,
@@ -55,19 +45,19 @@ const recruiterProfile = async (req, res) => {
       });
     }
 
-    // Normalize verified value to 0/1 or null
-    let verifiedValue = null;
+    // Convert verified (0/1) to status
+    let statusValue = null;
     if (typeof verified !== 'undefined' && verified !== null) {
-      // Accept boolean or numeric string/number
-      if (typeof verified === 'boolean') verifiedValue = verified ? 1 : 0;
-      else if (typeof verified === 'number') verifiedValue = verified ? 1 : 0;
-      else if (typeof verified === 'string') verifiedValue = ['1', 'true', 'yes'].includes(verified.toLowerCase()) ? 1 : 0;
-      else verifiedValue = 0;
+      // Convert verified number to status string
+      if (verified === 1 || verified === '1' || verified === true) {
+        statusValue = 'approved';
+      } else if (verified === 0 || verified === '0' || verified === false) {
+        statusValue = 'pending';
+      }
     }
 
     await connection.beginTransaction();
 
-    // Check if recruiter profile exists
     const [existing] = await connection.execute(
       'SELECT user_id FROM recruiter_profiles WHERE user_id = ?',
       [finalUserId]
@@ -81,7 +71,7 @@ const recruiterProfile = async (req, res) => {
         `UPDATE recruiter_profiles
          SET company_name = ?, company_website = ?, company_type = ?, 
              address_line1 = ?, address_line2 = ?, city = ?, state = ?, country = ?, pincode = ?,
-             verified = COALESCE(?, verified), verification_notes = ?, updated_at = ?
+             status = COALESCE(?, status), verification_notes = ?, updated_at = ?
          WHERE user_id = ?`,
         [
           company_name,
@@ -93,9 +83,7 @@ const recruiterProfile = async (req, res) => {
           state || null,
           country || null,
           pincode || null,
-          // For verified: if user omitted verified, keep existing value (using COALESCE in SQL)
-          // We pass verifiedValue (may be null) so COALESCE(?, verified) keeps old verified when null
-          verifiedValue,
+          statusValue || null,
           verification_notes || null,
           now,
           finalUserId
@@ -109,18 +97,26 @@ const recruiterProfile = async (req, res) => {
         [finalUserId]
       );
 
+      // Add verified field for frontend compatibility
+      const recruiterData = updatedRows[0];
+      if (recruiterData) {
+        recruiterData.verified = recruiterData.status === 'approved' ? 1 : 0;
+      }
+
       return res.json({
         success: true,
         message: 'Recruiter profile updated successfully',
-        recruiter: updatedRows[0]
+        recruiter: recruiterData
       });
     } else {
       // Create new recruiter profile
+      const defaultStatus = statusValue || 'pending';
+      
       await connection.execute(
         `INSERT INTO recruiter_profiles
          (user_id, company_name, company_website, company_type,
           address_line1, address_line2, city, state, country, pincode,
-          verified, verification_notes, created_at, updated_at)
+          status, verification_notes, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           finalUserId,
@@ -133,8 +129,7 @@ const recruiterProfile = async (req, res) => {
           state || null,
           country || null,
           pincode || null,
-          // If verifiedValue is null, default to 0 when inserting (adjust if your schema has default)
-          (verifiedValue === null ? 0 : verifiedValue),
+          defaultStatus,
           verification_notes || null,
           now,
           now
@@ -148,10 +143,16 @@ const recruiterProfile = async (req, res) => {
         [finalUserId]
       );
 
+      // Add verified field for frontend compatibility
+      const recruiterData = newRows[0];
+      if (recruiterData) {
+        recruiterData.verified = recruiterData.status === 'approved' ? 1 : 0;
+      }
+
       return res.status(201).json({
         success: true,
         message: 'Recruiter profile created successfully',
-        recruiter: newRows[0]
+        recruiter: recruiterData
       });
     }
   } catch (err) {

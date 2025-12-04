@@ -7,6 +7,7 @@ import api from "../../components/apiconfig/apiconfig";
 export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -20,7 +21,13 @@ export default function SignIn() {
     try {
       const { data } = await api.post("/auth/login", { email, password });
       const role = data?.user?.role || "user";
-      window.location.href = role === "recruiter" ? "/recruiter-profile" : "/dashboard";
+      
+      // Redirect based on role
+      if (role === "recruiter") {
+        window.location.href = "/recruiter-dashboard";
+      } else {
+        window.location.href = "/home";
+      }
     } catch (err) {
       setError(err?.response?.data?.message || "Login failed");
     } finally {
@@ -80,8 +87,8 @@ export default function SignIn() {
                 <p className="mt-1 text-sm text-slate-500">Welcome back!</p>
               </CardHeader>
 
-              <CardContent className="px-8 pb-8 space-y-4">
-                <form onSubmit={handleSubmit} className="space-y-4">
+              <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-3 sm:space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
                   <Input
                     className="rounded-xl border p-3 text-sm"
                     placeholder="Email"
