@@ -180,29 +180,35 @@ export default function Jobs() {
   const startIdx = filtered.length === 0 ? 0 : (page - 1) * pageSize + 1;
   const endIdx = (page - 1) * pageSize + paginated.length;
 
+  const hasFilters =
+    !!role.trim() ||
+    !!location.trim() ||
+    (exp && exp !== "Experience") ||
+    (mode && mode !== "Work mode");
+
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-7xl mx-auto px-4 py-10">
-        <header className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-semibold text-slate-900">
+    <div className="min-h-screen bg-slate-50/60">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-10 md:py-12">
+        <header className="mb-8">
+          <p className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-600 bg-blue-50 border border-blue-100 rounded-full px-3 py-1 mb-3">
+            Browse jobs
+          </p>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900">
             Open positions
           </h1>
-          <p className="mt-1 text-sm md:text-base text-slate-600">
-            Explore internships and early-career roles across locations and work modes.
+          <p className="mt-1 text-sm md:text-base text-slate-600 max-w-2xl">
+            Explore internships and early‑career roles across locations, experience levels, and work modes.
           </p>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-[280px,1fr] gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-[280px,1fr] gap-8 lg:gap-10">
           {/* Sidebar */}
-          <aside className="bg-white border border-slate-200 rounded-xl p-5 h-fit md:sticky md:top-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-medium text-slate-900">Filter jobs</h2>
-              {(role ||
-                location ||
-                (exp && exp !== "Experience") ||
-                (mode && mode !== "Work mode")) && (
+          <aside className="bg-white border border-slate-200 rounded-2xl p-5 h-fit md:sticky md:top-6 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-slate-900">Filter jobs</h2>
+              {hasFilters && (
                 <button
-                  className="text-[11px] text-slate-500 hover:text-slate-700"
+                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2.5 py-1 text-[11px] text-slate-600 hover:bg-slate-50"
                   onClick={() => {
                     setRole("");
                     setLocation("");
@@ -210,12 +216,37 @@ export default function Jobs() {
                     setMode("");
                   }}
                 >
-                  Reset
+                  Clear
                 </button>
               )}
             </div>
 
-            <div className="space-y-4">
+            {hasFilters && (
+              <div className="mb-3 flex flex-wrap gap-1.5">
+                {role.trim() && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-100 px-2 py-0.5 text-[11px] text-blue-700">
+                    Role: {role.trim()}
+                  </span>
+                )}
+                {location.trim() && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-100 px-2 py-0.5 text-[11px] text-blue-700">
+                    Location: {location.trim()}
+                  </span>
+                )}
+                {exp && exp !== "Experience" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-100 px-2 py-0.5 text-[11px] text-blue-700">
+                    Exp: {exp}
+                  </span>
+                )}
+                {mode && mode !== "Work mode" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-100 px-2 py-0.5 text-[11px] text-blue-700">
+                    Mode: {mode}
+                  </span>
+                )}
+              </div>
+            )}
+
+            <div className="space-y-4 pt-1 border-t border-slate-100">
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">
                   Role or keyword
@@ -224,7 +255,7 @@ export default function Jobs() {
                   placeholder="e.g. Frontend, Designer"
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
-                  className="text-sm"
+                  className="text-sm bg-slate-50 border-slate-200"
                 />
               </div>
 
@@ -236,7 +267,7 @@ export default function Jobs() {
                   placeholder="Remote, Bengaluru..."
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  className="text-sm"
+                  className="text-sm bg-slate-50 border-slate-200"
                 />
               </div>
 
@@ -246,7 +277,7 @@ export default function Jobs() {
                     Experience
                   </label>
                   <select
-                    className="w-full rounded-lg border border-slate-300 bg-white p-2 text-xs text-slate-800"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2 text-xs text-slate-800"
                     value={exp}
                     onChange={(e) => setExp(e.target.value)}
                   >
@@ -262,7 +293,7 @@ export default function Jobs() {
                     Work mode
                   </label>
                   <select
-                    className="w-full rounded-lg border border-slate-300 bg-white p-2 text-xs text-slate-800"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2 text-xs text-slate-800"
                     value={mode}
                     onChange={(e) => setMode(e.target.value)}
                   >
@@ -276,7 +307,7 @@ export default function Jobs() {
 
               <Button
                 onClick={handleSearch}
-                className="w-full text-sm mt-1 bg-slate-900 hover:bg-slate-800"
+                className="w-full text-sm mt-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm hover:shadow-md transition-all"
               >
                 Apply filters
               </Button>
@@ -284,7 +315,7 @@ export default function Jobs() {
           </aside>
 
           {/* Content */}
-          <section>
+          <section className="space-y-4">
             {error && (
               <div className="mb-4 text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-3">
                 {error}
@@ -298,11 +329,11 @@ export default function Jobs() {
             </div>
 
             {loading ? (
-              <div className="border border-slate-200 rounded-xl bg-white p-10 text-center text-slate-500 text-sm">
+              <div className="border border-slate-200 rounded-2xl bg-white p-10 text-center text-slate-500 text-sm shadow-sm">
                 Loading roles…
               </div>
             ) : paginated.length === 0 ? (
-              <div className="border border-slate-200 rounded-xl bg-white p-10 text-center text-slate-500 text-sm">
+              <div className="border border-slate-200 rounded-2xl bg-white p-10 text-center text-slate-500 text-sm shadow-sm">
                 No roles match these filters.
               </div>
             ) : (
@@ -310,7 +341,7 @@ export default function Jobs() {
                 {paginated.map((r) => (
                   <article
                     key={r.id}
-                    className="bg-white border border-slate-200 rounded-xl px-5 py-4 flex flex-col gap-3 shadow-sm hover:shadow-md hover:border-slate-300 transition-colors"
+                    className="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex flex-col gap-3 shadow-sm hover:shadow-lg hover:border-blue-100 hover:-translate-y-1 transition-all duration-200"
                   >
                     <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                       <div>
@@ -358,12 +389,12 @@ export default function Jobs() {
                       <a href={`/jobs/${r.id}`} className="md:w-auto w-full">
                         <Button
                           variant="outline"
-                          className="w-full md:w-auto border-slate-300 text-slate-800 hover:bg-slate-50"
+                          className="w-full md:w-auto border-blue-100 text-blue-700 bg-blue-50 hover:bg-blue-100"
                         >
                           View details
                         </Button>
                       </a>
-                      <Button className="md:w-auto w-full bg-slate-900 hover:bg-slate-800">
+                      <Button className="md:w-auto w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm hover:shadow-md">
                         Apply
                       </Button>
                     </div>
@@ -374,7 +405,7 @@ export default function Jobs() {
 
             <div className="flex justify-center items-center gap-2 mt-6">
               <button
-                className="rounded-md border border-slate-300 px-3 py-1.5 text-xs md:text-sm text-slate-700 disabled:opacity-50"
+                className="rounded-full border border-slate-300 px-3 py-1.5 text-xs md:text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-50"
                 disabled={page === 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
@@ -388,10 +419,10 @@ export default function Jobs() {
                   <button
                     key={pageNum}
                     onClick={() => setPage(pageNum)}
-                    className={`px-3 py-1.5 text-xs md:text-sm rounded-md border ${
+                    className={`px-3 py-1.5 text-xs md:text-sm rounded-full border ${
                       active
-                        ? "bg-slate-900 text-white border-slate-900"
-                        : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
+                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                        : "bg-white text-slate-700 border-slate-300 hover:bg-blue-50"
                     }`}
                   >
                     {pageNum}
@@ -400,7 +431,7 @@ export default function Jobs() {
               })}
 
               <button
-                className="rounded-md border border-slate-300 px-3 py-1.5 text-xs md:text-sm text-slate-700 disabled:opacity-50"
+                className="rounded-full border border-slate-300 px-3 py-1.5 text-xs md:text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-50"
                 disabled={page === totalPages || filtered.length === 0}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >
