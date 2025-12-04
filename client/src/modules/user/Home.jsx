@@ -811,35 +811,35 @@ function WhyChooseUs() {
 // CTA SECTION
 function DualCTA() {
   return (
-    <section className="bg-gradient-to-r from-blue-600 via-blue-700 to-sky-600 text-white">
+    <section className="bg-gradient-to-r from-blue-50 via-sky-50 to-blue-100 text-slate-900">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-10 md:py-14">
         <div className="grid lg:grid-cols-2 gap-8 items-center">
           <div className="space-y-3">
-            <p className="text-xs font-semibold tracking-[0.22em] uppercase text-blue-100">
+            <p className="text-xs font-semibold tracking-[0.22em] uppercase text-blue-700/70">
               Ready to get started?
             </p>
-            <h2 className="text-2xl sm:text-3xl font-extrabold leading-tight">
+            <h2 className="text-2xl sm:text-3xl font-extrabold leading-tight text-slate-900">
               One platform. Two journeys. Built for modern hiring.
             </h2>
-            <p className="text-sm sm:text-base text-blue-100/80 max-w-xl">
+            <p className="text-sm sm:text-base text-slate-700 max-w-xl">
               Whether you’re scaling your team or planning your next move, JobSpark
               keeps everything organised, fast, and human.
             </p>
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4">
-            <Card className="bg-white/5 border border-white/20 rounded-2xl shadow-lg">
+            <Card className="bg-white border border-blue-100 rounded-2xl shadow-lg">
               <CardContent className="p-5 space-y-3">
-                <p className="text-xs font-semibold text-blue-100 uppercase">
+                <p className="text-xs font-semibold text-blue-700 uppercase">
                   For recruiters
                 </p>
-                <h3 className="text-lg font-bold">Start hiring today</h3>
-                <p className="text-xs text-blue-100/80">
+                <h3 className="text-lg font-bold text-slate-900">Start hiring today</h3>
+                <p className="text-xs text-slate-600">
                   Publish roles, manage applicants, and collaborate with your team.
                 </p>
                 <Link to="/post-job">
                   <Button
-                    className="mt-2 w-full bg-white text-blue-700 hover:bg-blue-50 font-semibold flex items-center justify-center gap-1.5"
+                    className="mt-2 w-full bg-blue-600 text-white hover:bg-blue-700 font-semibold flex items-center justify-center gap-1.5"
                   >
                     Start Hiring
                     <ArrowRight size={16} />
@@ -848,17 +848,17 @@ function DualCTA() {
               </CardContent>
             </Card>
 
-            <Card className="bg-white/5 border border-white/20 rounded-2xl shadow-lg">
+            <Card className="bg-white border border-blue-100 rounded-2xl shadow-lg">
               <CardContent className="p-5 space-y-3">
-                <p className="text-xs font-semibold text-blue-100 uppercase">
+                <p className="text-xs font-semibold text-blue-700 uppercase">
                   For candidates
                 </p>
-                <h3 className="text-lg font-bold">Upload your resume</h3>
-                <p className="text-xs text-blue-100/80">
+                <h3 className="text-lg font-bold text-slate-900">Upload your resume</h3>
+                <p className="text-xs text-slate-600">
                   Build a profile once and apply to multiple roles in minutes.
                 </p>
                 <Link to="/profile/upload-resume">
-                  <Button className="mt-2 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold flex items-center justify-center gap-1.5">
+                  <Button className="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center justify-center gap-1.5">
                     Upload Resume
                     <ChevronRight size={16} />
           </Button>
