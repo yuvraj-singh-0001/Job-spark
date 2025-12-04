@@ -1,61 +1,121 @@
 import { Link } from "react-router-dom";
 import { Sparkles } from "lucide-react";
+
 function Footer() {
-    return (
-    <footer className="mt-12 bg-slate-900 border-t border-slate-800 text-slate-300">
-      <div className="max-w-6xl mx-auto px-4 py-12 grid md:grid-cols-3 gap-6">
-        <div>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-9 w-9 rounded-xl bg-orange-500 text-white grid place-items-center">
-              <Sparkles size={18} />
+  return (
+    <footer className="mt-12 bg-slate-950 border-t border-slate-800 text-slate-300">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
+        <div className="grid md:grid-cols-4 gap-8 mb-8">
+          {/* Brand / description */}
+          <div className="space-y-3 md:col-span-2 lg:col-span-1">
+            <div className="flex items-center gap-2">
+              <div className="h-9 w-9 rounded-xl bg-blue-600 text-white grid place-items-center">
+                <Sparkles size={18} />
+              </div>
+              <span className="text-lg font-extrabold tracking-tight text-white">
+                Hire<span className="text-blue-400">Spark</span>
+              </span>
             </div>
-            <div className="font-bold">HireSpark</div>
+            <p className="text-xs text-slate-400 max-w-xs">
+              A modern hiring platform that helps companies and candidates connect
+              faster and more fairly.
+            </p>
           </div>
-          <div className="text-sm text-slate-400">
-            Helping students & freshers find early-career roles.
+
+          {/* Product links */}
+          <div>
+            <h4 className="text-xs font-semibold text-slate-200 uppercase tracking-wide mb-3">
+              Product
+            </h4>
+            <ul className="space-y-2 text-xs text-slate-400">
+              <li>
+                <Link to="/jobs" className="hover:text-white transition-colors">
+                  Browse Jobs
+                </Link>
+              </li>
+              <li>
+                <Link to="/post-job" className="hover:text-white transition-colors">
+                  Post a Job
+                </Link>
+              </li>
+              <li>
+                <Link to="/companies" className="hover:text-white transition-colors">
+                  Companies
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Company links */}
+          <div>
+            <h4 className="text-xs font-semibold text-slate-200 uppercase tracking-wide mb-3">
+              Company
+            </h4>
+            <ul className="space-y-2 text-xs text-slate-400">
+              <li>
+                <Link to="/" className="hover:text-white transition-colors">
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="hover:text-white transition-colors">
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms" className="hover:text-white transition-colors">
+                  Terms
+                </Link>
+              </li>
+              <li>
+                <Link to="/privacy" className="hover:text-white transition-colors">
+                  Privacy
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Newsletter */}
+          <div>
+            <h4 className="text-xs font-semibold text-slate-200 uppercase tracking-wide mb-3">
+              Stay in the loop
+            </h4>
+            <p className="text-xs text-slate-400 mb-3">
+              Get curated job alerts and hiring insights in your inbox.
+            </p>
+            <form
+              onSubmit={(e) => e.preventDefault()}
+              className="space-y-2 max-w-xs"
+            >
+              <div className="flex rounded-lg bg-slate-900 border border-slate-800 overflow-hidden">
+                <input
+                  type="email"
+                  required
+                  placeholder="Your email"
+                  className="flex-1 px-3 py-2 text-xs bg-transparent outline-none text-slate-100 placeholder:text-slate-500"
+                />
+                <button
+                  type="submit"
+                  className="px-3 py-2 text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white"
+                >
+                  Subscribe
+                </button>
+              </div>
+              <p className="text-[10px] text-slate-500">
+                No spam. Unsubscribe anytime.
+              </p>
+            </form>
           </div>
         </div>
 
-        <div>
-          <div className="font-semibold mb-2">Product</div>
-          <ul className="text-sm text-slate-400 text-white space-y-1">
-            <li><Link to="/jobs"className="hover:text-orange-500">Jobs</Link></li>
-            <li><Link to="/companies"className="hover:text-orange-500">Companies</Link></li>
-            <li><Link to="/career-kit"className="hover:text-orange-500">Career Kit</Link></li>
-            <li><Link to="dashboard/profile"className="hover:text-orange-500"> user-profile</Link></li>
-            <li><Link to="dashboard/saved"className="hover:text-orange-500"> user-saved</Link></li>
-            <li><Link to="dashboard/applied"className="hover:text-orange-500"> user-applied</Link></li>
-            <li><Link to="dashboard/alerts"className="hover:text-orange-500"> user-alerts</Link></li>
-            <li><Link to ="/RecruiterProfileform"className="hover:text-orange-500">RecruiterProfileform</Link></li>
-            <li><Link to ="JobApplicants"className="hover:text-orange-500">JobApplicants</Link></li>
-            < li><Link to =" admin/signin"className="hover:text-orange-500">admin-signin</Link></li>
-            < li><Link to =" admin/signup"className="hover:text-orange-500">admin-signup</Link></li>
-            < li><Link to =" admin-dashboard"className="hover:text-orange-500">admin-dashboard</Link></li>
-          </ul>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-slate-800 pt-4">
+          <p className="text-[11px] text-slate-500">
+            © {new Date().getFullYear()} HireSpark. All rights reserved.
+          </p>
         </div>
-
-        <div>
-          <div className="font-semibold mb-2 text-white">Company</div>
-          <ul className="text-sm text-slate-400 text-white space-y-1">
-            <li><Link to="/"className="hover:text-orange-500">home  </Link></li>
-            <li><Link to="/alerts"className="hover:text-orange-500">alerts</Link></li>
-            <li><Link to="/contact"className="hover:text-orange-500">Contact</Link></li>
-            <li><Link to="jobs/:id"className="hover:text-orange-500">JobDetail</Link></li>
-            <li><Link to="recruiter-profile"className="hover:text-orange-500">recruiter-profile</Link></li>
-            <li><Link to="talent-hire"className="hover:text-orange-500">talent-hire</Link></li>
-            <li><Link to="create-job"className="hover:text-orange-500">create-job</Link></li>
-            <li><Link to="dashboard"className="hover:text-orange-500"> user-dashboard</Link></li>
-            <li><Link to ="/recruiter-dashboard"className="hover:text-orange-500">recruiter-dashboard</Link></li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="border-t border-slate-800 py-6 text-center text-sm text-slate-400">
-        © {new Date().getFullYear()} HireSpark — Built with ❤️
       </div>
     </footer>
   );
-  
 }
 
 export default Footer;

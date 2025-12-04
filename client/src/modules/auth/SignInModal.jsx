@@ -35,24 +35,34 @@ export default function SignInModal({ role = "user", onClose }) {
 
   // LOAD GOOGLE BUTTON (Google Identity Services)
   useEffect(() => {
-    /* global google */
-    if (!window.google) return;
+    // Ensure we are in the browser and script is loaded
+    if (typeof window === "undefined" || !window.google || !window.google.accounts?.id) {
+      console.error("Google Identity script not loaded or window.google is undefined.");
+      return;
+    }
 
-    google.accounts.id.initialize({
-      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      console.error("VITE_GOOGLE_CLIENT_ID is missing. Please set it in your client/.env file.");
+      return;
+    }
+
+    window.google.accounts.id.initialize({
+      client_id: clientId,
       callback: handleGoogleSuccess,
     });
 
-    google.accounts.id.renderButton(
-      document.getElementById("google-login-btn"),
-      {
+    const buttonContainer = document.getElementById("google-login-btn");
+    if (buttonContainer) {
+      window.google.accounts.id.renderButton(buttonContainer, {
         theme: "outline",
         size: "large",
-        width: "100%",
+        // width must be a number (px) per GIS docs; we handle 100% with CSS on the container
+        width: 320,
         type: "standard",
         text: "signin_with", // "Sign in with Google"
-      }
-    );
+      });
+    }
   }, [role]);
 
   return (

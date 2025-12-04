@@ -96,34 +96,51 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-900 text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white text-slate-900 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-3 md:py-4 flex items-center justify-between">
           {/* Logo */}
           <div>
-            <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <div className="h-10 w-10 rounded-xl bg-orange-500 text-white grid place-items-center shadow-md">
+            <Link
+              to="/"
+              className="flex items-center gap-3 hover:opacity-90 transition-opacity"
+            >
+              <div className="h-10 w-10 rounded-xl bg-blue-600 text-white grid place-items-center shadow-md">
                 <Sparkles size={20} />
               </div>
-              <b className="text-xl font-bold">HireSpark</b>
+              <b className="text-xl font-bold tracking-tight">
+                Hire<span className="text-blue-600">Spark</span>
+              </b>
             </Link>
           </div>
 
           {/* Desktop Navigation Menu */}
-          <nav className="hidden md:flex items-center gap-8 text-sm text-slate-300">
-            <Link to="/" className="hover:text-white transition-colors font-medium">
+          <nav className="hidden md:flex items-center gap-8 text-sm text-slate-600">
+            <Link to="/" className="hover:text-blue-600 transition-colors font-medium">
               Home
             </Link>
-            <Link to="/jobs" className="hover:text-white transition-colors font-medium">
-              Jobs
+            <Link
+              to="/jobs"
+              className="hover:text-blue-600 transition-colors font-medium"
+            >
+              Browse Jobs
             </Link>
-            <Link to="/companies" className="hover:text-white transition-colors font-medium">
+            <Link
+              to="/post-job"
+              className="hover:text-blue-600 transition-colors font-medium"
+            >
+              Post a Job
+            </Link>
+            <Link
+              to="/companies"
+              className="hover:text-blue-600 transition-colors font-medium"
+            >
               Companies
             </Link>
-            <Link to="/career-kit" className="hover:text-white transition-colors font-medium">
-              Career Kit
-            </Link>
-            <Link to="/why" className="hover:text-white transition-colors font-medium">
-              Why HireSpark
+            <Link
+              to="/contact"
+              className="hover:text-blue-600 transition-colors font-medium"
+            >
+              Contact
             </Link>
           </nav>
 
@@ -133,61 +150,61 @@ export default function Navbar() {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setOpen((v) => !v)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors"
                   aria-haspopup="true"
                   aria-expanded={open}
                 >
-                  <div className="h-9 w-9 rounded-full bg-slate-700 grid place-items-center text-sm font-semibold">
+                  <div className="h-9 w-9 rounded-full bg-slate-100 grid place-items-center text-sm font-semibold text-slate-700">
                     {user.username ? (
                       user.username.charAt(0).toUpperCase()
                     ) : (
                       <User size={18} />
                     )}
                   </div>
-                  <span className="hidden sm:block text-sm font-medium">
+                  <span className="hidden sm:block text-sm font-medium text-slate-800">
                     {user.name || user.fullname || user.username}
                   </span>
                 </button>
 
                 {open && (
-                  <div className="absolute right-0 mt-3 w-72 bg-slate-800 text-white rounded-xl shadow-2xl p-5 z-50 border border-slate-700">
+                  <div className="absolute right-0 mt-3 w-72 bg-white text-slate-900 rounded-xl shadow-2xl p-5 z-50 border border-slate-200">
                     <div className="mb-4">
-                      <div className="text-sm text-slate-400">Name</div>
+                      <div className="text-xs text-slate-500">Name</div>
                       <div className="font-semibold text-lg">
                         {user.name || user.fullname || user.username}
                       </div>
                     </div>
                     <div className="mb-4">
-                      <div className="text-sm text-slate-400">Username</div>
-                      <div className="font-medium">{user.username}</div>
+                      <div className="text-xs text-slate-500">Username</div>
+                      <div className="font-medium text-sm">{user.username}</div>
                     </div>
                     <div className="mb-4">
-                      <div className="text-sm text-slate-400">Role</div>
-                      <div className="font-medium">{user.role || "-"}</div>
+                      <div className="text-xs text-slate-500">Role</div>
+                      <div className="font-medium text-sm">{user.role || "-"}</div>
                     </div>
                     <div className="mb-4">
-                      <div className="text-sm text-slate-400">Member since</div>
-                      <div className="font-medium">
+                      <div className="text-xs text-slate-500">Member since</div>
+                      <div className="font-medium text-sm">
                         {formatCreatedDate(user)}
                       </div>
                     </div>
                     <div className="mb-4">
-                      <div className="text-sm text-slate-400">Last login</div>
-                      <div className="font-medium">
+                      <div className="text-xs text-slate-500">Last login</div>
+                      <div className="font-medium text-sm">
                         {formatLoginTime(user)}
                       </div>
                     </div>
-                    <div className="pt-4 border-t border-slate-700 space-y-3">
+                    <div className="pt-4 border-t border-slate-200 space-y-3">
                       <Link
                         to="/profile"
                         onClick={() => setOpen(false)}
-                        className="block w-full text-left px-4 py-3 rounded-lg bg-slate-700 hover:bg-slate-600 transition-colors font-medium"
+                        className="block w-full text-left px-4 py-3 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors font-medium text-sm"
                       >
                         View Profile
                       </Link>
                       <button
                         onClick={handleLogout}
-                        className="w-full text-left px-4 py-3 rounded-lg bg-red-600 hover:bg-red-700 transition-colors font-medium"
+                        className="w-full text-left px-4 py-3 rounded-lg bg-red-600 hover:bg-red-700 transition-colors font-medium text-sm text-white"
                       >
                         Logout
                       </button>
@@ -200,18 +217,18 @@ export default function Navbar() {
                 {/* Candidate = user (popup) */}
                 <Button
                   variant="ghost"
-                  className="text-white hover:bg-slate-800 transition-colors hidden sm:flex"
+                  className="text-slate-800 hover:bg-slate-100 transition-colors hidden sm:flex"
                   onClick={() => handleOpenAuth("user")}
                 >
-                  Candidate
+                  Candidate Login
                 </Button>
 
                 {/* Recruiter (popup) */}
                 <Button
-                  className="bg-orange-500 hover:bg-orange-600 text-white font-semibold shadow-md"
+                  className="bg-green-600 hover:bg-green-700 text-white font-semibold shadow-md"
                   onClick={() => handleOpenAuth("recruiter")}
                 >
-                  Recruiter
+                  Recruiter Login
                 </Button>
               </>
             )}
@@ -219,7 +236,7 @@ export default function Navbar() {
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen((v) => !v)}
-              className="md:hidden p-2 rounded-lg hover:bg-slate-800 transition-colors"
+              className="md:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors"
               aria-label="Toggle mobile menu"
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -229,57 +246,57 @@ export default function Navbar() {
 
         {/* Mobile Navigation Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-slate-800 border-t border-slate-700">
+          <div className="md:hidden bg-white border-t border-slate-200">
             <nav className="px-6 py-4 space-y-4">
               <Link
                 to="/"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-slate-300 hover:text-white transition-colors font-medium"
+                className="block text-slate-700 hover:text-blue-600 transition-colors font-medium"
               >
                 Home
               </Link>
               <Link
                 to="/jobs"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-slate-300 hover:text-white transition-colors font-medium"
+                className="block text-slate-700 hover:text-blue-600 transition-colors font-medium"
               >
-                Jobs
+                Browse Jobs
+              </Link>
+              <Link
+                to="/post-job"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-slate-700 hover:text-blue-600 transition-colors font-medium"
+              >
+                Post a Job
               </Link>
               <Link
                 to="/companies"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-slate-300 hover:text-white transition-colors font-medium"
+                className="block text-slate-700 hover:text-blue-600 transition-colors font-medium"
               >
                 Companies
               </Link>
               <Link
-                to="/career-kit"
+                to="/contact"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-slate-300 hover:text-white transition-colors font-medium"
+                className="block text-slate-700 hover:text-blue-600 transition-colors font-medium"
               >
-                Career Kit
-              </Link>
-              <Link
-                to="/why"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-slate-300 hover:text-white transition-colors font-medium"
-              >
-                Why HireSpark
+                Contact
               </Link>
               {!loading && !user && (
-                <div className="pt-4 border-t border-slate-700 space-y-3">
+                <div className="pt-4 border-t border-slate-200 space-y-3">
                   <Button
                     variant="ghost"
-                    className="w-full text-left text-slate-300 hover:text-white hover:bg-slate-700"
+                    className="w-full text-left text-slate-700 hover:text-blue-600 hover:bg-slate-50"
                     onClick={() => handleOpenAuth("user")}
                   >
-                    Candidate
+                    Candidate Login
                   </Button>
                   <Button
-                    className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
                     onClick={() => handleOpenAuth("recruiter")}
                   >
-                    Recruiter
+                    Recruiter Login
                   </Button>
                 </div>
               )}

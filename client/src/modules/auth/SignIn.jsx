@@ -57,16 +57,32 @@ export default function SignIn() {
 
   // LOAD GOOGLE BUTTON
   useEffect(() => {
-    /* global google */
-    google.accounts.id.initialize({
-      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+    // Make sure we are in the browser and the Google script has loaded
+    if (typeof window === "undefined" || !window.google || !window.google.accounts?.id) {
+      console.error("Google Identity script not loaded or window.google is undefined.");
+      return;
+    }
+
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+    if (!clientId) {
+      console.error("VITE_GOOGLE_CLIENT_ID is missing. Please set it in your .env file.");
+      return;
+    }
+
+    window.google.accounts.id.initialize({
+      client_id: clientId,
       callback: handleGoogleSuccess,
     });
 
-    google.accounts.id.renderButton(
-      document.getElementById("google-login-btn"),
-      { theme: "outline", size: "large", width: "100%" }
-    );
+    const buttonContainer = document.getElementById("google-login-btn");
+    if (buttonContainer) {
+      window.google.accounts.id.renderButton(buttonContainer, {
+        theme: "outline",
+        size: "large",
+        width: "100%",
+      });
+    }
   }, []);
 
   return (
