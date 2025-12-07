@@ -1,6 +1,11 @@
 import React from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
-import RecruiterSidebar from "../../recruiter/recruiter-dashboard/recruitersidebar.jsx";
+import RecruiterSidebar from "./RecruiterSidebar.jsx";
+
+/**
+ * Recruiter Layout - For recruiter dashboard pages
+ * Includes Sidebar for navigation
+ */
 export default function RecruiterLayout() {
   const location = useLocation();
 
@@ -107,3 +112,4 @@ export default function RecruiterLayout() {
     </div>
   );
 }
+

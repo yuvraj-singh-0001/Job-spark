@@ -1,15 +1,36 @@
 import React from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import Layout from "../components/ui/layout.jsx";
 import ProtectedRoute from "../protected/ProtectedRoute.jsx";
 
+// Import Layouts
+import GuestLayout from "../components/layout/guest-layout/GuestLayout.jsx";
+import CandidateLayout from "../components/layout/candidate-layout/CandidateLayout.jsx";
+import RecruiterLayout from "../components/layout/recruiter-layout/RecruiterLayout.jsx";
+import AdminLayout from "../components/layout/admin-layout/AdminLayout.jsx";
+
+// Import Public/User Components
 import Home from "../modules/user/Home.jsx";
 import Companies from "../modules/user/Companies.jsx";
 import CareerKit from "../modules/user/CareerKit.jsx";
 import Alerts from "../modules/user/alerts.jsx";
 import Jobs from "../modules/user/jobs/job-Index.jsx";
 import JobDetail from "../modules/user/jobs/job-details.jsx";
+import Profile from "../components/profile/profile.jsx";
 
+// Import Auth Components
+import SignIn from "../modules/auth/SignIn.jsx";
+import SignUp from "../modules/auth/SignUp.jsx";
+import Forgot from "../modules/auth/Forgot.jsx";
+import SignInModal from "../modules/auth/SignInModal.jsx";
+
+// Import Candidate/User Dashboard Components
+import Dashboard from "../modules/user/User-Dashboard/user-Index.jsx";
+import UserProfile from "../modules/user/User-Dashboard/user-Profile.jsx";
+import Saved from "../modules/user/User-Dashboard/user-Saved.jsx";
+import Applied from "../modules/user/User-Dashboard/user-Applied.jsx";
+import AlertsManage from "../modules/user/User-Dashboard/user-Alerts.jsx";
+
+// Import Recruiter Components
 import RecruiterCreateJob from "../modules/recruiter/hire-jobs/create-job.jsx";
 import TalentHire from "../modules/recruiter/recruter-premier/talent-hire.jsx";
 import RecruiterProfileform from "../modules/recruiter/recruiter-dashboard/recruiter-profile-form.jsx";
@@ -17,21 +38,8 @@ import JobPosted from "../modules/recruiter/recruiter-dashboard/job-posted.jsx";
 import RecruiterDashboard from "../modules/recruiter/recruiter-dashboard/recruiter-index.jsx";
 import RecruiterProfile from "../modules/recruiter/recruiter-dashboard/recruiter-profile.jsx";
 import JobApplicants from "../modules/recruiter/recruiter-dashboard/JobApplicants.jsx";
-import SignIn from "../modules/auth/SignIn.jsx";
-import SignUp from "../modules/auth/SignUp.jsx";
-import Forgot from "../modules/auth/Forgot.jsx";
-import SignInModal from "../modules/auth/SignInModal.jsx";
-import Profile from "../components/profile/profile.jsx";
-
-import Dashboard from "../modules/user/User-Dashboard/user-Index.jsx";
-import UserProfile from "../modules/user/User-Dashboard/user-Profile.jsx";
-import Saved from "../modules/user/User-Dashboard/user-Saved.jsx";
-import Applied from "../modules/user/User-Dashboard/user-Applied.jsx";
-import AlertsManage from "../modules/user/User-Dashboard/user-Alerts.jsx";
-
 
 // Import Admin Components
-import AdminLayout from "../modules/admin/AdminLayout.jsx";
 import AdminSignIn from "../modules/admin/SignIn.jsx";
 import AdminSignUp from "../modules/admin/SignUp.jsx";
 import AdminDashboard from "../modules/admin/AdminDashboard.jsx";
@@ -45,14 +53,12 @@ import ApprovedJobs from "../modules/admin/ApprovedJobs.jsx";
 import ClosedJobs from "../modules/admin/ClosedJobs.jsx";
 import RejectedJobs from "../modules/admin/RejectedJobs.jsx";
 
-// Import Recruiter Layout (CREATE THIS FILE)
-import RecruiterLayout from "../modules/recruiter/recruiter-dashboard/RecruiterLayout.jsx";
-
 // Define application routes
 const router = createBrowserRouter([
+  // ================= GUEST/PUBLIC ROUTES (Navbar + Footer) =================
   {
     path: "/",
-    element: <Layout />,
+    element: <GuestLayout />,
     children: [
       { index: true, element: <Navigate to="/home" replace /> },
 
@@ -77,53 +83,43 @@ const router = createBrowserRouter([
       // Profile - Public
       { path: "profile", element: <Profile /> },
 
-      // ================= USER/JOB SEEKER ONLY ROUTES =================
-      {
-        path: "dashboard",
-        element: (
-          <ProtectedRoute roles={["user"]}>
-            <Dashboard />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "dashboard/profile",
-        element: (
-          <ProtectedRoute roles={["user"]}>
-            <UserProfile />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "dashboard/saved",
-        element: (
-          <ProtectedRoute roles={["user"]}>
-            <Saved />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "dashboard/applied",
-        element: (
-          <ProtectedRoute roles={["user"]}>
-            <Applied />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "dashboard/alerts",
-        element: (
-          <ProtectedRoute roles={["user"]}>
-            <AlertsManage />
-          </ProtectedRoute>
-        ),
-      },
-
       { path: "*", element: <Navigate to="/home" replace /> },
     ],
   },
 
-  // ================= RECRUITER ROUTES WITH SIDEBAR (SEPARATE FROM MAIN LAYOUT) =================
+  // ================= CANDIDATE/USER ROUTES WITH SIDEBAR =================
+  {
+    path: "/",
+    element: (
+      <ProtectedRoute roles={["user"]}>
+        <CandidateLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: "dashboard",
+        element: <Dashboard />,
+      },
+      {
+        path: "dashboard/profile",
+        element: <UserProfile />,
+      },
+      {
+        path: "dashboard/saved",
+        element: <Saved />,
+      },
+      {
+        path: "dashboard/applied",
+        element: <Applied />,
+      },
+      {
+        path: "dashboard/alerts",
+        element: <AlertsManage />,
+      },
+    ],
+  },
+
+  // ================= RECRUITER ROUTES WITH SIDEBAR =================
   {
     path: "/",
     element: (
@@ -163,7 +159,7 @@ const router = createBrowserRouter([
     ],
   },
 
-  // ================= ADMIN ROUTES WITH SIDEBAR (SEPARATE FROM MAIN LAYOUT) =================
+  // ================= ADMIN ROUTES WITH SIDEBAR =================
   {
     path: "admin",
     element: (

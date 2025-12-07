@@ -1,8 +1,11 @@
-// src/modules/admin/AdminLayout.jsx
 import React from "react";
 import { Outlet } from "react-router-dom";
-import AdminSidebar from "./AdminSidebar";
+import AdminSidebar from "./AdminSidebar.jsx";
 
+/**
+ * Admin Layout - For admin dashboard pages
+ * Includes Sidebar for navigation
+ */
 const AdminLayout = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -16,3 +19,4 @@ const AdminLayout = () => {
 };
 
 export default AdminLayout;
+

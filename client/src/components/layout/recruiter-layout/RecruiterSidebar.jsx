@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
   Briefcase, 
@@ -11,10 +11,15 @@ import {
   Menu,
   X
 } from "lucide-react";
+import api from "../../../components/apiconfig/apiconfig";
 
+/**
+ * Recruiter Sidebar - For recruiter dashboard
+ */
 export default function RecruiterSidebar() {
   const [isOpen, setIsOpen] = useState(true);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Check if current route is active
   const isActive = (path) => {
@@ -59,6 +64,16 @@ export default function RecruiterSidebar() {
       path: "/notifications" 
     },
   ];
+
+  const handleLogout = async () => {
+    try {
+      await api.post('/auth/logout');
+      localStorage.removeItem('token');
+      navigate('/sign-in');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
     <aside
@@ -114,6 +129,7 @@ export default function RecruiterSidebar() {
       {/* Bottom Section - Logout */}
       <div className="px-2 py-4 border-t border-slate-200">
         <button 
+          onClick={handleLogout}
           className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-all duration-200
             ${!isOpen ? "justify-center" : ""}
           `}
@@ -128,3 +144,4 @@ export default function RecruiterSidebar() {
     </aside>
   );
 }
+

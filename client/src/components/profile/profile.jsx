@@ -3,9 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../apiconfig/apiconfig.jsx';
 
-// Import your Navbar - adjust path to your project
-import Navbar from '../../components/ui/Navbar.jsx'; // <- change path if different
-
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -50,9 +47,6 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Navbar at top — pass user or handlers if navbar expects them */}
-      <Navbar user={user} onLogout={handleLogout} />
-
       {/* Main content */}
       <main className="max-w-md mx-auto p-6 mt-6">
         <h2 className="text-xl mb-3">Profile</h2>

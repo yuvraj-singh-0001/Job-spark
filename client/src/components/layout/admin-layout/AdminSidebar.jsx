@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
   Briefcase, 
@@ -10,12 +10,18 @@ import {
   CheckCircle,
   FileText,
   XCircle,
-  Archive
+  Archive,
+  LogOut
 } from "lucide-react";
+import api from "../../../components/apiconfig/apiconfig";
 
+/**
+ * Admin Sidebar - For admin dashboard
+ */
 const AdminSidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Define menu items
   const menuItems = [
@@ -29,6 +35,16 @@ const AdminSidebar = () => {
     { title: "Rejected Jobs", icon: <XCircle />, path: "/admin/rejected-jobs" },
     { title: "Closed Jobs", icon: <Archive />, path: "/admin/closed-jobs" },
   ];
+
+  const handleLogout = async () => {
+    try {
+      await api.post('/auth/logout');
+      localStorage.removeItem('token');
+      navigate('/admin/signin');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
     <aside
@@ -81,8 +97,28 @@ const AdminSidebar = () => {
           );
         })}
       </ul>
+
+      {/* Logout Button */}
+      <div className="absolute bottom-0 left-0 right-0 p-2 border-t">
+        <button
+          onClick={handleLogout}
+          className={`flex items-center gap-4 w-full px-4 py-3 rounded-lg cursor-pointer
+            transition-all duration-200 text-red-600 hover:bg-red-50
+            ${!isOpen ? "justify-center" : ""}
+          `}
+        >
+          <LogOut size={20} />
+          <span
+            className={`${isOpen ? "block" : "hidden"
+              } text-md font-medium whitespace-nowrap`}
+          >
+            Logout
+          </span>
+        </button>
+      </div>
     </aside>
   );
 };
 
 export default AdminSidebar;
+

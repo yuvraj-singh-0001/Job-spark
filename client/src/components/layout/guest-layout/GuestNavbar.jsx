@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Sparkles, User, Menu, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button } from "../../components/ui/button";
-import api from "../../components/apiconfig/apiconfig";
-import SignInModal from "../../modules/auth/SignInModal";
+import { Button } from "../../ui/button";
+import api from "../../../components/apiconfig/apiconfig";
+import SignInModal from "../../../modules/auth/SignInModal";
 
-export default function Navbar() {
+/**
+ * Guest Navbar - For public pages
+ */
+export default function GuestNavbar() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -315,3 +318,4 @@ export default function Navbar() {
     </>
   );
 }
+

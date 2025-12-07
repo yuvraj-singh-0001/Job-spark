@@ -1,7 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-export default function Sidebar({
+/**
+ * Candidate Sidebar - For user/candidate dashboard
+ */
+export default function CandidateSidebar({
   sidebarOpen,
   mobileSidebarOpen,
   userData,
@@ -21,7 +24,7 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Desktop Sidebar - Exactly like your HTML */}
+      {/* Desktop Sidebar */}
       <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col">
         <div className="px-6 py-4 border-b border-slate-200">
           <h1 className="text-xl font-semibold tracking-tight">HireSpark</h1>
@@ -105,3 +108,4 @@ export default function Sidebar({
     </>
   );
 }
+

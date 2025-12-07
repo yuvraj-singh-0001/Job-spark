@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import { Sparkles } from "lucide-react";
 
-function Footer() {
+/**
+ * Guest Footer - For public pages
+ */
+function GuestFooter() {
   return (
     <footer className="mt-12 bg-white border-t border-slate-200 text-slate-600">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-10 md:py-12">
@@ -118,4 +121,5 @@ function Footer() {
   );
 }
 
-export default Footer;
+export default GuestFooter;
+
