@@ -33,8 +33,9 @@ async function googleAuth(req, res) {
       return res.status(400).json({ message: 'Google credential token is required' });
     }
 
-    // Validate role (default to 'user' if not provided or invalid)
-    const userRole = (role === 'recruiter' ? 'recruiter' : 'user');
+    // Validate role (default to 'candidate' if not provided or invalid)
+    // Store 'recruiter' for recruiters, 'candidate' for candidates
+    const userRole = (role === 'recruiter' ? 'recruiter' : 'candidate');
 
     // Initialize Google OAuth client
     const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);

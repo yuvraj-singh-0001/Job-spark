@@ -1,66 +1,68 @@
 import React from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import Layout from "../components/ui/layout.jsx";
 import ProtectedRoute from "../protected/ProtectedRoute.jsx";
 
-import Home from "../modules/user/Home.jsx";
-import Companies from "../modules/user/Companies.jsx";
-import CareerKit from "../modules/user/CareerKit.jsx";
-import Alerts from "../modules/user/alerts.jsx";
-import Jobs from "../modules/user/jobs/job-Index.jsx";
-import JobDetail from "../modules/user/jobs/job-details.jsx";
+// Import Layouts
+import GuestLayout from "../components/layout/guest-layout/GuestLayout.jsx";
+import CandidateLayout from "../components/layout/candidate-layout/CandidateLayout.jsx";
+import RecruiterLayout from "../components/layout/recruiter-layout/RecruiterLayout.jsx";
+import AdminLayout from "../components/layout/admin-layout/AdminLayout.jsx";
 
-import RecruiterCreateJob from "../modules/recruiter/hire-jobs/create-job.jsx";
-import TalentHire from "../modules/recruiter/recruter-premier/talent-hire.jsx";
-import RecruiterProfileform from "../modules/recruiter/recruiter-dashboard/recruiter-profile-form.jsx";
-import JobPosted from "../modules/recruiter/recruiter-dashboard/job-posted.jsx";
-import RecruiterDashboard from "../modules/recruiter/recruiter-dashboard/recruiter-index.jsx";
-import RecruiterProfile from "../modules/recruiter/recruiter-dashboard/recruiter-profile.jsx";
-import JobApplicants from "../modules/recruiter/recruiter-dashboard/JobApplicants.jsx";
-import SignIn from "../modules/auth/SignIn.jsx";
-import SignUp from "../modules/auth/SignUp.jsx";
-import Forgot from "../modules/auth/Forgot.jsx";
-import SignInModal from "../modules/auth/SignInModal.jsx";
+// Import Public/Guest Components (renamed)
+import Home from "../modules/guest/Home.jsx";
+import Companies from "../modules/guest/companies/companies.jsx";
+import CareerGuide from "../modules/guest/guide/career-guide.jsx";
+import Jobs from "../modules/guest/jobs/job-list.jsx";
+import JobDetail from "../modules/guest/jobs/job-list-details.jsx";
 import Profile from "../components/profile/profile.jsx";
 
-import Dashboard from "../modules/user/User-Dashboard/user-Index.jsx";
-import UserProfile from "../modules/user/User-Dashboard/user-Profile.jsx";
-import Saved from "../modules/user/User-Dashboard/user-Saved.jsx";
-import Applied from "../modules/user/User-Dashboard/user-Applied.jsx";
-import AlertsManage from "../modules/user/User-Dashboard/user-Alerts.jsx";
+// Import Auth Components (Candidate/Recruiter - Google Login Only)
+import SignIn from "../modules/auth/candidate-recruiter/SignIn.jsx";
+import SignUp from "../modules/auth/candidate-recruiter/SignUp.jsx";
+import Forgot from "../modules/auth/candidate-recruiter/Forgot.jsx";
+import SignInModal from "../modules/auth/candidate-recruiter/SignInModal.jsx";
 
+// Import Candidate Dashboard Components (renamed paths)
+import Dashboard from "../modules/candidate/dashboard/home.jsx";
+import UserProfile from "../modules/candidate/dashboard/profile.jsx";
+import Saved from "../modules/candidate/jobs/saved-list.jsx";
+import Applied from "../modules/candidate/jobs/applied-list.jsx";
 
-// Import Admin Components
-import AdminLayout from "../modules/admin/AdminLayout.jsx";
-import AdminSignIn from "../modules/admin/SignIn.jsx";
-import AdminSignUp from "../modules/admin/SignUp.jsx";
-import AdminDashboard from "../modules/admin/AdminDashboard.jsx";
-import AdminUsers from "../modules/admin/AdminUsers.jsx";
-import AdminRecruiters from "../modules/admin/AdminRecruiters.jsx";
-import AdminJobs from "../modules/admin/AdminJobs.jsx";
-import PendingRecruiters from "../modules/admin/PendingRecruiters.jsx";
-import VerifiedRecruiters from "../modules/admin/VerifiedRecruiters.jsx";
-import PendingJobs from "../modules/admin/PendingJobs.jsx";
-import ApprovedJobs from "../modules/admin/ApprovedJobs.jsx";
-import ClosedJobs from "../modules/admin/ClosedJobs.jsx";
-import RejectedJobs from "../modules/admin/RejectedJobs.jsx";
+// Import Recruiter Components
+import RecruiterDashboard from "../modules/recruiter/home/home.jsx";
+import RecruiterPostJob from "../modules/recruiter/jobs/job-post.jsx";
+import JobPosted from "../modules/recruiter/jobs/job-posted.jsx";
+import JobApplicants from "../modules/recruiter/jobs/Job-response-list.jsx";
+import RecruiterProfile from "../modules/recruiter/profile/recruiter-profile.jsx";
+import RecruiterProfileForm from "../modules/recruiter/profile/recruiter-profile-form.jsx";
 
-// Import Recruiter Layout (CREATE THIS FILE)
-import RecruiterLayout from "../modules/recruiter/recruiter-dashboard/RecruiterLayout.jsx";
+// Import Admin Auth Components (Username/Password Login)
+import AdminSignIn from "../modules/auth/admin/SignIn.jsx";
+import AdminSignUp from "../modules/auth/admin/SignUp.jsx";
+import AdminDashboard from "../modules/admin/dashboard/dashboard.jsx";
+import AdminUsers from "../modules/admin/candidate/candidate-list.jsx";
+import AdminRecruiters from "../modules/admin/recruiter/recruiters-list.jsx";
+import AdminJobs from "../modules/admin/jobs/jobs-list.jsx";
+import PendingRecruiters from "../modules/admin/recruiter/pending-recruiters.jsx";
+import VerifiedRecruiters from "../modules/admin/recruiter/verified-recruiters.jsx";
+import PendingJobs from "../modules/admin/approval-management/pending-jobs-list.jsx";
+import ApprovedJobs from "../modules/admin/approval-management/approval-job-list.jsx";
+import ClosedJobs from "../modules/admin/approval-management/closed-jobs-list.jsx";
+import RejectedJobs from "../modules/admin/approval-management/rejected-jobs.jsx";
 
 // Define application routes
 const router = createBrowserRouter([
+  // ================= GUEST/PUBLIC ROUTES (Navbar + Footer) =================
   {
     path: "/",
-    element: <Layout />,
+    element: <GuestLayout />,
     children: [
       { index: true, element: <Navigate to="/home" replace /> },
 
       // Public pages (accessible without login)
       { path: "home", element: <Home /> },
       { path: "companies", element: <Companies /> },
-      { path: "career-kit", element: <CareerKit /> },
-      { path: "alerts", element: <Alerts /> },
+      { path: "career-guide", element: <CareerGuide /> },
       { path: "jobs", element: <Jobs /> },
       { path: "jobs/:id", element: <JobDetail /> },
 
@@ -77,53 +79,39 @@ const router = createBrowserRouter([
       // Profile - Public
       { path: "profile", element: <Profile /> },
 
-      // ================= USER/JOB SEEKER ONLY ROUTES =================
-      {
-        path: "dashboard",
-        element: (
-          <ProtectedRoute roles={["user"]}>
-            <Dashboard />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "dashboard/profile",
-        element: (
-          <ProtectedRoute roles={["user"]}>
-            <UserProfile />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "dashboard/saved",
-        element: (
-          <ProtectedRoute roles={["user"]}>
-            <Saved />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "dashboard/applied",
-        element: (
-          <ProtectedRoute roles={["user"]}>
-            <Applied />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "dashboard/alerts",
-        element: (
-          <ProtectedRoute roles={["user"]}>
-            <AlertsManage />
-          </ProtectedRoute>
-        ),
-      },
-
       { path: "*", element: <Navigate to="/home" replace /> },
     ],
   },
 
-  // ================= RECRUITER ROUTES WITH SIDEBAR (SEPARATE FROM MAIN LAYOUT) =================
+  // ================= CANDIDATE/USER ROUTES WITH SIDEBAR =================
+  {
+    path: "/",
+    element: (
+      <ProtectedRoute roles={["user", "candidate"]}>
+        <CandidateLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: "dashboard",
+        element: <Dashboard />,
+      },
+      {
+        path: "dashboard/profile",
+        element: <UserProfile />,
+      },
+      {
+        path: "dashboard/saved",
+        element: <Saved />,
+      },
+      {
+        path: "dashboard/applied",
+        element: <Applied />,
+      },
+    ],
+  },
+
+  // ================= RECRUITER ROUTES WITH SIDEBAR =================
   {
     path: "/",
     element: (
@@ -141,20 +129,16 @@ const router = createBrowserRouter([
         element: <RecruiterProfile />,
       },
       {
-        path: "recruiter-profileform",
-        element: <RecruiterProfileform />,
+        path: "recruiter-profile-form",
+        element: <RecruiterProfileForm />,
       },
       {
         path: "create-job",
-        element: <RecruiterCreateJob />,
+        element: <RecruiterPostJob />,
       },
       {
         path: "job-posted",
         element: <JobPosted />,
-      },
-      {
-        path: "talent-hire",
-        element: <TalentHire />,
       },
       {
         path: "recruiter/jobs/:jobId/applicants",
@@ -163,7 +147,7 @@ const router = createBrowserRouter([
     ],
   },
 
-  // ================= ADMIN ROUTES WITH SIDEBAR (SEPARATE FROM MAIN LAYOUT) =================
+  // ================= ADMIN ROUTES WITH SIDEBAR =================
   {
     path: "admin",
     element: (
