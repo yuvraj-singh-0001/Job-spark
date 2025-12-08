@@ -29,13 +29,12 @@ import Saved from "../modules/candidate/jobs/saved-list.jsx";
 import Applied from "../modules/candidate/jobs/applied-list.jsx";
 
 // Import Recruiter Components
-import RecruiterCreateJob from "../modules/recruiter/create-job/create-job.jsx";
-import TalentHire from "../modules/recruiter/talent-hire/talent-hire.jsx";
-import RecruiterProfileform from "../modules/recruiter/recruiter-profile-form/recruiter-profile-form.jsx";
-import JobPosted from "../modules/recruiter/job-posted/job-posted.jsx";
 import RecruiterDashboard from "../modules/recruiter/home/home.jsx";
-import RecruiterProfile from "../modules/recruiter/recruiter-profile/recruiter-profile.jsx";
-import JobApplicants from "../modules/recruiter/job-applicants/JobApplicants.jsx";
+import RecruiterPostJob from "../modules/recruiter/jobs/job-post.jsx";
+import JobPosted from "../modules/recruiter/jobs/job-posted.jsx";
+import JobApplicants from "../modules/recruiter/jobs/Job-response-list.jsx";
+import RecruiterProfile from "../modules/recruiter/profile/recruiter-profile.jsx";
+import RecruiterProfileForm from "../modules/recruiter/profile/recruiter-profile-form.jsx";
 
 // Import Admin Auth Components (Username/Password Login)
 import AdminSignIn from "../modules/auth/admin/SignIn.jsx";
@@ -130,20 +129,16 @@ const router = createBrowserRouter([
         element: <RecruiterProfile />,
       },
       {
-        path: "recruiter-profileform",
-        element: <RecruiterProfileform />,
+        path: "recruiter-profile-form",
+        element: <RecruiterProfileForm />,
       },
       {
         path: "create-job",
-        element: <RecruiterCreateJob />,
+        element: <RecruiterPostJob />,
       },
       {
         path: "job-posted",
         element: <JobPosted />,
-      },
-      {
-        path: "talent-hire",
-        element: <TalentHire />,
       },
       {
         path: "recruiter/jobs/:jobId/applicants",

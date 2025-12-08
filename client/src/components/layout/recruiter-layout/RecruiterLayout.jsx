@@ -21,8 +21,7 @@ export default function RecruiterLayout() {
     if (location.pathname === '/create-job') return 'Create Job';
     if (location.pathname.includes('/applicants')) return 'Applicants';
     if (location.pathname === '/recruiter-profile') return 'Company Profile';
-    if (location.pathname === '/talent-hire') return 'Talent Hire';
-    if (location.pathname === '/recruiter-profileform') return 'Complete Profile';
+    if (location.pathname === '/recruiter-profile-form') return 'Complete Profile';
     return 'Recruiter Dashboard';
   };
 
@@ -33,8 +32,7 @@ export default function RecruiterLayout() {
     if (location.pathname === '/create-job') return 'Create a new job posting.';
     if (location.pathname.includes('/applicants')) return 'Review and manage applicants.';
     if (location.pathname === '/recruiter-profile') return 'Update your company profile and settings.';
-    if (location.pathname === '/talent-hire') return 'Find and hire top talent.';
-    if (location.pathname === '/recruiter-profileform') return 'Complete your company profile to get started.';
+    if (location.pathname === '/recruiter-profile-form') return 'Complete your company profile to get started.';
     return 'Manage your recruiting activities.';
   };
 

@@ -44,24 +44,14 @@ export default function RecruiterSidebar() {
       path: "/job-posted" 
     },
     { 
-      title: "Applicants", 
-      icon: <Users size={20} />, 
-      path: "/recruiter/jobs" 
-    },
-    { 
       title: "Company Profile", 
       icon: <Building size={20} />, 
       path: "/recruiter-profile" 
     },
     { 
-      title: "Talent Hire", 
+      title: "Complete Profile", 
       icon: <UserPlus size={20} />, 
-      path: "/talent-hire" 
-    },
-    { 
-      title: "Notifications", 
-      icon: <Bell size={20} />, 
-      path: "/notifications" 
+      path: "/recruiter-profile-form" 
     },
   ];
 
