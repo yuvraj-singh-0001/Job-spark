@@ -10,8 +10,8 @@ import AdminLayout from "../components/layout/admin-layout/AdminLayout.jsx";
 
 // Import Public/Guest Components (renamed)
 import Home from "../modules/guest/Home.jsx";
-import Companies from "../modules/guest/companies.jsx";
-import CareerGuide from "../modules/guest/career-guide.jsx";
+import Companies from "../modules/guest/companies/companies.jsx";
+import CareerGuide from "../modules/guest/guide/career-guide.jsx";
 import Jobs from "../modules/guest/jobs/job-list.jsx";
 import JobDetail from "../modules/guest/jobs/job-list-details.jsx";
 import Profile from "../components/profile/profile.jsx";
