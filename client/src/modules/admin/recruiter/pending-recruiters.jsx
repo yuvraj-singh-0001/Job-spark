@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import api from "../../components/apiconfig/apiconfig";
+import api from "../../../components/apiconfig/apiconfig";
 
 export default function PendingRecruiters() {
   const [recruiters, setRecruiters] = useState([]);

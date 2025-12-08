@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import api from "../../components/apiconfig/apiconfig";
+import api from "../../../components/apiconfig/apiconfig";
 
-export default function ApprovedJobs() {
+export default function PendingJobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState(null);
@@ -13,10 +13,10 @@ export default function ApprovedJobs() {
 
   const fetchJobs = async () => {
     try {
-      const response = await api.get("/admin/auth/jobs?status=approved");
+      const response = await api.get("/admin/auth/jobs?status=pending");
       setJobs(response.data.jobs || []);
     } catch (error) {
-      console.error("Error fetching approved jobs:", error);
+      console.error("Error fetching pending jobs:", error);
     } finally {
       setLoading(false);
     }
@@ -56,15 +56,6 @@ export default function ApprovedJobs() {
     return salary;
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -78,9 +69,9 @@ export default function ApprovedJobs() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Approved Jobs</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Pending Jobs</h1>
           <p className="text-sm md:text-base text-gray-600">
-            Total {jobs.length} approved jobs
+            Total {jobs.length} jobs waiting for approval
           </p>
         </div>
         <button
@@ -91,14 +82,14 @@ export default function ApprovedJobs() {
         </button>
       </div>
 
-      {/* Approved Jobs Table */}
+      {/* Pending Jobs Table */}
       <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <div className="px-4 py-3 bg-green-600 border-b border-green-700">
+        <div className="px-4 py-3 bg-yellow-600 border-b border-yellow-700">
           <h2 className="text-lg font-semibold text-white">
-            Approved Jobs ({jobs.length})
+            Pending Approval ({jobs.length})
           </h2>
-          <p className="text-sm text-green-100">
-            Jobs that have been approved and are live on the platform
+          <p className="text-sm text-yellow-100">
+            Jobs waiting for admin approval
           </p>
         </div>
         {jobs.length > 0 ? (
@@ -110,13 +101,10 @@ export default function ApprovedJobs() {
                     Job Details
                   </th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                    Company & Recruiter
+                    Company
                   </th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
                     Location
-                  </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Posted
                   </th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -125,7 +113,7 @@ export default function ApprovedJobs() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {jobs.map((job) => (
-                  <tr key={job.id} className="hover:bg-green-50">
+                  <tr key={job.id} className="hover:bg-yellow-50">
                     <td className="px-3 py-4">
                       <div>
                         <div className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
@@ -146,11 +134,6 @@ export default function ApprovedJobs() {
                     <td className="px-3 py-4 hidden lg:table-cell">
                       <div className="text-sm text-gray-900 truncate max-w-[120px]">{job.location}</div>
                     </td>
-                    <td className="px-3 py-4">
-                      <div className="text-sm text-gray-900">
-                        {formatDate(job.created_at)}
-                      </div>
-                    </td>
                     <td className="px-3 py-4 text-sm font-medium">
                       <div className="flex flex-col sm:flex-row gap-2">
                         <button
@@ -160,10 +143,16 @@ export default function ApprovedJobs() {
                           View
                         </button>
                         <button
-                          onClick={() => updateJobStatus(job.id, 'closed')}
-                          className="text-orange-600 hover:text-orange-900 border border-orange-200 hover:bg-orange-50 text-xs sm:text-sm px-2 py-1 rounded"
+                          onClick={() => updateJobStatus(job.id, 'approved')}
+                          className="text-green-600 hover:text-green-900 border border-green-200 hover:bg-green-50 text-xs sm:text-sm px-2 py-1 rounded"
                         >
-                          Close Job
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => updateJobStatus(job.id, 'rejected')}
+                          className="text-red-600 hover:text-red-900 border border-red-200 hover:bg-red-50 text-xs sm:text-sm px-2 py-1 rounded"
+                        >
+                          Reject
                         </button>
                       </div>
                     </td>
@@ -174,13 +163,13 @@ export default function ApprovedJobs() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
-              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-100 mb-4">
+              <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Approved Jobs</h3>
-            <p className="text-gray-500">Approve jobs to see them listed here</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Pending Jobs</h3>
+            <p className="text-gray-500">All jobs have been reviewed</p>
           </div>
         )}
       </div>
@@ -250,8 +239,13 @@ export default function ApprovedJobs() {
                     <div>
                       <label className="text-xs md:text-sm font-medium text-gray-500">Status</label>
                       <p className="text-gray-900">
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                          Approved
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          selectedJob.status === 'approved' ? 'bg-green-100 text-green-800' :
+                          selectedJob.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                          selectedJob.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {selectedJob.status.charAt(0).toUpperCase() + selectedJob.status.slice(1)}
                         </span>
                       </p>
                     </div>
@@ -308,12 +302,21 @@ export default function ApprovedJobs() {
               <div className="mt-6 flex flex-col sm:flex-row justify-end gap-3">
                 <button
                   onClick={() => {
-                    updateJobStatus(selectedJob.id, 'closed');
+                    updateJobStatus(selectedJob.id, 'approved');
                     setShowModal(false);
                   }}
-                  className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 text-sm md:text-base"
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm md:text-base"
                 >
-                  Close Job
+                  Approve Job
+                </button>
+                <button
+                  onClick={() => {
+                    updateJobStatus(selectedJob.id, 'rejected');
+                    setShowModal(false);
+                  }}
+                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm md:text-base"
+                >
+                  Reject Job
                 </button>
                 <button
                   onClick={() => setShowModal(false)}

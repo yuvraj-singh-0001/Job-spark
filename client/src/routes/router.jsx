@@ -39,16 +39,16 @@ import RecruiterProfileForm from "../modules/recruiter/profile/recruiter-profile
 // Import Admin Auth Components (Username/Password Login)
 import AdminSignIn from "../modules/auth/admin/SignIn.jsx";
 import AdminSignUp from "../modules/auth/admin/SignUp.jsx";
-import AdminDashboard from "../modules/admin/AdminDashboard.jsx";
-import AdminUsers from "../modules/admin/AdminUsers.jsx";
-import AdminRecruiters from "../modules/admin/AdminRecruiters.jsx";
-import AdminJobs from "../modules/admin/AdminJobs.jsx";
-import PendingRecruiters from "../modules/admin/PendingRecruiters.jsx";
-import VerifiedRecruiters from "../modules/admin/VerifiedRecruiters.jsx";
-import PendingJobs from "../modules/admin/PendingJobs.jsx";
-import ApprovedJobs from "../modules/admin/ApprovedJobs.jsx";
-import ClosedJobs from "../modules/admin/ClosedJobs.jsx";
-import RejectedJobs from "../modules/admin/RejectedJobs.jsx";
+import AdminDashboard from "../modules/admin/dashboard/dashboard.jsx";
+import AdminUsers from "../modules/admin/candidate/candidate-list.jsx";
+import AdminRecruiters from "../modules/admin/recruiter/recruiters-list.jsx";
+import AdminJobs from "../modules/admin/jobs/jobs-list.jsx";
+import PendingRecruiters from "../modules/admin/recruiter/pending-recruiters.jsx";
+import VerifiedRecruiters from "../modules/admin/recruiter/verified-recruiters.jsx";
+import PendingJobs from "../modules/admin/approval-management/pending-jobs-list.jsx";
+import ApprovedJobs from "../modules/admin/approval-management/approval-job-list.jsx";
+import ClosedJobs from "../modules/admin/approval-management/closed-jobs-list.jsx";
+import RejectedJobs from "../modules/admin/approval-management/rejected-jobs.jsx";
 
 // Define application routes
 const router = createBrowserRouter([

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../components/apiconfig/apiconfig";
+import api from "../../../components/apiconfig/apiconfig";
 
 export default function AdminJobs() {
   const [jobs, setJobs] = useState([]);

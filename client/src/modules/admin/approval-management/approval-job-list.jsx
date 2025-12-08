@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import api from "../../components/apiconfig/apiconfig";
+import api from "../../../components/apiconfig/apiconfig";
 
-export default function RejectedJobs() {
+export default function ApprovedJobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState(null);
@@ -13,10 +13,10 @@ export default function RejectedJobs() {
 
   const fetchJobs = async () => {
     try {
-      const response = await api.get("/admin/auth/jobs?status=rejected");
+      const response = await api.get("/admin/auth/jobs?status=approved");
       setJobs(response.data.jobs || []);
     } catch (error) {
-      console.error("Error fetching rejected jobs:", error);
+      console.error("Error fetching approved jobs:", error);
     } finally {
       setLoading(false);
     }
@@ -78,9 +78,9 @@ export default function RejectedJobs() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Rejected Jobs</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Approved Jobs</h1>
           <p className="text-sm md:text-base text-gray-600">
-            Total {jobs.length} rejected jobs
+            Total {jobs.length} approved jobs
           </p>
         </div>
         <button
@@ -91,14 +91,14 @@ export default function RejectedJobs() {
         </button>
       </div>
 
-      {/* Rejected Jobs Table */}
+      {/* Approved Jobs Table */}
       <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <div className="px-4 py-3 bg-red-600 border-b border-red-700">
+        <div className="px-4 py-3 bg-green-600 border-b border-green-700">
           <h2 className="text-lg font-semibold text-white">
-            Rejected Jobs ({jobs.length})
+            Approved Jobs ({jobs.length})
           </h2>
-          <p className="text-sm text-red-100">
-            Jobs that have been rejected by admin
+          <p className="text-sm text-green-100">
+            Jobs that have been approved and are live on the platform
           </p>
         </div>
         {jobs.length > 0 ? (
@@ -116,7 +116,7 @@ export default function RejectedJobs() {
                     Location
                   </th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Rejected Date
+                    Posted
                   </th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -125,7 +125,7 @@ export default function RejectedJobs() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {jobs.map((job) => (
-                  <tr key={job.id} className="hover:bg-red-50">
+                  <tr key={job.id} className="hover:bg-green-50">
                     <td className="px-3 py-4">
                       <div>
                         <div className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
@@ -148,7 +148,7 @@ export default function RejectedJobs() {
                     </td>
                     <td className="px-3 py-4">
                       <div className="text-sm text-gray-900">
-                        {formatDate(job.updated_at || job.created_at)}
+                        {formatDate(job.created_at)}
                       </div>
                     </td>
                     <td className="px-3 py-4 text-sm font-medium">
@@ -160,10 +160,10 @@ export default function RejectedJobs() {
                           View
                         </button>
                         <button
-                          onClick={() => updateJobStatus(job.id, 'approved')}
-                          className="text-green-600 hover:text-green-900 border border-green-200 hover:bg-green-50 text-xs sm:text-sm px-2 py-1 rounded"
+                          onClick={() => updateJobStatus(job.id, 'closed')}
+                          className="text-orange-600 hover:text-orange-900 border border-orange-200 hover:bg-orange-50 text-xs sm:text-sm px-2 py-1 rounded"
                         >
-                          Approve
+                          Close Job
                         </button>
                       </div>
                     </td>
@@ -174,13 +174,13 @@ export default function RejectedJobs() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
-              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
+              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Rejected Jobs</h3>
-            <p className="text-gray-500">No jobs have been rejected yet</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Approved Jobs</h3>
+            <p className="text-gray-500">Approve jobs to see them listed here</p>
           </div>
         )}
       </div>
@@ -250,8 +250,8 @@ export default function RejectedJobs() {
                     <div>
                       <label className="text-xs md:text-sm font-medium text-gray-500">Status</label>
                       <p className="text-gray-900">
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                          Rejected
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                          Approved
                         </span>
                       </p>
                     </div>
@@ -308,12 +308,12 @@ export default function RejectedJobs() {
               <div className="mt-6 flex flex-col sm:flex-row justify-end gap-3">
                 <button
                   onClick={() => {
-                    updateJobStatus(selectedJob.id, 'approved');
+                    updateJobStatus(selectedJob.id, 'closed');
                     setShowModal(false);
                   }}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm md:text-base"
+                  className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 text-sm md:text-base"
                 >
-                  Approve Job
+                  Close Job
                 </button>
                 <button
                   onClick={() => setShowModal(false)}
