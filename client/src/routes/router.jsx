@@ -17,11 +17,11 @@ import Jobs from "../modules/guest/jobs/job-Index.jsx";
 import JobDetail from "../modules/guest/jobs/job-details.jsx";
 import Profile from "../components/profile/profile.jsx";
 
-// Import Auth Components (Candidate)
-import SignIn from "../modules/auth/candidate/SignIn.jsx";
-import SignUp from "../modules/auth/candidate/SignUp.jsx";
-import Forgot from "../modules/auth/candidate/Forgot.jsx";
-import SignInModal from "../modules/auth/candidate/SignInModal.jsx";
+// Import Auth Components (Candidate/Recruiter - Google Login Only)
+import SignIn from "../modules/auth/candidate-recruiter/SignIn.jsx";
+import SignUp from "../modules/auth/candidate-recruiter/SignUp.jsx";
+import Forgot from "../modules/auth/candidate-recruiter/Forgot.jsx";
+import SignInModal from "../modules/auth/candidate-recruiter/SignInModal.jsx";
 
 // Import Candidate Dashboard Components
 import Dashboard from "../modules/candidate/Candidate-Dashboard/candidate-Index.jsx";
@@ -39,9 +39,9 @@ import RecruiterDashboard from "../modules/recruiter/recruiter-dashboard/recruit
 import RecruiterProfile from "../modules/recruiter/recruiter-dashboard/recruiter-profile.jsx";
 import JobApplicants from "../modules/recruiter/recruiter-dashboard/JobApplicants.jsx";
 
-// Import Admin Components
-import AdminSignIn from "../modules/admin/SignIn.jsx";
-import AdminSignUp from "../modules/admin/SignUp.jsx";
+// Import Admin Auth Components (Username/Password Login)
+import AdminSignIn from "../modules/auth/admin/SignIn.jsx";
+import AdminSignUp from "../modules/auth/admin/SignUp.jsx";
 import AdminDashboard from "../modules/admin/AdminDashboard.jsx";
 import AdminUsers from "../modules/admin/AdminUsers.jsx";
 import AdminRecruiters from "../modules/admin/AdminRecruiters.jsx";

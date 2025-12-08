@@ -2,35 +2,9 @@ import { useState, useEffect } from "react";
 import api from "../../../components/apiconfig/apiconfig";
 
 export default function SignIn() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setLoading(true);
-    setMessage("");
-    setError("");
-
-    try {
-      const { data } = await api.post("/auth/login", { email, password });
-      const role = data?.user?.role || "user";
-      
-      // Redirect based on role
-      if (role === "recruiter") {
-        window.location.href = "/recruiter-dashboard";
-      } else {
-        window.location.href = "/home";
-      }
-    } catch (err) {
-      setError(err?.response?.data?.message || "Login failed");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   // GOOGLE LOGIN SUCCESS HANDLER
   const handleGoogleSuccess = async (response) => {
@@ -97,41 +71,10 @@ export default function SignIn() {
             <div className="w-full max-w-md rounded-2xl shadow-lg bg-white border border-gray-200">
               <div className="px-8 pt-8 border-b border-gray-200 pb-4">
                 <h2 className="text-2xl font-semibold">Sign in to HireSpark</h2>
-                <p className="mt-1 text-sm text-slate-500">Welcome back!</p>
+                <p className="mt-1 text-sm text-slate-500">Welcome back! Sign in with Google</p>
               </div>
 
               <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-3 sm:space-y-4 pt-6">
-                <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-                  <input
-                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
-                    placeholder="Email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-
-                  <input
-                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
-                    placeholder="Password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-
-                  <button disabled={loading} className="w-full rounded-full py-3 bg-emerald-600 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                    {loading ? "Please wait..." : "Sign In"}
-                  </button>
-                </form>
-
-                <div className="relative my-4">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-300"></div>
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-slate-500">Or continue with</span>
-                  </div>
-                </div>
-
                 <div id="google-login-btn" className="flex justify-center"></div>
 
                 {message && <p className="text-green-600 text-sm text-center">{message}</p>}
@@ -149,4 +92,3 @@ export default function SignIn() {
     </div>
   );
 }
-

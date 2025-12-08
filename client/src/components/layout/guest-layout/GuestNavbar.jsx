@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Sparkles, User, Menu, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../../components/apiconfig/apiconfig";
-import SignInModal from "../../../modules/auth/candidate/SignInModal";
+import SignInModal from "../../../modules/auth/candidate-recruiter/SignInModal";
 
 /**
  * Guest Navbar - For public pages
