@@ -44,7 +44,12 @@ export default function ProtectedRoute({ children, roles }) {
   const role = user?.role;
   
   // Check if user has required role
-  if (roles && roles.length > 0 && !roles.includes(role)) {
+  // Treat "candidate" and "user" as equivalent for backward compatibility
+  const normalizedRole = role === "candidate" ? "user" : role;
+  const normalizedRoles = roles?.map(r => r === "candidate" ? "user" : r) || [];
+  const hasAccess = normalizedRoles.length === 0 || normalizedRoles.includes(normalizedRole);
+  
+  if (roles && roles.length > 0 && !hasAccess) {
     // If user tries to access wrong role's pages, redirect them to appropriate page
     if (role === "admin") {
       return <Navigate to="/admin-dashboard" replace />;

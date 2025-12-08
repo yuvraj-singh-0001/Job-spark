@@ -14,12 +14,15 @@ export default function SignUp() {
     setMessage("");
 
     try {
+      // Map role: "user" -> "candidate" for backend, "recruiter" -> "recruiter"
+      const roleToSend = role === "recruiter" ? "recruiter" : "candidate";
+      
       const { data } = await api.post("/auth/google", {
         credential: response.credential,
-        role: role
+        role: roleToSend
       });
 
-      const userRole = data?.user?.role || role;
+      const userRole = data?.user?.role || roleToSend;
 
       window.location.href = userRole === "recruiter"
         ? "/recruiter-profile"

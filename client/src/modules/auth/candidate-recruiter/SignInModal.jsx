@@ -13,12 +13,16 @@ export default function SignInModal({ role = "user", onClose }) {
     setMessage("");
 
     try {
+      // Map role prop: "user" -> "candidate" for backend, "recruiter" -> "recruiter"
+      const roleToSend = role === "recruiter" ? "recruiter" : "candidate";
+      
       const { data } = await api.post("/auth/google", {
-        credential: response.credential
+        credential: response.credential,
+        role: roleToSend
       });
 
-      const role = data?.user?.role || "user";
-      window.location.href = role === "recruiter" ? "/recruiter-profile" : "/dashboard";
+      const userRole = data?.user?.role || role;
+      window.location.href = userRole === "recruiter" ? "/recruiter-profile" : "/dashboard";
     } catch (err) {
       setError(err?.response?.data?.message || "Google login failed");
     } finally {

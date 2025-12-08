@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import api from "../../../components/apiconfig/apiconfig";
 
 export default function SignIn() {
+  const [role, setRole] = useState("candidate");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -14,11 +15,12 @@ export default function SignIn() {
 
     try {
       const { data } = await api.post("/auth/google", {
-        credential: response.credential
+        credential: response.credential,
+        role: role
       });
 
-      const role = data?.user?.role || "user";
-      window.location.href = role === "recruiter" ? "/recruiter-profile" : "/dashboard";
+      const userRole = data?.user?.role || role;
+      window.location.href = userRole === "recruiter" ? "/recruiter-profile" : "/dashboard";
     } catch (err) {
       setError(err?.response?.data?.message || "Google login failed");
     } finally {
@@ -54,7 +56,7 @@ export default function SignIn() {
         width: "100%",
       });
     }
-  }, []);
+  }, [role]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4 py-12">
@@ -75,6 +77,42 @@ export default function SignIn() {
               </div>
 
               <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-3 sm:space-y-4 pt-6">
+                {/* Role Selection */}
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    I want to sign in as:
+                  </label>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <label className={`flex gap-2 p-3 border-2 rounded-xl cursor-pointer transition-colors ${
+                      role === "candidate" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+                    }`}>
+                      <input 
+                        type="radio" 
+                        name="role" 
+                        value="candidate" 
+                        checked={role === "candidate"} 
+                        onChange={() => setRole("candidate")}
+                        className="mt-0.5"
+                      />
+                      <span className="font-medium">Candidate</span>
+                    </label>
+
+                    <label className={`flex gap-2 p-3 border-2 rounded-xl cursor-pointer transition-colors ${
+                      role === "recruiter" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+                    }`}>
+                      <input 
+                        type="radio" 
+                        name="role" 
+                        value="recruiter" 
+                        checked={role === "recruiter"} 
+                        onChange={() => setRole("recruiter")}
+                        className="mt-0.5"
+                      />
+                      <span className="font-medium">Recruiter</span>
+                    </label>
+                  </div>
+                </div>
+
                 <div id="google-login-btn" className="flex justify-center"></div>
 
                 {message && <p className="text-green-600 text-sm text-center">{message}</p>}
