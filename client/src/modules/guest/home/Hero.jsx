@@ -1,8 +1,7 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, MapPin, ChevronRight } from "lucide-react";
-import homeIllustration from "../../../assets/home.svg";
-import { CTA_GREEN, PRIMARY_BLUE, jobCategories } from "./data";
+import { PRIMARY, jobCategories } from "./data";
 
 function useFadeInOnScroll() {
   const ref = useRef(null);
@@ -95,37 +94,32 @@ export default function Hero() {
   return (
     <section
       ref={sectionRef}
-      className={`relative bg-white transition-all duration-1000 ease-out ${
-        sectionVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-      }`}
+      className={`relative bg-white transition-all duration-1000 ease-out min-h-screen flex items-center justify-center ${sectionVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+        }`}
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-10 md:py-12 lg:py-16 lg:min-h-[calc(100vh-120px)] grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-        {/* Left copy */}
-        <div className="space-y-5">
-          <p className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-blue-600 bg-blue-50 border border-blue-100 rounded-full px-3 py-1 w-fit">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-            Jobs for you. Talent for companies.
-          </p>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
-            Find local & remote jobs{" "}
-            <span className="text-blue-600">in minutes</span>
+      <div
+        className="max-w-6xl w-full mx-auto px-4 sm:px-6 md:px-16 lg:px-20 
+             py-10 md:py-12 lg:py-16 
+             flex flex-col items-center justify-center text-center gap-6">
+        <div className="space-y-5 w-full flex flex-col items-center">
+
+          <h1 className="text-[32px] sm:text-[36px] md:text-[40px] lg:text-[44px] font-bold tracking-tight leading-[1.4]" style={{ color: '#111111' }}>
+            Trusted Opportunities for {" "}
+            <span style={{ color: '#1769E0' }}>Fresh Talent</span>
           </h1>
-          <p className="text-sm sm:text-base text-slate-600 max-w-xl">
-            Search by city, role or skill. Apply in a few taps. No confusing
-            steps. Real openings from verified companies, not spam.
-          </p>
+
 
           {/* Advanced search */}
-          <div className="border border-slate-200 shadow-lg rounded-2xl bg-white">
-            <div className="p-4 sm:p-5 space-y-4">
-              <form onSubmit={handleSubmit} className="space-y-3">
-                <div className="grid md:grid-cols-4 gap-3">
+          <div className="bg-gray-200 rounded-[5px] w-full max-w-5xl mx-auto">
+            <div className="p-5 sm:p-6">
+              <form onSubmit={handleSubmit} className="space-y-10">
+                <div className="grid md:grid-cols-4 gap-1">
                   <div className="relative">
-                    <label className="text-xs font-semibold text-slate-500 mb-1 block">
+                    <label className="text-[13px] sm:text-[14px] font-medium mb-1.5 block" style={{ color: '#555555' }}>
                       Job title or skill
                     </label>
-                    <div className="flex items-center gap-2 border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50">
-                      <Search size={18} className="text-slate-400" />
+                    <div className="flex items-center gap-3 rounded-[5px] px-3.5 py-3 bg-gray-50">
+                      <Search size={18} style={{ color: '#1769E0', strokeWidth: 2 }} />
                       <input
                         type="text"
                         value={searchTerm}
@@ -139,11 +133,12 @@ export default function Hero() {
                           setShowSuggestions(true);
                         }}
                         placeholder="e.g. Delivery, Telecaller"
-                        className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+                        className="w-full bg-transparent text-[14px] sm:text-[15px] outline-none border-none"
+                        style={{ color: '#111111' }}
                       />
                     </div>
                     {showSuggestions && filteredSuggestions.length > 0 && (
-                      <div className="absolute z-20 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-lg text-sm max-h-52 overflow-auto">
+                      <div className="absolute z-20 mt-1 w-full bg-white rounded-[10px] shadow-soft text-[14px] sm:text-[15px] max-h-52 overflow-auto border border-gray-200">
                         {filteredSuggestions.map((s) => (
                           <button
                             key={s}
@@ -152,7 +147,8 @@ export default function Hero() {
                               e.preventDefault();
                               handleSuggestionClick(s);
                             }}
-                            className="w-full text-left px-3 py-2 hover:bg-slate-50"
+                            className="w-full text-left px-3 py-2 hover:bg-chip-bg transition-colors"
+                            style={{ color: '#111111' }}
                           >
                             {s}
                           </button>
@@ -162,31 +158,33 @@ export default function Hero() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-slate-500 mb-1 block">
+                    <label className="text-[13px] sm:text-[14px] font-medium mb-1.5 block" style={{ color: '#555555' }}>
                       City / area
                     </label>
-                    <div className="flex items-center gap-2 border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50">
-                      <MapPin size={18} className="text-slate-400" />
+                    <div className="flex items-center gap-2 rounded-[5px] px-3.5 py-3 bg-gray-50">
+                      <MapPin size={18} style={{ color: '#1769E0', strokeWidth: 2 }} />
                       <input
                         type="text"
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
                         onFocus={() => setActiveField("location")}
                         placeholder="e.g. Delhi, Remote"
-                        className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+                        className="w-full bg-transparent text-[14px] sm:text-[15px] outline-none border-none"
+                        style={{ color: '#111111' }}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-slate-500 mb-1 block">
+                    <label className="text-[13px] sm:text-[14px] font-medium mb-1.5 block" style={{ color: '#555555' }}>
                       Category
                     </label>
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
                       onFocus={() => setActiveField("category")}
-                      className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 text-sm outline-none text-slate-700"
+                      className="w-full rounded-[5px] px-3.5 py-3 bg-gray-50 text-[14px] sm:text-[15px] outline-none border-none"
+                      style={{ color: '#111111' }}
                     >
                       <option value="">All categories</option>
                       {jobCategories.map((c) => (
@@ -198,99 +196,67 @@ export default function Hero() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-slate-500 mb-1 block">
+                    <label className="text-[13px] sm:text-[14px] font-medium mb-1.5 block" style={{ color: '#555555' }}>
                       Experience
                     </label>
                     <select
                       value={experience}
                       onChange={(e) => setExperience(e.target.value)}
                       onFocus={() => setActiveField("experience")}
-                      className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 text-sm outline-none text-slate-700"
+                      className="w-full rounded-[5px] px-3.5 py-3 bg-gray-50 text-[14px] sm:text-[15px] outline-none border-none"
+                      style={{ color: '#111111' }}
                     >
                       <option value="">Any</option>
                       <option value="fresher">Fresher / Entry</option>
-                      <option value="mid">2–5 years</option>
-                      <option value="senior">5+ years</option>
+                      <option value="mid">0–2 years</option>
+                      <option value="senior">2+ years</option>
                     </select>
                   </div>
                 </div>
 
                 {/* Filter chips */}
                 {chips.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 justify-center">
                     {chips.map((chip) => (
                       <button
                         key={chip.key}
                         type="button"
                         onClick={() => removeChip(chip.key)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100 hover:bg-blue-100 transition-colors"
+                        className="inline-flex items-center gap-1.5 rounded-[20px] text-[13px] sm:text-[14px] font-medium transition-colors"
+                        style={{
+                          backgroundColor: '#E8F1FF',
+                          color: '#1769E0',
+                          padding: '7px 16px'
+                        }}
                       >
                         <span>{chip.value}</span>
-                        <span className="text-[10px] text-blue-500">✕</span>
+                        <span className="text-[11px]" style={{ color: '#1769E0' }}>✕</span>
                       </button>
                     ))}
                   </div>
                 )}
 
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div className="flex gap-3">
-                    <button
-                      type="submit"
-                      className="flex-1 sm:flex-none sm:px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm hover:shadow-md transition-all px-4 py-2 rounded-lg"
-                      style={{ backgroundColor: PRIMARY_BLUE }}
-                    >
-                      Search Jobs
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSearchTerm("");
-                        setLocation("");
-                        setCategory("");
-                        setExperience("");
-                        setChips([]);
-                      }}
-                      className="hidden sm:inline-flex border border-slate-200 text-slate-600 hover:bg-slate-50 px-4 py-2 rounded-lg transition-colors"
-                    >
-                      Clear
-                    </button>
-                  </div>
+                <div className="flex flex-col items-center gap-3">
+                  <button
+                    type="submit"
+                    className="text-white font-semibold shadow-soft hover:shadow-md transition-all rounded-[10px]"
+                    style={{
+                      backgroundColor: '#1769E0',
+                      padding: '10px 32px',
+                      fontSize: '15px'
+                    }}
+                  >
+                    Search Jobs
+                  </button>
+
                 </div>
               </form>
             </div>
           </div>
 
-          {/* Dual CTAs */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Link to="/post-job" className="flex-1">
-              <button
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md flex items-center justify-center gap-2 text-sm px-4 py-2 rounded-lg transition-colors"
-                style={{ backgroundColor: CTA_GREEN }}
-              >
-                Post a Job
-                <ChevronRight size={16} />
-              </button>
-            </Link>
-            <Link to="/jobs" className="flex-1">
-              <button className="w-full bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-100 font-semibold flex items-center justify-center gap-2 text-sm px-4 py-2 rounded-lg transition-colors">
-                Browse Jobs
-                <ChevronRight size={16} />
-              </button>
-            </Link>
-          </div>
+
         </div>
 
-        {/* Right side – hero illustration image */}
-        <div className="relative flex items-center justify-center">
-          <div className="relative w-full max-w-xl lg:max-w-2xl lg:mt-12">
-            <img
-              src={homeIllustration}
-              alt="People exploring new career opportunities"
-              className="w-full h-auto rounded-3xl object-contain"
-              loading="lazy"
-            />
-          </div>
-        </div>
       </div>
     </section>
   );

@@ -1,7 +1,19 @@
 // Shared constants and data for the guest home page
-export const PRIMARY_BLUE = "#0066CC";
-export const LIGHT_GREY_BG = "#F5F5F5";
-export const CTA_GREEN = "#0052A3";
+// Design System Colors
+export const PRIMARY = "#1769E0";
+export const PRIMARY_LIGHT = "#2E8CFF";
+export const CHIP_BG = "#E8F1FF";
+export const BG = "#F5F7FA";
+export const WHITE = "#FFFFFF";
+export const TEXT_DARK = "#111111";
+export const TEXT_MUTED = "#555555";
+export const BORDER = "#E5E7EB";
+export const HIGHLIGHT = "#F7C948";
+
+// Legacy constants (for backward compatibility)
+export const PRIMARY_BLUE = PRIMARY;
+export const LIGHT_GREY_BG = BG;
+export const CTA_GREEN = PRIMARY;
 
 
 

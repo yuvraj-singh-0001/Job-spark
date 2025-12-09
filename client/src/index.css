@@ -3,6 +3,36 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Design System CSS Variables */
+:root {
+  --primary: #1769E0;
+  --primary-light: #2E8CFF;
+  --chip-bg: #E8F1FF;
+  --bg: #F5F7FA;
+  --white: #FFFFFF;
+  --text-dark: #111111;
+  --text-muted: #555555;
+  --border: #E5E7EB;
+  --highlight: #F7C948;
+}
+
+/* Typography */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
 /* minimal defaults if not using Tailwind */
 html, body, #root { height: 100%; }
-body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+body { 
+  margin: 0; 
+  font-family: 'Inter', 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text-dark);
+  background-color: var(--bg);
+}
+
+/* Placeholder styling */
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}

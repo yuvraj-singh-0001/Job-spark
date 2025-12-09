@@ -39,7 +39,7 @@ export default function Profile() {
   if (!user) return (
     <div className="p-6">
       <div>You are not logged in.</div>
-      <button onClick={()=>navigate('/sign-in')} className="mt-3 px-3 py-1 bg-blue-600 text-white rounded">Login</button>
+      <button onClick={() => navigate('/sign-in')} className="mt-3 px-3 py-1 bg-blue-600 text-white rounded">Login</button>
     </div>
   );
 

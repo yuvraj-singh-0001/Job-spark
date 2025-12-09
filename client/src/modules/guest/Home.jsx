@@ -3,7 +3,6 @@ import Hero from "./home/Hero";
 import Categories from "./home/Categories";
 
 import HowItWorks from "./home/HowItWorks";
-import WhyChooseUs from "./home/WhyChooseUs";
 
 
 export default function Home() {
@@ -14,7 +13,7 @@ export default function Home() {
         <Categories />
       
         <HowItWorks />
-        <WhyChooseUs />
+      
       
       </main>
     </div>

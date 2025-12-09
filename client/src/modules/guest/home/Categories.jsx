@@ -29,14 +29,14 @@ function useFadeInOnScroll() {
 }
 
 const iconMap = {
-  home: <MapPin size={22} />,
-  clock: <Clock size={22} />,
-  users: <Users size={22} />,
-  userPlus: <UserPlus size={22} />,
-  send: <Send size={22} />,
-  building: <Building2 size={22} />,
-  briefcase: <Briefcase size={22} />,
-  arrowRight: <ArrowRight size={22} />,
+  home: MapPin,
+  clock: Clock,
+  users: Users,
+  userPlus: UserPlus,
+  send: Send,
+  building: Building2,
+  briefcase: Briefcase,
+  arrowRight: ArrowRight,
 };
 
 export default function Categories() {
@@ -50,23 +50,24 @@ export default function Categories() {
   return (
     <section
       ref={sectionRef}
-      className={`bg-slate-50 transition-all duration-1000 ease-out ${
+      className={`transition-all duration-1000 ease-out min-h-screen flex items-center ${
         sectionVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
       }`}
+      style={{ backgroundColor: '#F7FAFF' }}
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-12 md:py-16">
+      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-16 lg:px-20 py-12 md:py-16" style={{ paddingTop: '40px', paddingBottom: '60px' }}>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+            <h2 className="text-[24px] font-bold leading-[1.4]" style={{ color: '#111111' }}>
               Browse by category
             </h2>
-            <p className="text-sm sm:text-base text-slate-600 mt-1">
+            <p className="text-[14px] leading-[1.5] mt-1" style={{ color: '#555555' }}>
               Tap a card to see jobs only from that category.
             </p>
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5" style={{ gap: '16px' }}>
           {jobCategories.map((cat) => (
             <button
               key={cat.id}
@@ -74,20 +75,20 @@ export default function Categories() {
               onClick={() => handleClick(cat.id)}
               className="group text-left"
             >
-              <div className="h-full border border-slate-200 rounded-2xl shadow-sm group-hover:shadow-lg group-hover:-translate-y-1 transition-all bg-slate-50/60">
-                <div className="p-5 flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-blue-700 border border-blue-100">
-                    {iconMap[cat.icon] || <Briefcase size={22} />}
+              <div className="h-full border rounded-[12px] shadow-soft group-hover:shadow-lg group-hover:-translate-y-1 transition-all bg-white" style={{ borderColor: '#E5E7EB' }}>
+                <div className="p-4 flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-[10px] bg-white flex items-center justify-center border" style={{ borderColor: '#E5E7EB', color: '#1769E0' }}>
+                    {iconMap[cat.icon] ? React.createElement(iconMap[cat.icon], { size: 22, style: { color: '#1769E0', strokeWidth: 2 } }) : <Briefcase size={22} style={{ color: '#1769E0', strokeWidth: 2 }} />}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-slate-900">
+                    <p className="text-[18px] font-semibold leading-[1.4]" style={{ color: '#111111' }}>
                       {cat.label}
                     </p>
-                    <p className="text-xs text-slate-500 mt-0.5">
+                    <p className="text-[14px] leading-[1.5] mt-0.5" style={{ color: '#555555' }}>
                       {cat.count.toLocaleString()} open roles
                     </p>
                   </div>
-                  <ChevronRight className="text-slate-300 group-hover:text-blue-500 transition-colors" />
+                  <ChevronRight size={20} className="transition-colors group-hover:opacity-70" style={{ color: '#1769E0', strokeWidth: 2 }} />
                 </div>
               </div>
             </button>

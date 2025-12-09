@@ -116,34 +116,23 @@ export default function GuestNavbar() {
           </div>
 
           {/* Desktop Navigation Menu */}
-          <nav className="hidden md:flex items-center gap-8 text-sm text-slate-600">
-            <Link to="/" className="hover:text-blue-600 transition-colors font-medium">
+          <nav className="hidden md:flex items-center gap-3">
+            <Link to="/" className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
               Home
             </Link>
             <Link
               to="/jobs"
-              className="hover:text-blue-600 transition-colors font-medium"
+              className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
             >
               Browse Jobs
             </Link>
             <Link
               to="/post-job"
-              className="hover:text-blue-600 transition-colors font-medium"
+              className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
             >
               Post a Job
             </Link>
-            <Link
-              to="/companies"
-              className="hover:text-blue-600 transition-colors font-medium"
-            >
-              Companies
-            </Link>
-            <Link
-              to="/contact"
-              className="hover:text-blue-600 transition-colors font-medium"
-            >
-              Contact
-            </Link>
+
           </nav>
 
           {/* Buttons / Profile */}
@@ -218,7 +207,7 @@ export default function GuestNavbar() {
               <>
                 {/* Candidate = user (popup) */}
                 <button
-                  className="text-slate-800 hover:bg-slate-100 transition-colors hidden sm:flex px-4 py-2 rounded-lg font-medium"
+                  className="hidden sm:flex px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                   onClick={() => handleOpenAuth("user")}
                 >
                   Candidate Login
@@ -226,7 +215,7 @@ export default function GuestNavbar() {
 
                 {/* Recruiter (popup) */}
                 <button
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md px-4 py-2 rounded-lg"
+                  className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                   onClick={() => handleOpenAuth("recruiter")}
                 >
                   Recruiter Login
@@ -270,13 +259,7 @@ export default function GuestNavbar() {
               >
                 Post a Job
               </Link>
-              <Link
-                to="/companies"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-slate-700 hover:text-blue-600 transition-colors font-medium"
-              >
-                Companies
-              </Link>
+
               <Link
                 to="/contact"
                 onClick={() => setMobileMenuOpen(false)}
@@ -287,13 +270,13 @@ export default function GuestNavbar() {
               {!loading && !user && (
                 <div className="pt-4 border-t border-slate-200 space-y-3">
                   <button
-                    className="w-full text-left text-slate-700 hover:text-blue-600 hover:bg-slate-50 px-4 py-2 rounded-lg font-medium"
+                    className="w-full text-left px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                     onClick={() => handleOpenAuth("user")}
                   >
                     Candidate Login
                   </button>
                   <button
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg"
+                    className="w-full text-left px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                     onClick={() => handleOpenAuth("recruiter")}
                   >
                     Recruiter Login
