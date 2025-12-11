@@ -15,7 +15,7 @@ const getAdminUsers = async (req, res) => {
         up.created_at,
         u.email,
         u.username
-      FROM user_profiles up
+      FROM candidate_profiles up
       LEFT JOIN users u ON up.user_id = u.id
       ORDER BY up.created_at DESC
     `);

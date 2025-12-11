@@ -45,7 +45,7 @@ async function getJobApplicants(req, res) {
         up.portfolio_url
       FROM job_applications ja
       INNER JOIN users u ON ja.user_id = u.id
-      LEFT JOIN user_profiles up ON u.id = up.user_id
+      LEFT JOIN candidate_profiles up ON u.id = up.user_id
       WHERE ja.job_id = ?
       ORDER BY ja.applied_at DESC
     `;

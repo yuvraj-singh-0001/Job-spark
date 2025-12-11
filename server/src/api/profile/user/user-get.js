@@ -9,7 +9,7 @@ const getuser = async (req, res) => {
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
-    const [rows] = await connection.execute('SELECT * FROM user_profiles WHERE user_id = ?', [userId]);
+    const [rows] = await connection.execute('SELECT * FROM candidate_profiles WHERE user_id = ?', [userId]);
     if (!rows || rows.length === 0) return res.status(404).json({ success: false, message: 'Profile not found' });
 
     res.json({ success: true, user: rows[0] });

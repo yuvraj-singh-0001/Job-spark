@@ -52,7 +52,7 @@ const user = async (req, res) => {
 
     // Check if profile exists
     const [existingProfiles] = await connection.execute(
-      'SELECT user_id FROM user_profiles WHERE user_id = ?',
+      'SELECT user_id FROM candidate_profiles WHERE user_id = ?',
       [finalUserId]
     );
 
@@ -61,7 +61,7 @@ const user = async (req, res) => {
     if (existingProfiles.length > 0) {
       // Update existing profile
       await connection.execute(
-        `UPDATE user_profiles
+        `UPDATE candidate_profiles
          SET full_name = ?, phone = ?, city = ?, state = ?, country = ?,
              experience_years = ?, highest_education = ?, resume_path = ?,
              linkedin_url = ?, portfolio_url = ?, updated_at = ?
@@ -85,7 +85,7 @@ const user = async (req, res) => {
       await connection.commit();
 
       const [updatedProfiles] = await connection.execute(
-        'SELECT * FROM user_profiles WHERE user_id = ?',
+        'SELECT * FROM candidate_profiles WHERE user_id = ?',
         [finalUserId]
       );
 
@@ -97,7 +97,7 @@ const user = async (req, res) => {
     } else {
       // Create new profile
       await connection.execute(
-        `INSERT INTO user_profiles
+        `INSERT INTO candidate_profiles
          (user_id, full_name, phone, city, state, country, experience_years,
           highest_education, resume_path, linkedin_url, portfolio_url, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -121,7 +121,7 @@ const user = async (req, res) => {
       await connection.commit();
 
       const [newProfiles] = await connection.execute(
-        'SELECT * FROM user_profiles WHERE user_id = ?',
+        'SELECT * FROM candidate_profiles WHERE user_id = ?',
         [finalUserId]
       );
 
