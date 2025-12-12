@@ -38,8 +38,8 @@ export default function CandidateSidebar({
               to={item.path}
               className={`
                 flex items-center gap-2 px-3 py-2 rounded-lg font-medium
-                ${currentPath === item.path 
-                  ? 'bg-slate-900 text-white' 
+                ${currentPath === item.path
+                  ? 'bg-slate-900 text-white'
                   : 'text-slate-700 hover:bg-slate-100'
                 }
               `}
@@ -50,7 +50,7 @@ export default function CandidateSidebar({
         </nav>
 
         <div className="px-3 py-4 border-t border-slate-200">
-          <button 
+          <button
             onClick={onLogout}
             className="w-full text-left px-3 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50"
           >
@@ -61,7 +61,7 @@ export default function CandidateSidebar({
 
       {/* Mobile Sidebar Overlay */}
       {mobileSidebarOpen && (
-        <div 
+        <div
           className="md:hidden fixed inset-0 bg-black/50 z-40"
           onClick={() => setMobileSidebarOpen(false)}
         />
@@ -84,8 +84,8 @@ export default function CandidateSidebar({
               to={item.path}
               className={`
                 flex items-center gap-2 px-3 py-2 rounded-lg font-medium
-                ${currentPath === item.path 
-                  ? 'bg-slate-900 text-white' 
+                ${currentPath === item.path
+                  ? 'bg-slate-900 text-white'
                   : 'text-slate-700 hover:bg-slate-100'
                 }
               `}
@@ -97,7 +97,7 @@ export default function CandidateSidebar({
         </nav>
 
         <div className="px-3 py-4 border-t border-slate-200">
-          <button 
+          <button
             onClick={onLogout}
             className="w-full text-left px-3 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50"
           >

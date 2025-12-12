@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import api from "../../../components/apiconfig/apiconfig";
 
 export default function SignIn() {
@@ -6,6 +7,74 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const location = useLocation();
+
+  // Decide where to send the user based on role + profile existence
+  const resolveRedirect = async (resolvedRole) => {
+    try {
+      if (resolvedRole === "recruiter") {
+        // Recruiter profile exists?
+        await api.get("/recruiter-profile/recruiter");
+        return "/recruiter-profile";
+      }
+
+      // Candidate profile exists?
+      await api.get("/profile/user");
+      return "/dashboard";
+    } catch (err) {
+      // 404 means profile not created yet
+      const status = err?.response?.status;
+      if (status === 404) {
+        return resolvedRole === "recruiter"
+          ? "/recruiter-profile-form"
+          : "/dashboard/profile";
+      }
+      // Fallback to default destinations on other errors
+      return resolvedRole === "recruiter" ? "/recruiter-profile" : "/dashboard";
+    }
+  };
+
+  const consumePostLoginTasks = async (userRoleFallback) => {
+    const getItem = (key) => {
+      try {
+        return window.localStorage.getItem(key);
+      } catch {
+        return null;
+      }
+    };
+
+    const removeItem = (key) => {
+      try {
+        window.localStorage.removeItem(key);
+      } catch {
+        // ignore storage errors
+      }
+    };
+
+    const pendingJobId = getItem("postLoginSaveJobId");
+    const pendingRedirect = getItem("postLoginRedirect");
+
+    if (pendingJobId) {
+      try {
+        await api.post(`/jobs/save/${pendingJobId}`);
+        setMessage("Job saved successfully after sign-in.");
+      } catch (err) {
+        setMessage("Signed in, but we could not save the job automatically.");
+      }
+    }
+
+    removeItem("postLoginSaveJobId");
+    removeItem("postLoginRedirect");
+
+    const fallbackRedirect = await resolveRedirect(userRoleFallback);
+    const next =
+      pendingRedirect ||
+      location.state?.from?.pathname ||
+      fallbackRedirect ||
+      "/dashboard";
+
+    return next;
+  };
 
   // GOOGLE LOGIN SUCCESS HANDLER
   const handleGoogleSuccess = async (response) => {
@@ -16,11 +85,12 @@ export default function SignIn() {
     try {
       const { data } = await api.post("/auth/google", {
         credential: response.credential,
-        role: role
+        role: role,
       });
 
       const userRole = data?.user?.role || role;
-      window.location.href = userRole === "recruiter" ? "/recruiter-profile" : "/dashboard";
+      const next = await consumePostLoginTasks(userRole);
+      window.location.href = next;
     } catch (err) {
       setError(err?.response?.data?.message || "Google login failed");
     } finally {
@@ -83,28 +153,26 @@ export default function SignIn() {
                     I want to sign in as:
                   </label>
                   <div className="grid grid-cols-2 gap-3 text-sm">
-                    <label className={`flex gap-2 p-3 border-2 rounded-xl cursor-pointer transition-colors ${
-                      role === "candidate" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
-                    }`}>
-                      <input 
-                        type="radio" 
-                        name="role" 
-                        value="candidate" 
-                        checked={role === "candidate"} 
+                    <label className={`flex gap-2 p-3 border-2 rounded-xl cursor-pointer transition-colors ${role === "candidate" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+                      }`}>
+                      <input
+                        type="radio"
+                        name="role"
+                        value="candidate"
+                        checked={role === "candidate"}
                         onChange={() => setRole("candidate")}
                         className="mt-0.5"
                       />
                       <span className="font-medium">Candidate</span>
                     </label>
 
-                    <label className={`flex gap-2 p-3 border-2 rounded-xl cursor-pointer transition-colors ${
-                      role === "recruiter" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
-                    }`}>
-                      <input 
-                        type="radio" 
-                        name="role" 
-                        value="recruiter" 
-                        checked={role === "recruiter"} 
+                    <label className={`flex gap-2 p-3 border-2 rounded-xl cursor-pointer transition-colors ${role === "recruiter" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+                      }`}>
+                      <input
+                        type="radio"
+                        name="role"
+                        value="recruiter"
+                        checked={role === "recruiter"}
                         onChange={() => setRole("recruiter")}
                         className="mt-0.5"
                       />

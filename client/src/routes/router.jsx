@@ -23,7 +23,6 @@ import Forgot from "../modules/auth/candidate-recruiter/Forgot.jsx";
 import SignInModal from "../modules/auth/candidate-recruiter/SignInModal.jsx";
 
 // Import Candidate Dashboard Components (renamed paths)
-import Dashboard from "../modules/candidate/dashboard/home.jsx";
 import UserProfile from "../modules/candidate/dashboard/profile.jsx";
 import Saved from "../modules/candidate/jobs/saved-list.jsx";
 import Applied from "../modules/candidate/jobs/applied-list.jsx";
@@ -94,7 +93,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: "dashboard",
-        element: <Dashboard />,
+        element: <Jobs />,
       },
       {
         path: "dashboard/profile",

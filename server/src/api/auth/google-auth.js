@@ -71,10 +71,17 @@ async function googleAuth(req, res) {
       let user;
 
       if (existing.length) {
+        console.log('User exists - updating last_login and google_id/auth_provider if needed');
         // User exists - update last_login and google_id/auth_provider if needed
         const existingUser = existing[0];
         const updates = [];
         const values = [];
+
+        // Set role if missing (ensures role is stored in DB for legacy rows)
+        if (!existingUser.role) {
+          updates.push('role = ?');
+          values.push(userRole);
+        }
 
         // Update google_id if not set
         if (!existingUser.google_id) {
@@ -117,8 +124,10 @@ async function googleAuth(req, res) {
           'SELECT id, email, name, role FROM users WHERE id = ?',
           [existingUser.id]
         );
-        user = updated[0];
+        // Ensure role fallback if still null in DB
+        user = { ...updated[0], role: updated[0].role || userRole };
       } else {
+        console.log('New user - creating account with role:', userRole);
         // New user - create account with role from frontend (userRole)
         const randomPassword = require('crypto').randomBytes(32).toString('hex');
         const passwordHash = await require('bcryptjs').hash(randomPassword, 10);

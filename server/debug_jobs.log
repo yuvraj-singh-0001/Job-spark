@@ -108,3 +108,69 @@
     at D:\Company Project\Job-spark\server\node_modules\router\index.js:295:15
     at processParams (D:\Company Project\Job-spark\server\node_modules\router\index.js:582:12)
     at next (D:\Company Project\Job-spark\server\node_modules\router\index.js:291:5)
+2025-12-09T16:01:23.664Z - ERROR: Error: connect ETIMEDOUT
+    at PromisePool.query (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getjobs (C:\Users\CreativeStudio24\Desktop\Job-spark\server\src\api\jobs\get-jobs.js:34:31)
+    at Layer.handleRequest (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:295:15
+    at processParams (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:582:12)
+    at next (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:291:5)
+2025-12-09T16:01:33.692Z - ERROR: Error: connect ETIMEDOUT
+    at PromisePool.query (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getjobs (C:\Users\CreativeStudio24\Desktop\Job-spark\server\src\api\jobs\get-jobs.js:34:31)
+    at Layer.handleRequest (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:295:15
+    at processParams (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:582:12)
+    at next (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:291:5)
+2025-12-11T10:34:04.022Z - ERROR: Error: connect ETIMEDOUT
+    at PromisePool.query (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getjobs (C:\Users\CreativeStudio24\Desktop\Job-spark\server\src\api\jobs\get-jobs.js:34:31)
+    at Layer.handleRequest (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:295:15
+    at processParams (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:582:12)
+    at next (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:291:5)
+2025-12-11T10:34:14.039Z - ERROR: Error: connect ETIMEDOUT
+    at PromisePool.query (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getjobs (C:\Users\CreativeStudio24\Desktop\Job-spark\server\src\api\jobs\get-jobs.js:34:31)
+    at Layer.handleRequest (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:295:15
+    at processParams (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:582:12)
+    at next (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:291:5)
+2025-12-11T10:52:16.776Z - ERROR: Error: connect ETIMEDOUT
+    at PromisePool.query (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getjobs (C:\Users\CreativeStudio24\Desktop\Job-spark\server\src\api\jobs\get-jobs.js:34:31)
+    at Layer.handleRequest (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:295:15
+    at processParams (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:582:12)
+    at next (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:291:5)
+2025-12-11T10:52:26.786Z - ERROR: Error: connect ETIMEDOUT
+    at PromisePool.query (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getjobs (C:\Users\CreativeStudio24\Desktop\Job-spark\server\src\api\jobs\get-jobs.js:34:31)
+    at Layer.handleRequest (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:295:15
+    at processParams (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:582:12)
+    at next (C:\Users\CreativeStudio24\Desktop\Job-spark\server\node_modules\router\index.js:291:5)

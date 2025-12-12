@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Building2,
   MapPin,
@@ -8,33 +8,104 @@ import {
   Bookmark,
   BookmarkCheck,
   Clock,
+  Search,
+  ArrowUpRight,
 } from "lucide-react";
 import api from "../../../components/apiconfig/apiconfig";
 
+const CITY_OPTIONS = [
+  "Delhi",
+  "Ghaziabad",
+  "Noida",
+  "Faridabad",
+  "Greater Noida",
+  "Gurgaon",
+];
+
+const ROLE_OPTIONS = [
+  { label: "Trainer", value: "trainer" },
+  { label: "Recruiter / HR / Admin", value: "recruiter" },
+  { label: "Event Management", value: "event management" },
+  { label: "Back Office / Data Entry", value: "data entry" },
+  { label: "Content Writer", value: "content writer" },
+  { label: "Receptionist", value: "receptionist" },
+  { label: "+ 1 More", value: "assistant" },
+];
+
+const SALARY_OPTIONS = [
+  { label: "More than ₹ 5000", value: 5000 },
+  { label: "More than ₹ 10000", value: 10000 },
+  { label: "More than ₹ 20000", value: 20000 },
+  { label: "More than ₹ 30000", value: 30000 },
+  { label: "More than ₹ 40000", value: 40000 },
+  { label: "More than ₹ 50000", value: 50000 },
+];
+
+const OTHER_CATEGORIES = [
+  "Event Management (304)",
+  "Back Office / Data Entry (12258)",
+  "Content Writer (419)",
+  "Receptionist (2481)",
+  "Accountant (7733)",
+];
+
+const pageSize = 6;
+
+const parseSalaryValue = (salary) => {
+  if (!salary) return null;
+  const numeric = `${salary}`.replace(/[^0-9]/g, "");
+  if (!numeric) return null;
+  return Number(numeric);
+};
+
+const formatSalary = (salary) => {
+  const numeric = parseSalaryValue(salary);
+  if (!numeric) return salary || "";
+  return `₹ ${numeric.toLocaleString("en-IN")}`;
+};
+
 export default function Jobs() {
   const [jobList, setJobList] = useState([]);
-  const [role, setRole] = useState("");
-  const [location, setLocation] = useState("");
-  const [exp, setExp] = useState("");
-  const [type, setType] = useState("");
-  const [mode, setMode] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCities, setSelectedCities] = useState([]);
+  const [selectedRoles, setSelectedRoles] = useState([]);
+  const [salaryFilter, setSalaryFilter] = useState("");
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [savedStatus, setSavedStatus] = useState({});
-  
+  const [page, setPage] = useState(1);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+
   const locationHook = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const { data } = await api.get("/auth/authcheck");
+        if (alive) setIsAuthenticated(Boolean(data?.user));
+      } catch (err) {
+        if (alive) setIsAuthenticated(false);
+      } finally {
+        if (alive) setAuthChecked(true);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(locationHook.search);
-    const searchQuery = searchParams.get('search') || '';
+    const searchQuery = searchParams.get("search") || "";
     if (searchQuery) {
-      setRole(searchQuery);
+      setSearchTerm(searchQuery);
     }
   }, [locationHook]);
-
-  const pageSize = 6;
-  const [page, setPage] = useState(1);
 
   useEffect(() => {
     let alive = true;
@@ -52,11 +123,12 @@ export default function Jobs() {
             title: j.title || j.jobTitle || "",
             company: j.company || j.companyName || "",
             location: j.location || j.jobLocation || "",
-            type: j.type || j.jobType || "",
+            type: j.type || j.jobType || "Full Time",
             mode: j.mode || j.workMode || j.workType || "",
             experience: j.experience || j.experiance || j.exp || "",
-            skills: j.skills || j.tags || [], // Use skills field
+            skills: j.skills || j.tags || [],
             salary: j.salary || "",
+            vacancies: j.vacancies || "",
             description: j.description || "",
           }));
           setJobList(mapped);
@@ -83,246 +155,290 @@ export default function Jobs() {
         const response = await api.get(`/jobs/save/${job.id}`);
         status[job.id] = response.data.isSaved;
       } catch (error) {
-        console.error(`Error checking saved status for job ${job.id}:`, error);
         status[job.id] = false;
       }
     }
     setSavedStatus(status);
   };
 
+  const redirectToLoginForSave = (jobId) => {
+    try {
+      const currentPath = window.location.pathname + window.location.search;
+      localStorage.setItem("postLoginSaveJobId", jobId);
+      localStorage.setItem("postLoginRedirect", currentPath || "/jobs");
+    } catch (err) {
+      // fail silently if storage not available
+    }
+    navigate("/sign-in");
+  };
+
   const toggleSaveJob = async (jobId, isCurrentlySaved) => {
+    if (!isAuthenticated) {
+      // If auth status is still being checked, try one more quick check
+      if (!authChecked) {
+        try {
+          const { data } = await api.get("/auth/authcheck");
+          if (data?.user) {
+            setIsAuthenticated(true);
+          } else {
+            redirectToLoginForSave(jobId);
+            return;
+          }
+        } catch (err) {
+          redirectToLoginForSave(jobId);
+          return;
+        }
+      } else {
+        redirectToLoginForSave(jobId);
+        return;
+      }
+    }
+
     try {
       if (isCurrentlySaved) {
         await api.delete(`/jobs/save/${jobId}`);
-        setSavedStatus(prev => ({ ...prev, [jobId]: false }));
+        setSavedStatus((prev) => ({ ...prev, [jobId]: false }));
       } else {
         await api.post(`/jobs/save/${jobId}`);
-        setSavedStatus(prev => ({ ...prev, [jobId]: true }));
+        setSavedStatus((prev) => ({ ...prev, [jobId]: true }));
       }
     } catch (error) {
-      console.error('Error toggling save:', error);
-      alert('Error saving job: ' + (error.response?.data?.message || error.message));
+      alert(
+        "Error saving job: " +
+        (error.response?.data?.message || error.message || "Try again")
+      );
     }
   };
 
-  const handleSearch = () => {
+  const applyFilters = useCallback(() => {
     if (jobList.length === 0) return;
 
     let data = [...jobList];
+    const query = searchTerm.trim().toLowerCase();
 
-    const roleTrim = role.trim().toLowerCase();
-    const locationTrim = location.trim().toLowerCase();
-
-    if (roleTrim !== "") {
+    if (query) {
       data = data.filter((job) => {
-        const titleMatch = job.title?.toLowerCase().includes(roleTrim) || false;
-        const companyMatch = job.company?.toLowerCase().includes(roleTrim) || false;
-        const skillsMatch = job.skills?.some(skill => 
-          skill?.toLowerCase().includes(roleTrim)
-        ) || false;
-        const descriptionMatch = job.description?.toLowerCase().includes(roleTrim) || false;
-        
-        return titleMatch || companyMatch || skillsMatch || descriptionMatch;
+        const textBucket = [
+          job.title,
+          job.company,
+          job.location,
+          job.description,
+          ...(job.skills || []),
+        ]
+          .join(" ")
+          .toLowerCase();
+        return textBucket.includes(query);
       });
     }
 
-    if (locationTrim !== "") {
+    if (selectedCities.length) {
       data = data.filter((job) =>
-        job.location?.toLowerCase().includes(locationTrim)
+        selectedCities.some((city) =>
+          (job.location || "").toLowerCase().includes(city.toLowerCase())
+        )
       );
     }
 
-    if (exp && exp !== "Experience") {
-      data = data.filter((job) =>
-        (job.experience || "").toLowerCase().includes(exp.toLowerCase())
-      );
+    if (selectedRoles.length) {
+      data = data.filter((job) => {
+        const haystack = `${job.title} ${job.company} ${(job.skills || []).join(
+          " "
+        )}`.toLowerCase();
+        return selectedRoles.some((role) =>
+          haystack.includes(role.toLowerCase())
+        );
+      });
     }
 
-    if (mode && mode !== "Work mode") {
-      data = data.filter((job) =>
-        (job.mode || "").toLowerCase().includes(mode.toLowerCase())
-      );
+    if (salaryFilter) {
+      const threshold = Number(salaryFilter);
+      data = data.filter((job) => {
+        const numeric = parseSalaryValue(job.salary);
+        if (!numeric) return true; // keep jobs without salary info
+        return numeric >= threshold;
+      });
     }
 
     setFiltered(data);
     setPage(1);
-    
+
     const params = new URLSearchParams();
-    if (roleTrim) params.set('search', roleTrim);
-    if (locationTrim) params.set('location', locationTrim);
-    if (exp && exp !== "Experience") params.set('experience', exp);
-    if (type && type !== "Type") params.set('type', type);
-    
-    const newUrl = params.toString() ? `/jobs?${params.toString()}` : '/jobs';
-    window.history.replaceState({}, '', newUrl);
-  };
+    if (query) params.set("search", query);
+    const newUrl = params.toString() ? `/jobs?${params.toString()}` : "/jobs";
+    window.history.replaceState({}, "", newUrl);
+  }, [jobList, searchTerm, selectedCities, selectedRoles, salaryFilter]);
 
   useEffect(() => {
-    handleSearch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [role, location, exp, mode]);
+    applyFilters();
+  }, [applyFilters]);
 
-  const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(filtered.length / pageSize)),
+    [filtered.length]
+  );
 
   useEffect(() => {
-    if (page > totalPages && totalPages > 0) {
+    if (page > totalPages) {
       setPage(totalPages);
-    } else if (totalPages === 0) {
-      setPage(1);
     }
-  }, [filtered, totalPages, page]);
+  }, [page, totalPages]);
 
-  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const paginated = useMemo(
+    () => filtered.slice((page - 1) * pageSize, page * pageSize),
+    [filtered, page]
+  );
 
   const startIdx = filtered.length === 0 ? 0 : (page - 1) * pageSize + 1;
   const endIdx = (page - 1) * pageSize + paginated.length;
 
-  const hasFilters =
-    !!role.trim() ||
-    !!location.trim() ||
-    (exp && exp !== "Experience") ||
-    (mode && mode !== "Work mode");
+  const hasSidebarFilters =
+    selectedCities.length > 0 ||
+    selectedRoles.length > 0 ||
+    Boolean(salaryFilter);
+
+  const toggleValue = (value, setFn) => {
+    setFn((prev) =>
+      prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
+    );
+  };
+
+  const clearFilters = () => {
+    setSelectedCities([]);
+    setSelectedRoles([]);
+    setSalaryFilter("");
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50/60">
+    <div className="min-h-screen bg-[#f6f8fb]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-10 md:py-12">
-        <header className="mb-8">
-          <p className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-600 bg-blue-50 border border-blue-100 rounded-full px-3 py-1 mb-3">
-            Browse jobs
-          </p>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900">
-            Open positions
-          </h1>
-          <p className="mt-1 text-sm md:text-base text-slate-600 max-w-2xl">
-            Explore internships and early‑career roles across locations, experience levels, and work modes.
-          </p>
-        </header>
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+          <div>
+            <p className="text-sm text-slate-600">
+              {filtered.length || jobList.length} jobs near you
+            </p>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
+              Find Jobs
+            </h1>
+          </div>
+          <div className="w-full md:w-[420px]">
+            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
+              <Search size={18} className="text-slate-500" />
+              <input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && applyFilters()}
+                className="flex-1 text-sm outline-none"
+                placeholder="Search jobs here"
+              />
+              <button
+                onClick={applyFilters}
+                className="bg-blue-600 text-white text-sm font-semibold px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Search
+              </button>
+            </div>
+          </div>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-[280px,1fr] gap-8 lg:gap-10">
-          {/* Sidebar */}
-          <aside className="bg-white border border-slate-200 rounded-2xl p-5 h-fit md:sticky md:top-6 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-slate-900">Filter jobs</h2>
-              {hasFilters && (
+        <div className="grid grid-cols-1 md:grid-cols-[280px,1fr] gap-6 lg:gap-8">
+          <aside className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-slate-900">Filters</h2>
+              {hasSidebarFilters && (
                 <button
-                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2.5 py-1 text-[11px] text-slate-600 hover:bg-slate-50"
-                  onClick={() => {
-                    setRole("");
-                    setLocation("");
-                    setExp("");
-                    setMode("");
-                  }}
+                  onClick={clearFilters}
+                  className="text-sm text-blue-600 hover:text-blue-700"
                 >
-                  Clear
+                  Clear All
                 </button>
               )}
             </div>
 
-            {hasFilters && (
-              <div className="mb-3 flex flex-wrap gap-1.5">
-                {role.trim() && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-100 px-2 py-0.5 text-[11px] text-blue-700">
-                    Role: {role.trim()}
-                  </span>
-                )}
-                {location.trim() && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-100 px-2 py-0.5 text-[11px] text-blue-700">
-                    Location: {location.trim()}
-                  </span>
-                )}
-                {exp && exp !== "Experience" && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-100 px-2 py-0.5 text-[11px] text-blue-700">
-                    Exp: {exp}
-                  </span>
-                )}
-                {mode && mode !== "Work mode" && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-100 px-2 py-0.5 text-[11px] text-blue-700">
-                    Mode: {mode}
-                  </span>
-                )}
-              </div>
-            )}
-
-            <div className="space-y-4 pt-1 border-t border-slate-100">
+            <div className="space-y-6">
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
-                  Role or keyword
-                </label>
-                <input
-                  placeholder="e.g. Frontend, Designer"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
-                  Location
-                </label>
-                <input
-                  placeholder="Remote, Bengaluru..."
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">
-                    Experience
-                  </label>
-                  <select
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2 text-xs text-slate-800"
-                    value={exp}
-                    onChange={(e) => setExp(e.target.value)}
-                  >
-                    <option>Experience</option>
-                    <option>Student</option>
-                    <option>Fresher (0 yrs)</option>
-                    <option>1–2 yrs</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">
-                    Work mode
-                  </label>
-                  <select
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2 text-xs text-slate-800"
-                    value={mode}
-                    onChange={(e) => setMode(e.target.value)}
-                  >
-                    <option>Work mode</option>
-                    <option>Remote</option>
-                    <option>Hybrid</option>
-                    <option>Office</option>
-                  </select>
+                <p className="text-sm font-semibold text-slate-900 mb-2">City</p>
+                <div className="flex flex-wrap gap-2">
+                  {CITY_OPTIONS.map((city) => {
+                    const active = selectedCities.includes(city);
+                    return (
+                      <button
+                        key={city}
+                        onClick={() => toggleValue(city, setSelectedCities)}
+                        className={`rounded-full border px-3 py-1 text-xs font-medium transition ${active
+                          ? "bg-blue-50 border-blue-200 text-blue-700"
+                          : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                          }`}
+                      >
+                        {city}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              <button
-                onClick={handleSearch}
-                className="w-full text-sm mt-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm hover:shadow-md transition-all px-4 py-2.5 rounded-xl"
-              >
-                Apply filters
-              </button>
+              <div>
+                <p className="text-sm font-semibold text-slate-900 mb-2">
+                  Job Role(s)
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {ROLE_OPTIONS.map((role) => {
+                    const active = selectedRoles.includes(role.value);
+                    return (
+                      <button
+                        key={role.value}
+                        onClick={() => toggleValue(role.value, setSelectedRoles)}
+                        className={`rounded-full border px-3 py-1 text-xs font-medium transition ${active
+                          ? "bg-blue-50 border-blue-200 text-blue-700"
+                          : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                          }`}
+                      >
+                        {role.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold text-slate-900 mb-2">Salary</p>
+                <div className="space-y-2">
+                  {SALARY_OPTIONS.map((opt) => (
+                    <label
+                      key={opt.value}
+                      className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        name="salary"
+                        value={opt.value}
+                        checked={String(salaryFilter) === String(opt.value)}
+                        onChange={(e) => setSalaryFilter(e.target.value)}
+                        className="text-blue-600"
+                      />
+                      {opt.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
             </div>
           </aside>
 
-          {/* Content */}
           <section className="space-y-4">
             {error && (
-              <div className="mb-4 text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-3">
+              <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-3">
                 {error}
               </div>
             )}
 
-            <div className="mb-4 flex items-center justify-between text-xs md:text-sm text-slate-600">
+            <div className="flex items-center justify-between text-sm text-slate-600">
               <span>
                 Showing {startIdx}–{endIdx} of {filtered.length} roles
               </span>
+              {hasSidebarFilters && (
+                <span className="text-xs bg-blue-50 text-blue-700 border border-blue-100 px-2 py-1 rounded-full">
+                  Filters applied
+                </span>
+              )}
             </div>
 
             {loading ? (
@@ -338,60 +454,113 @@ export default function Jobs() {
                 {paginated.map((r) => (
                   <article
                     key={r.id}
-                    className="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex flex-col gap-3 shadow-sm hover:shadow-lg hover:border-blue-100 hover:-translate-y-1 transition-all duration-200"
+                    className="relative bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition"
                   >
-                    <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                      <div>
-                        <h3 className="text-base md:text-lg font-semibold text-slate-900">
-                          {r.title}
-                        </h3>
-                        <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-slate-600">
-                          <span className="inline-flex items-center gap-1.5">
-                            <Building2 size={16} /> {r.company}
-                          </span>
-                          <span className="inline-flex items-center gap-1.5">
-                            <MapPin size={16} /> {r.location}
-                          </span>
+                    <button
+                      onClick={() => toggleSaveJob(r.id, savedStatus[r.id])}
+                      className="absolute right-4 top-4 text-slate-500 hover:text-blue-600"
+                      aria-label={savedStatus[r.id] ? "Unsave job" : "Save job"}
+                    >
+                      {savedStatus[r.id] ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
+                    </button>
+
+                    <div className="flex flex-col gap-2">
+                      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                        <div className="space-y-1">
+                          <p className="text-xs text-slate-500 uppercase tracking-[0.08em]">
+                            Work from home
+                          </p>
+                          <h3 className="text-lg font-semibold text-slate-900">
+                            {r.title || "Untitled role"}
+                          </h3>
+                          <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+                            {r.company && (
+                              <span className="inline-flex items-center gap-1.5">
+                                <Building2 size={16} /> {r.company}
+                              </span>
+                            )}
+                            {r.location && (
+                              <span className="inline-flex items-center gap-1.5">
+                                <MapPin size={16} /> {r.location}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="text-right">
+                          {r.salary && (
+                            <p className="text-lg font-semibold text-slate-900">
+                              {formatSalary(r.salary)}
+                              <span className="text-sm font-medium text-slate-600"> /Month</span>
+                            </p>
+                          )}
+                          {r.vacancies && (
+                            <p className="text-xs text-slate-500">{r.vacancies} vacancies</p>
+                          )}
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap gap-2 text-xs text-slate-600">
-                        <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 border border-slate-200">
-                          <Briefcase size={14} /> {r.type}
-                        </span>
-                        <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 border border-slate-200">
-                          <Clock size={14} /> {r.mode}
-                        </span>
-                        <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 border border-slate-200">
-                          <GraduationCap size={14} /> {r.experience}
-                        </span>
-                      </div>
-                    </div>
-
-                    {r.skills && r.skills.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-1">
-                        {r.skills.map((t) => (
-                          <span
-                            key={t}
-                            className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] border border-slate-200 text-slate-600 bg-slate-50"
-                          >
-                            {t}
+                      <div className="flex flex-wrap gap-2 text-xs text-slate-700">
+                        {r.type && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1">
+                            <Briefcase size={14} /> {r.type}
                           </span>
-                        ))}
+                        )}
+                        {r.mode && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1">
+                            <Clock size={14} /> {r.mode}
+                          </span>
+                        )}
+                        {r.experience && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1">
+                            <GraduationCap size={14} /> {r.experience}
+                          </span>
+                        )}
+                        {r.vacancies && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1">
+                            {r.vacancies} Vacancies
+                          </span>
+                        )}
                       </div>
-                    )}
 
-                    <div className="flex flex-col gap-2 pt-2 md:flex-row md:justify-end">
-                      <a href={`/jobs/${r.id}`} className="md:w-auto w-full">
-                        <button
-                          className="w-full md:w-auto border border-blue-100 text-blue-700 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        >
-                          View details
-                        </button>
-                      </a>
-                      <button className="md:w-auto w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm hover:shadow-md px-4 py-2 rounded-lg text-sm transition-colors">
-                        Apply
-                      </button>
+                      {r.skills && r.skills.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {r.skills.map((skill) => (
+                            <span
+                              key={skill}
+                              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] border border-slate-200 text-slate-600 bg-slate-50"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex flex-wrap gap-2 text-[11px] font-medium text-blue-700">
+                          <span className="inline-flex items-center bg-blue-50 border border-blue-100 px-2 py-1 rounded-full">
+                            New
+                          </span>
+                          {r.vacancies && (
+                            <span className="inline-flex items-center bg-orange-50 border border-orange-100 px-2 py-1 rounded-full text-orange-700">
+                              {r.vacancies} Vacancies
+                            </span>
+                          )}
+                          <span className="inline-flex items-center bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-full text-emerald-700">
+                            Full Time
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={`/jobs/${r.id}`}
+                            className="inline-flex items-center gap-1 text-sm font-semibold text-blue-700 hover:text-blue-800"
+                          >
+                            View details
+                            <ArrowUpRight size={16} />
+                          </a>
+                        </div>
+                      </div>
                     </div>
                   </article>
                 ))}
@@ -414,11 +583,10 @@ export default function Jobs() {
                   <button
                     key={pageNum}
                     onClick={() => setPage(pageNum)}
-                    className={`px-3 py-1.5 text-xs md:text-sm rounded-full border ${
-                      active
-                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                        : "bg-white text-slate-700 border-slate-300 hover:bg-blue-50"
-                    }`}
+                    className={`px-3 py-1.5 text-xs md:text-sm rounded-full border ${active
+                      ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                      : "bg-white text-slate-700 border-slate-300 hover:bg-blue-50"
+                      }`}
                   >
                     {pageNum}
                   </button>
@@ -432,6 +600,22 @@ export default function Jobs() {
               >
                 Next
               </button>
+            </div>
+
+            <div className="mt-6 border border-slate-200 bg-white rounded-2xl p-5 shadow-sm">
+              <p className="flex items-center gap-2 text-sm font-semibold text-slate-900 mb-3">
+                Explore jobs in other categories
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {OTHER_CATEGORIES.map((cat) => (
+                  <span
+                    key={cat}
+                    className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 text-xs text-slate-700 px-3 py-1"
+                  >
+                    {cat}
+                  </span>
+                ))}
+              </div>
             </div>
           </section>
         </div>

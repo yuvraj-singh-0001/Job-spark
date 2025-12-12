@@ -6,6 +6,27 @@ export default function SignInModal({ role = "user", onClose }) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  // Decide where to send based on role + profile existence
+  const resolveRedirect = async (resolvedRole) => {
+    try {
+      if (resolvedRole === "recruiter") {
+        await api.get("/recruiter-profile/recruiter");
+        return "/recruiter-profile";
+      }
+
+      await api.get("/profile/user");
+      return "/dashboard";
+    } catch (err) {
+      const status = err?.response?.status;
+      if (status === 404) {
+        return resolvedRole === "recruiter"
+          ? "/recruiter-profile-form"
+          : "/dashboard/profile";
+      }
+      return resolvedRole === "recruiter" ? "/recruiter-profile" : "/dashboard";
+    }
+  };
+
   // GOOGLE LOGIN SUCCESS HANDLER
   const handleGoogleSuccess = async (response) => {
     setLoading(true);
@@ -22,7 +43,8 @@ export default function SignInModal({ role = "user", onClose }) {
       });
 
       const userRole = data?.user?.role || role;
-      window.location.href = userRole === "recruiter" ? "/recruiter-profile" : "/dashboard";
+      const next = await resolveRedirect(userRole);
+      window.location.href = next;
     } catch (err) {
       setError(err?.response?.data?.message || "Google login failed");
     } finally {

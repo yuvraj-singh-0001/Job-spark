@@ -10,6 +10,8 @@ export default function JobDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isSaved, setIsSaved] = useState(false); // Track if job is saved
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
 
   // Application form state
   const [applicantName, setApplicantName] = useState("");
@@ -48,6 +50,24 @@ export default function JobDetail() {
     return () => { alive = false; };
   }, [id]);
 
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const { data } = await api.get("/auth/authcheck");
+        if (alive) setIsAuthenticated(Boolean(data?.user));
+      } catch (err) {
+        if (alive) setIsAuthenticated(false);
+      } finally {
+        if (alive) setAuthChecked(true);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   // Check if job is saved
   const checkSavedStatus = async (jobId) => {
     try {
@@ -59,7 +79,38 @@ export default function JobDetail() {
     }
   };
 
+  const redirectToLoginForSave = () => {
+    try {
+      const currentPath = window.location.pathname + window.location.search;
+      localStorage.setItem("postLoginSaveJobId", id);
+      localStorage.setItem("postLoginRedirect", currentPath || `/jobs/${id}`);
+    } catch (err) {
+      // ignore storage failures
+    }
+    navigate("/sign-in");
+  };
+
   const toggleSave = async () => {
+    if (!isAuthenticated) {
+      if (!authChecked) {
+        try {
+          const { data } = await api.get("/auth/authcheck");
+          if (data?.user) {
+            setIsAuthenticated(true);
+          } else {
+            redirectToLoginForSave();
+            return;
+          }
+        } catch (err) {
+          redirectToLoginForSave();
+          return;
+        }
+      } else {
+        redirectToLoginForSave();
+        return;
+      }
+    }
+
     try {
       if (isSaved) {
         // Unsave the job
