@@ -10,7 +10,8 @@ app.use(cors({
   origin: [
     process.env.CLIENT_ORIGIN,
     'http://localhost:3000', 
-    'http://localhost:5173'
+    'http://localhost:5173',
+    'https://apibridz.creativestudio24.com'
   ].filter(Boolean),
   credentials: true
 }));
