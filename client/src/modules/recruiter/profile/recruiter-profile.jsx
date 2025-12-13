@@ -24,7 +24,7 @@ export default function RecruiterProfileView() {
 
     async function loadProfile() {
       try {
-        const res = await api.get("/profile/recruiter");
+        const res = await api.get("/recruiter-profile/recruiter");
         if (!mounted) return;
         const profileData = res.data?.recruiter ?? null;
         setProfile(profileData);
@@ -72,7 +72,7 @@ export default function RecruiterProfileView() {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.put("/profile/recruiter", form);
+      const res = await api.put("/recruiter-profile/recruiter", form);
       setProfile(res.data?.recruiter);
       setIsEditing(false);
     } catch (err) {
@@ -170,7 +170,7 @@ export default function RecruiterProfileView() {
               </div>
               <h2 className="font-bold text-lg text-gray-900 truncate">{form.company_name || "Your Company"}</h2>
               <p className="text-sm text-gray-600 mt-1">{form.company_type || "Company"}</p>
-              
+
               {/* Verification Badge */}
               {profile && (
                 <div className="mt-3">
@@ -376,24 +376,24 @@ export default function RecruiterProfileView() {
                   {/* Company Details Section */}
                   <InfoSection title="Company Details" icon="business">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <InfoItem 
-                        label="Company Name" 
+                      <InfoItem
+                        label="Company Name"
                         value={profile?.company_name}
                         icon="building"
                       />
-                      <InfoItem 
-                        label="Company Type" 
+                      <InfoItem
+                        label="Company Type"
                         value={profile?.company_type}
                         icon="category"
                       />
-                      <InfoItem 
-                        label="Website" 
+                      <InfoItem
+                        label="Website"
                         value={profile?.company_website}
                         icon="link"
                         isLink={true}
                       />
-                      <InfoItem 
-                        label="Verification Status" 
+                      <InfoItem
+                        label="Verification Status"
                         value={profile?.verified === 1 ? "Verified" : "Pending Verification"}
                         icon="verified"
                         status={profile?.verified === 1 ? "success" : "warning"}
@@ -404,33 +404,33 @@ export default function RecruiterProfileView() {
                   {/* Address Section */}
                   <InfoSection title="Company Address" icon="location">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <InfoItem 
-                        label="Address Line 1" 
+                      <InfoItem
+                        label="Address Line 1"
                         value={profile?.address_line1}
                         icon="location"
                       />
-                      <InfoItem 
-                        label="Address Line 2" 
+                      <InfoItem
+                        label="Address Line 2"
                         value={profile?.address_line2}
                         icon="location"
                       />
-                      <InfoItem 
-                        label="City" 
+                      <InfoItem
+                        label="City"
                         value={profile?.city}
                         icon="city"
                       />
-                      <InfoItem 
-                        label="State" 
+                      <InfoItem
+                        label="State"
                         value={profile?.state}
                         icon="region"
                       />
-                      <InfoItem 
-                        label="Country" 
+                      <InfoItem
+                        label="Country"
                         value={profile?.country}
                         icon="country"
                       />
-                      <InfoItem 
-                        label="Pincode" 
+                      <InfoItem
+                        label="Pincode"
                         value={profile?.pincode}
                         icon="pin"
                       />
@@ -441,13 +441,13 @@ export default function RecruiterProfileView() {
                   {profile && (
                     <InfoSection title="Profile Information" icon="info">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <InfoItem 
-                          label="Verification Notes" 
+                        <InfoItem
+                          label="Verification Notes"
                           value={profile.verification_notes || "No notes provided"}
                           icon="notes"
                         />
-                        <InfoItem 
-                          label="Profile Created" 
+                        <InfoItem
+                          label="Profile Created"
                           value={profile.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long',
@@ -455,8 +455,8 @@ export default function RecruiterProfileView() {
                           }) : "—"}
                           icon="calendar"
                         />
-                        <InfoItem 
-                          label="Last Updated" 
+                        <InfoItem
+                          label="Last Updated"
                           value={profile.updated_at ? new Date(profile.updated_at).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long',
