@@ -2,7 +2,7 @@ const express = require('express');
 const pool = require('../config/db');
 const router = express.Router();
 
-async function getjobdetails(req, res)  {
+async function getjobdetails(req, res) {
   try {
     const id = parseInt(req.params.id, 10);
     if (Number.isNaN(id)) return res.status(400).json({ ok: false, message: 'Invalid job id' });
@@ -21,6 +21,7 @@ async function getjobdetails(req, res)  {
         vacancies,
         description,
         logo_path,
+        status,
         created_at,
         contact_email,
         contact_phone,
@@ -51,17 +52,31 @@ async function getjobdetails(req, res)  {
       // ignore if tag tables aren't present
     }
 
+    // Build location string safely handling null/undefined values
+    let location = '';
+    if (r.city) {
+      location = r.city;
+      if (r.locality) {
+        location += `, ${r.locality}`;
+      }
+    } else if (r.locality) {
+      location = r.locality;
+    } else {
+      location = 'Not specified';
+    }
+
     const job = {
       id: r.id,
       title: r.title,
       company: r.company,
       type: r.job_type || 'Full-time',
-      location: r.city + (r.locality ? `, ${r.locality}` : ''),
+      location,
       tags: tags.length ? tags : (r.skills || '').split(',').map(s => s.trim()).filter(Boolean),
       salary: r.salary || null,
       vacancies: r.vacancies,
       description: r.description,
       logoPath: r.logo_path || null,
+      status: r.status || 'pending',
       createdAt: r.created_at,
       experiance,
       min_experience: r.min_experience,

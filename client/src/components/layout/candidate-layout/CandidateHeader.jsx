@@ -27,7 +27,7 @@ export default function CandidateHeader() {
 
   const fetchUserData = async () => {
     try {
-      const response = await api.get('/auth/authcheck');
+      const response = await api.get('/auth/session');
       if (response.data?.user) {
         setUserData(response.data.user);
       }
@@ -46,7 +46,6 @@ export default function CandidateHeader() {
   const handleLogout = async () => {
     try {
       await api.post('/auth/logout');
-      localStorage.removeItem('token');
       navigate('/sign-in');
     } catch (error) {
       console.error('Logout error:', error);
@@ -109,11 +108,10 @@ export default function CandidateHeader() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive(item.path)
-                    ? 'border-2 border-slate-900 text-slate-900'
-                    : 'text-slate-700 hover:bg-slate-100'
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isActive(item.path)
+                  ? 'border-2 border-slate-900 text-slate-900'
+                  : 'text-slate-700 hover:bg-slate-100'
+                  }`}
               >
                 {item.label}
               </Link>
@@ -145,7 +143,7 @@ export default function CandidateHeader() {
                 </div>
                 <div className="mb-4">
                   <div className="text-xs text-slate-500">Username</div>
-                  <div className="font-medium text-sm">{userData.username || '-'}</div>
+                  <div className="font-medium text-sm">{userData.username || userData.email || '-'}</div>
                 </div>
                 <div className="mb-4">
                   <div className="text-xs text-slate-500">Role</div>

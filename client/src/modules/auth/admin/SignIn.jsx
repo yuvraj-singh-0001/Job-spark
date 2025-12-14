@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../../components/apiconfig/apiconfig";
 
 export default function AdminSignIn() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -16,7 +18,7 @@ export default function AdminSignIn() {
       [e.target.name]: e.target.value,
     });
   };
-// Handle form submission
+  // Handle form submission
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
@@ -31,9 +33,9 @@ export default function AdminSignIn() {
 
       setMessage(data?.message || "Admin login successful");
 
-      // Redirect to admin dashboard
+      // Redirect to admin dashboard using React Router
       setTimeout(() => {
-        window.location.href = "/admin";
+        navigate("/admin", { replace: true });
       }, 1000);
     } catch (err) {
       const errorMessage =

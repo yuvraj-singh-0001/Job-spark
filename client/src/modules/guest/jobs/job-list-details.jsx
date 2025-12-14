@@ -10,20 +10,45 @@ export default function JobDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isSaved, setIsSaved] = useState(false); // Track if job is saved
+  const [isApplied, setIsApplied] = useState(false); // Track if job is already applied
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const [candidateProfile, setCandidateProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [userEmail, setUserEmail] = useState(null);
 
-  // Application form state
+  // Application form state (only for non-logged-in users)
   const [applicantName, setApplicantName] = useState("");
   const [applicantEmail, setApplicantEmail] = useState("");
   const [resumeFile, setResumeFile] = useState(null);
   const [resumeLink, setResumeLink] = useState("");
   const [coverLetter, setCoverLetter] = useState("");
 
+  // For logged-in users: optional resume update
+  const [updateResumeFile, setUpdateResumeFile] = useState(null);
+
   const [applying, setApplying] = useState(false);
   const [applyError, setApplyError] = useState(null);
   const [applySuccess, setApplySuccess] = useState(null);
   const [applied, setApplied] = useState(false); // set true after success
+
+  // Check if job is already applied
+  const checkAppliedStatus = async (jobId) => {
+    try {
+      const response = await api.get("/jobs/applied-jobs");
+      if (response.data?.ok && response.data.applications) {
+        const applied = response.data.applications.some(app => app.job_id === Number(jobId));
+        setIsApplied(applied);
+        // If applied, also set isSaved to false (since applied jobs can't be saved)
+        if (applied) {
+          setIsSaved(false);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking applied status:', error);
+      setIsApplied(false);
+    }
+  };
 
   useEffect(() => {
     let alive = true;
@@ -34,7 +59,7 @@ export default function JobDetail() {
         if (!alive) return;
         if (data.ok && data.job) {
           setJob(data.job);
-          
+
           // Check if job is saved
           await checkSavedStatus(id);
         } else {
@@ -54,8 +79,17 @@ export default function JobDetail() {
     let alive = true;
     (async () => {
       try {
-        const { data } = await api.get("/auth/authcheck");
-        if (alive) setIsAuthenticated(Boolean(data?.user));
+        const { data } = await api.get("/auth/session");
+        if (alive) {
+          setIsAuthenticated(Boolean(data?.user));
+          if (data?.user) {
+            setUserEmail(data.user.email);
+            // Fetch candidate profile if authenticated
+            await loadCandidateProfile();
+            // Check if job is already applied
+            await checkAppliedStatus(id);
+          }
+        }
       } catch (err) {
         if (alive) setIsAuthenticated(false);
       } finally {
@@ -66,7 +100,33 @@ export default function JobDetail() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [id]);
+
+  // Load candidate profile for logged-in users
+  const loadCandidateProfile = async () => {
+    setProfileLoading(true);
+    try {
+      const res = await api.get("/profile/user");
+      if (res?.data?.success && res.data.user) {
+        setCandidateProfile(res.data.user);
+      }
+    } catch (err) {
+      // Profile doesn't exist or error - that's okay, user will need to complete it
+      setCandidateProfile(null);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  // Check if profile is complete (has name, email, and resume)
+  const isProfileComplete = () => {
+    if (!candidateProfile) return false;
+    return !!(
+      candidateProfile.full_name &&
+      userEmail &&
+      candidateProfile.resume_path
+    );
+  };
 
   // Check if job is saved
   const checkSavedStatus = async (jobId) => {
@@ -94,7 +154,7 @@ export default function JobDetail() {
     if (!isAuthenticated) {
       if (!authChecked) {
         try {
-          const { data } = await api.get("/auth/authcheck");
+          const { data } = await api.get("/auth/session");
           if (data?.user) {
             setIsAuthenticated(true);
           } else {
@@ -123,7 +183,14 @@ export default function JobDetail() {
       }
     } catch (error) {
       console.error('Error toggling save:', error);
-      alert('Error: ' + (error.response?.data?.message || error.message));
+      const errorMessage = error.response?.data?.message || error.message;
+      // Show specific message if trying to save an applied job
+      if (errorMessage.includes('already applied')) {
+        alert('Cannot save a job you have already applied to');
+        setIsApplied(true);
+      } else {
+        alert('Error: ' + errorMessage);
+      }
     }
   };
 
@@ -155,17 +222,43 @@ export default function JobDetail() {
     setResumeFile(f);
   };
 
+  // Redirect to login for non-logged-in users
+  const redirectToLoginForApply = () => {
+    try {
+      const currentPath = window.location.pathname + window.location.search;
+      localStorage.setItem("postLoginApplyJobId", id);
+      localStorage.setItem("postLoginRedirect", currentPath || `/jobs/${id}`);
+    } catch (err) {
+      // ignore storage failures
+    }
+    navigate("/sign-in?role=candidate");
+  };
+
   const submitApplication = async () => {
     setApplyError(null);
     setApplySuccess(null);
 
-    // Minimal validation: require job id (present) and either resume file or resume link or cover letter
-    if (!id) {
-      setApplyError("Job ID missing.");
+    // Check authentication first
+    if (!isAuthenticated) {
+      redirectToLoginForApply();
       return;
     }
-    if (!resumeFile && !resumeLink && !coverLetter) {
-      setApplyError("Please attach a resume or provide a resume link or a cover letter.");
+
+    // For logged-in users: check if profile is complete
+    if (isAuthenticated && !isProfileComplete()) {
+      // Redirect to complete profile, then come back to apply
+      try {
+        localStorage.setItem("postLoginApplyJobId", id);
+        localStorage.setItem("postLoginRedirect", window.location.pathname + window.location.search);
+      } catch (err) {
+        // ignore storage failures
+      }
+      navigate("/dashboard/profile");
+      return;
+    }
+
+    if (!id) {
+      setApplyError("Job ID missing.");
       return;
     }
 
@@ -174,26 +267,45 @@ export default function JobDetail() {
 
       const formData = new FormData();
       formData.append("job_id", id);
-      if (coverLetter) formData.append("cover_letter", coverLetter);
-      // optional: send applicant name/email (backend can ignore if not stored)
-      if (applicantName) formData.append("applicant_name", applicantName);
-      if (applicantEmail) formData.append("applicant_email", applicantEmail);
-      if (resumeFile) formData.append("resume", resumeFile);
-      if (!resumeFile && resumeLink) formData.append("resume_link", resumeLink);
+
+      if (isAuthenticated && candidateProfile) {
+        // For logged-in users: use profile data
+        // Only send cover letter and optional resume update
+        if (coverLetter) formData.append("cover_letter", coverLetter);
+
+        // If user wants to update resume, use the new file
+        if (updateResumeFile) {
+          formData.append("resume", updateResumeFile);
+        }
+        // Otherwise, backend should use resume_path from profile
+        // We'll send it in the body if backend supports it
+        if (!updateResumeFile && candidateProfile.resume_path) {
+          formData.append("resume_path", candidateProfile.resume_path);
+        }
+      } else {
+        // For non-logged-in users: use form data
+        if (coverLetter) formData.append("cover_letter", coverLetter);
+        if (applicantName) formData.append("applicant_name", applicantName);
+        if (applicantEmail) formData.append("applicant_email", applicantEmail);
+        if (resumeFile) formData.append("resume", resumeFile);
+        if (!resumeFile && resumeLink) formData.append("resume_link", resumeLink);
+      }
 
       const res = await api.post("/jobs/apply", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
       if (res.data && res.data.ok) {
-        setApplySuccess("Application submitted successfully.");
+        setApplySuccess("You have successfully applied for this job");
         setApplied(true);
-        // optionally clear form
+        setIsApplied(true); // Mark as applied
+        // Remove from saved jobs (if it was saved) - backend handles this automatically
+        setIsSaved(false);
+        // Clear form
         setCoverLetter("");
         setResumeFile(null);
         setResumeLink("");
-        // you can navigate the user to their applications page if you have one:
-        // navigate('/my-applications');
+        setUpdateResumeFile(null);
       } else {
         setApplyError(res.data?.error || res.data?.message || "Failed to submit application");
       }
@@ -219,11 +331,11 @@ export default function JobDetail() {
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">{job.title}</h1>
           <p className="mt-1 text-gray-600 flex flex-wrap items-center gap-2 sm:gap-3">
-            <span className="inline-flex items-center gap-1 text-sm"><Building2 size={16} className="text-blue-500"/> {job.company}</span>
-            <span className="inline-flex items-center gap-1 text-sm"><MapPin size={16} className="text-blue-500"/> {job.location}</span>
-            <span className="inline-flex items-center gap-1 text-xs border border-blue-200 rounded-full px-2 py-1 bg-blue-50 text-blue-700"><Clock size={14}/> {job.type}</span>
-            <span className="inline-flex items-center gap-1 text-xs border border-blue-200 rounded-full px-2 py-1 bg-blue-50 text-blue-700"><Briefcase size={14}/> {job.type}</span>
-            <span className="inline-flex items-center gap-1 text-xs border border-blue-200 rounded-full px-2 py-1 bg-blue-50 text-blue-700"><GraduationCap size={14}/> {job.experiance}</span>
+            <span className="inline-flex items-center gap-1 text-sm"><Building2 size={16} className="text-blue-500" /> {job.company}</span>
+            <span className="inline-flex items-center gap-1 text-sm"><MapPin size={16} className="text-blue-500" /> {job.location}</span>
+            <span className="inline-flex items-center gap-1 text-xs border border-blue-200 rounded-full px-2 py-1 bg-blue-50 text-blue-700"><Clock size={14} /> {job.type}</span>
+            <span className="inline-flex items-center gap-1 text-xs border border-blue-200 rounded-full px-2 py-1 bg-blue-50 text-blue-700"><Briefcase size={14} /> {job.type}</span>
+            <span className="inline-flex items-center gap-1 text-xs border border-blue-200 rounded-full px-2 py-1 bg-blue-50 text-blue-700"><GraduationCap size={14} /> {job.experiance}</span>
           </p>
 
           <div className="mt-6 rounded-xl sm:rounded-2xl border border-blue-200 shadow-lg bg-white">
@@ -246,8 +358,8 @@ export default function JobDetail() {
               </div>
               <div className="flex flex-wrap gap-2">
                 {skills.map((s) => (
-                  <span 
-                    key={s} 
+                  <span
+                    key={s}
                     className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs"
                   >
                     {s}
@@ -263,22 +375,24 @@ export default function JobDetail() {
             <div className="border-b border-blue-100 p-4 sm:p-6">
               <div className="flex justify-between items-center text-blue-900 text-lg sm:text-xl">
                 <h2 className="font-semibold">Apply to this job</h2>
-                <button 
-                  onClick={toggleSave}
-                  className="flex items-center gap-1 border border-blue-300 text-blue-700 hover:bg-blue-50 hover:text-blue-800 text-xs px-3 py-1.5 rounded-lg transition-colors"
-                >
-                  {isSaved ? (
-                    <>
-                      <BookmarkCheck size={14} className="text-blue-600" />
-                      Saved
-                    </>
-                  ) : (
-                    <>
-                      <Bookmark size={14} />
-                      Save
-                    </>
-                  )}
-                </button>
+                {!isApplied && (
+                  <button
+                    onClick={toggleSave}
+                    className="flex items-center gap-1 border border-blue-300 text-blue-700 hover:bg-blue-50 hover:text-blue-800 text-xs px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    {isSaved ? (
+                      <>
+                        <BookmarkCheck size={14} className="text-blue-600" />
+                        Saved
+                      </>
+                    ) : (
+                      <>
+                        <Bookmark size={14} />
+                        Save
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
             <div className="p-4 sm:p-6">
@@ -288,62 +402,100 @@ export default function JobDetail() {
                 <div className="flex justify-between"><span>Experience</span><span className="font-semibold text-blue-700">{job.experiance}</span></div>
               </div>
 
-              <div className="space-y-3 sm:space-y-4">
-                <input 
-                  placeholder="Your name (optional)" 
-                  value={applicantName} 
-                  onChange={(e) => setApplicantName(e.target.value)}
-                  className="w-full rounded-lg border border-blue-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
-                />
-                <input 
-                  placeholder="Email (optional)" 
-                  value={applicantEmail} 
-                  onChange={(e) => setApplicantEmail(e.target.value)}
-                  className="w-full rounded-lg border border-blue-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
-                />
+              {isAuthenticated && candidateProfile ? (
+                // Logged-in user: Simplified form
+                <div className="space-y-3 sm:space-y-4">
+                  {/* Show profile info */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
+                    <div className="font-semibold text-blue-900 mb-1">Applying as:</div>
+                    <div className="text-gray-700">{candidateProfile.full_name || "Your name"}</div>
+                    <div className="text-gray-600 text-xs mt-1">{userEmail}</div>
+                    {candidateProfile.resume_path && (
+                      <div className="text-gray-600 text-xs mt-1">✓ Resume on file</div>
+                    )}
+                  </div>
 
-                <div>
-                  <label className="block text-sm mb-1 text-gray-700">Resume (PDF / DOC / DOCX)</label>
-                  <input 
-                    type="file" 
-                    accept=".pdf,.doc,.docx" 
-                    onChange={onFileChange}
-                    className="w-full text-xs sm:text-sm text-gray-600 file:mr-2 file:py-1 file:px-3 sm:file:py-2 sm:file:px-4 file:rounded-full file:border-0 file:text-xs sm:file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  {resumeFile && <div className="text-xs mt-1 text-blue-600">{resumeFile.name}</div>}
-                </div>
+                  {/* Optional resume update */}
+                  {candidateProfile.resume_path && (
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm text-gray-700">Resume</label>
+                        <button
+                          type="button"
+                          onClick={() => document.getElementById('update-resume-input')?.click()}
+                          className="text-xs text-blue-600 hover:text-blue-800 underline"
+                        >
+                          Update Resume
+                        </button>
+                      </div>
+                      <input
+                        id="update-resume-input"
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0] || null;
+                          if (!f) {
+                            setUpdateResumeFile(null);
+                            return;
+                          }
+                          const allowed = [".pdf", ".doc", ".docx"];
+                          const ext = f.name.substring(f.name.lastIndexOf(".")).toLowerCase();
+                          if (!allowed.includes(ext)) {
+                            setApplyError("Only PDF / DOC / DOCX files are allowed for resume.");
+                            setUpdateResumeFile(null);
+                            return;
+                          }
+                          const maxSize = 5 * 1024 * 1024; // 5 MB
+                          if (f.size > maxSize) {
+                            setApplyError("Resume must be smaller than 5 MB.");
+                            setUpdateResumeFile(null);
+                            return;
+                          }
+                          setApplyError(null);
+                          setUpdateResumeFile(f);
+                        }}
+                        className="hidden"
+                      />
+                      {updateResumeFile && (
+                        <div className="text-xs mt-1 text-blue-600">New file: {updateResumeFile.name}</div>
+                      )}
+                    </div>
+                  )}
 
-                <input 
-                  placeholder="Or paste a resume link" 
-                  value={resumeLink} 
-                  onChange={(e) => setResumeLink(e.target.value)}
-                  className="w-full rounded-lg border border-blue-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
-                />
+                  {/* Cover letter */}
+                  <div>
+                    <label className="block text-sm mb-1 text-gray-700">Cover letter (optional)</label>
+                    <textarea
+                      rows={3}
+                      value={coverLetter}
+                      onChange={(e) => setCoverLetter(e.target.value)}
+                      className="w-full rounded-lg border border-blue-300 p-2 sm:p-3 text-sm focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="Tell us why you're a good fit for this role..."
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm mb-1 text-gray-700">Cover letter (optional)</label>
-                  <textarea
-                    rows={3}
-                    value={coverLetter}
-                    onChange={(e) => setCoverLetter(e.target.value)}
-                    className="w-full rounded-lg border border-blue-300 p-2 sm:p-3 text-sm focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="Tell us why you're a good fit for this role..."
-                  />
-                </div>
+                  {applyError && <div className="text-red-600 text-sm bg-red-50 p-2 rounded-lg">{applyError}</div>}
+                  {applySuccess && <div className="text-green-700 text-sm bg-green-50 p-2 rounded-lg">{applySuccess}</div>}
 
-                {applyError && <div className="text-red-600 text-sm bg-red-50 p-2 rounded-lg">{applyError}</div>}
-                {applySuccess && <div className="text-green-700 text-sm bg-green-50 p-2 rounded-lg">{applySuccess}</div>}
-
-                <div className="flex gap-2">
-                  <button 
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
-                    onClick={submitApplication} 
-                    disabled={applying || applied}
+                  <button
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={submitApplication}
+                    disabled={applying || applied || profileLoading}
                   >
-                    {applied ? "Applied" : applying ? "Applying..." : "Quick Apply"}
+                    {applied ? "Applied" : applying ? "Applying..." : "Apply Now"}
                   </button>
                 </div>
-              </div>
+              ) : (
+                // Non-logged-in user: Just Sign in to Apply Now button (no form fields)
+                <div className="space-y-3 sm:space-y-4">
+                  <button
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base px-4 py-2 rounded-lg font-medium transition-colors"
+                    onClick={submitApplication}
+                  >
+                    Sign in to Apply Now
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </aside>

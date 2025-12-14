@@ -3,7 +3,7 @@ const pool = require('../../config/db');
 const getAdminJobs = async (req, res) => {
   try {
     const { status } = req.query;
-    
+
     let sql = `
       SELECT 
         j.id,
@@ -26,20 +26,24 @@ const getAdminJobs = async (req, res) => {
         j.created_at,
         j.updated_at,
         u.email as recruiter_email,
-        u.username as recruiter_username,
         rp.company_name
       FROM jobs j
       LEFT JOIN users u ON j.recruiter_id = u.id
       LEFT JOIN recruiter_profiles rp ON j.recruiter_id = rp.user_id
     `;
-    
+
     // Add status filter if provided
     if (status && status !== 'all') {
-      sql += ` WHERE j.status = ?`;
+      // Handle 'pending' status to include both 'pending' and NULL (for backward compatibility)
+      if (status === 'pending') {
+        sql += ` WHERE (j.status = ? OR j.status IS NULL)`;
+      } else {
+        sql += ` WHERE j.status = ?`;
+      }
     }
-    
+
     sql += ` ORDER BY j.created_at DESC`;
-    
+
     const params = status && status !== 'all' ? [status] : [];
     const [jobs] = await pool.execute(sql, params);
 
@@ -50,10 +54,23 @@ const getAdminJobs = async (req, res) => {
       else if (job.min_experience == null && job.max_experience != null) experience = `Up to ${job.max_experience} yrs`;
       else experience = `${job.min_experience}-${job.max_experience} yrs`;
 
+      // Build location string safely handling null/undefined values
+      let location = '';
+      if (job.city) {
+        location = job.city;
+        if (job.locality) {
+          location += `, ${job.locality}`;
+        }
+      } else if (job.locality) {
+        location = job.locality;
+      } else {
+        location = 'Not specified';
+      }
+
       return {
         ...job,
         experience,
-        location: job.city + (job.locality ? `, ${job.locality}` : '')
+        location
       };
     });
 
@@ -63,9 +80,15 @@ const getAdminJobs = async (req, res) => {
     });
   } catch (error) {
     console.error('Admin get jobs error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      query: req.query
+    });
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

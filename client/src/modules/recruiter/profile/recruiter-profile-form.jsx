@@ -1,19 +1,16 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../../../components/apiconfig/apiconfig";
 
 /**
- * RecruiterProfileEdit (PUT-only)
- *
- * Props:
- *  - initialData: optional object to prefill the form (fetched by parent)
- *  - onSaved: optional callback after successful save
- *  - onCancel: optional callback (optional)
- *
- * This component DOES NOT perform GET.
+ * RecruiterProfileForm - Create/Edit recruiter profile
+ * Handles both creation and update via PUT endpoint
+ * Redirects to recruiter-profile after successful save
  */
-export default function RecruiterProfileEdit({ initialData = null, onSaved = null, onCancel = null }) {
+export default function RecruiterProfileForm({ initialData = null, onSaved = null, onCancel = null }) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const [form, setForm] = useState({
     company_name: "",
@@ -24,9 +21,7 @@ export default function RecruiterProfileEdit({ initialData = null, onSaved = nul
     city: "",
     state: "",
     country: "",
-    pincode: "",
-    verified: 0,
-    verification_notes: ""
+    pincode: ""
   });
 
   // Prefill only from initialData
@@ -42,12 +37,7 @@ export default function RecruiterProfileEdit({ initialData = null, onSaved = nul
         city: initialData.city ?? "",
         state: initialData.state ?? "",
         country: initialData.country ?? "",
-        pincode: initialData.pincode ?? "",
-        verified:
-          typeof initialData.verified !== "undefined" && initialData.verified !== null
-            ? (initialData.verified ? 1 : 0)
-            : 0,
-        verification_notes: initialData.verification_notes ?? ""
+        pincode: initialData.pincode ?? ""
       }));
     }
   }, [initialData]);
@@ -74,6 +64,11 @@ export default function RecruiterProfileEdit({ initialData = null, onSaved = nul
     e.preventDefault();
     setMessage(null);
 
+    if (!termsAccepted) {
+      setMessage({ type: "error", text: "Please confirm that all company details are accurate and accept the Terms & Conditions." });
+      return;
+    }
+
     const errors = validate();
     if (errors.length) {
       setMessage({ type: "error", text: errors.join(" ") });
@@ -83,14 +78,21 @@ export default function RecruiterProfileEdit({ initialData = null, onSaved = nul
     setSaving(true);
 
     try {
-      const res = await api.put("/profile/recruiter", form);
+      const res = await api.put("/recruiter-profile/recruiter", form);
       const payload = res.data || {};
 
       setMessage({ type: "success", text: payload.message || "Profile saved successfully." });
 
+      // Call callback if provided
       if (typeof onSaved === "function") {
         onSaved(payload);
       }
+
+      // Always redirect to recruiter-profile after successful save
+      // Use window.location.href to force full page reload and ensure fresh data
+      setTimeout(() => {
+        window.location.href = "/recruiter-profile";
+      }, 1500);
     } catch (err) {
       if (err.response) {
         const msg = err.response.data?.message || "Failed to save profile.";
@@ -106,7 +108,10 @@ export default function RecruiterProfileEdit({ initialData = null, onSaved = nul
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-3xl mx-auto">
-        <h2 className="text-lg font-semibold mb-4">Edit Recruiter Profile</h2>
+        <h2 className="text-2xl font-bold mb-2">Create Recruiter Profile</h2>
+        <p className="text-sm text-gray-600 mb-6">
+          Complete your company profile to start posting jobs and managing applications.
+        </p>
 
         <form
           onSubmit={handleSubmit}
@@ -114,11 +119,10 @@ export default function RecruiterProfileEdit({ initialData = null, onSaved = nul
         >
           {message && (
             <div
-              className={`mb-4 px-4 py-2 rounded ${
-                message.type === "success"
-                  ? "bg-green-50 border border-green-200 text-green-700"
-                  : "bg-red-50 border border-red-200 text-red-700"
-              }`}
+              className={`mb-4 px-4 py-2 rounded ${message.type === "success"
+                ? "bg-green-50 border border-green-200 text-green-700"
+                : "bg-red-50 border border-red-200 text-red-700"
+                }`}
             >
               {message.text}
             </div>
@@ -223,26 +227,24 @@ export default function RecruiterProfileEdit({ initialData = null, onSaved = nul
             </div>
           </div>
 
-          <div className="flex items-center gap-3 mb-4">
-            <input
-              id="verified"
-              type="checkbox"
-              name="verified"
-              checked={form.verified === 1}
-              onChange={handleChange}
-            />
-            <label htmlFor="verified" className="text-sm">Verified</label>
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-sm mb-2">Verification Notes</label>
-            <textarea
-              name="verification_notes"
-              value={form.verification_notes}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded border"
-              rows={3}
-            />
+          {/* Terms & Conditions Acceptance */}
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex items-start gap-2">
+              <input
+                type="checkbox"
+                id="terms-checkbox-recruiter"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                required
+              />
+              <label htmlFor="terms-checkbox-recruiter" className="text-sm text-gray-700 cursor-pointer">
+                I confirm that all company details are accurate and I agree to HireSpark's{" "}
+                <Link to="/terms" target="_blank" className="text-blue-600 hover:underline">
+                  Terms & Conditions
+                </Link>.
+              </label>
+            </div>
           </div>
 
           <div className="flex justify-end">
@@ -256,10 +258,9 @@ export default function RecruiterProfileEdit({ initialData = null, onSaved = nul
 
             <button
               type="submit"
-              disabled={saving}
-              className={`px-6 py-2 rounded-full text-white ${
-                saving ? "bg-gray-400" : "bg-blue-600 hover:brightness-95"
-              }`}
+              disabled={saving || !termsAccepted}
+              className={`px-6 py-2 rounded-full text-white ${saving || !termsAccepted ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:brightness-95"
+                }`}
             >
               {saving ? "Saving..." : "Save Profile"}
             </button>

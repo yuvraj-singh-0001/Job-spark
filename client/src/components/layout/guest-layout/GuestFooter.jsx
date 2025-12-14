@@ -37,7 +37,7 @@ function GuestFooter() {
                 </Link>
               </li>
               <li>
-                <Link to="/post-job" className="hover:text-blue-600 transition-colors">
+                <Link to="/sign-in?role=recruiter&redirect=post-job" className="hover:text-blue-600 transition-colors">
                   Post a Job
                 </Link>
               </li>
@@ -67,12 +67,17 @@ function GuestFooter() {
               </li>
               <li>
                 <Link to="/terms" className="hover:text-blue-600 transition-colors">
-                  Terms
+                  Terms & Conditions
                 </Link>
               </li>
               <li>
                 <Link to="/privacy" className="hover:text-blue-600 transition-colors">
-                  Privacy
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/refund" className="hover:text-blue-600 transition-colors">
+                  Refund / Cancellation
                 </Link>
               </li>
             </ul>

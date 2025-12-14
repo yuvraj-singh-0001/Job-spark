@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import api from "../../../components/apiconfig/apiconfig";
 
 export default function SignUp() {
@@ -6,9 +6,10 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const handleGoogleSuccessRef = useRef(null);
 
   // GOOGLE SIGNUP
-  const handleGoogleSuccess = async (response) => {
+  const handleGoogleSuccess = useCallback(async (response) => {
     setLoading(true);
     setError("");
     setMessage("");
@@ -16,7 +17,7 @@ export default function SignUp() {
     try {
       // Map role: "user" -> "candidate" for backend, "recruiter" -> "recruiter"
       const roleToSend = role === "recruiter" ? "recruiter" : "candidate";
-      
+
       const { data } = await api.post("/auth/google", {
         credential: response.credential,
         role: roleToSend
@@ -33,14 +34,14 @@ export default function SignUp() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [role]);
+
+  // Keep ref updated
+  useEffect(() => {
+    handleGoogleSuccessRef.current = handleGoogleSuccess;
+  }, [handleGoogleSuccess]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !window.google || !window.google.accounts?.id) {
-      console.error("Google Identity script not loaded or window.google is undefined.");
-      return;
-    }
-
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
     if (!clientId) {
@@ -48,19 +49,47 @@ export default function SignUp() {
       return;
     }
 
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: handleGoogleSuccess,
-    });
+    // Wait for Google script to load
+    let retryCount = 0;
+    const maxRetries = 50; // 5 seconds max wait time
+    const initializeGoogleAuth = () => {
+      if (typeof window === "undefined" || !window.google || !window.google.accounts?.id) {
+        retryCount++;
+        if (retryCount < maxRetries) {
+          // Retry after a short delay if script not loaded yet
+          setTimeout(initializeGoogleAuth, 100);
+        } else {
+          console.error("Google Identity script failed to load after multiple retries.");
+        }
+        return;
+      }
 
-    const buttonContainer = document.getElementById("google-signup-btn");
-    if (buttonContainer) {
-      window.google.accounts.id.renderButton(buttonContainer, {
-        theme: "outline",
-        size: "large",
-        width: "100%",
-      });
-    }
+      try {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: (response) => {
+            if (handleGoogleSuccessRef.current) {
+              handleGoogleSuccessRef.current(response);
+            }
+          },
+        });
+
+        const buttonContainer = document.getElementById("google-signup-btn");
+        if (buttonContainer) {
+          buttonContainer.innerHTML = "";
+          window.google.accounts.id.renderButton(buttonContainer, {
+            theme: "outline",
+            size: "large",
+            width: "100%",
+          });
+        }
+      } catch (err) {
+        console.error("Error initializing Google auth:", err);
+      }
+    };
+
+    // Start initialization
+    initializeGoogleAuth();
   }, [role]);
 
   return (
@@ -88,28 +117,26 @@ export default function SignUp() {
                     I want to sign up as:
                   </label>
                   <div className="grid grid-cols-2 gap-3 text-sm">
-                    <label className={`flex gap-2 p-3 border-2 rounded-xl cursor-pointer transition-colors ${
-                      role === "user" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
-                    }`}>
-                      <input 
-                        type="radio" 
-                        name="role" 
-                        value="user" 
-                        checked={role === "user"} 
+                    <label className={`flex gap-2 p-3 border-2 rounded-xl cursor-pointer transition-colors ${role === "user" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+                      }`}>
+                      <input
+                        type="radio"
+                        name="role"
+                        value="user"
+                        checked={role === "user"}
                         onChange={() => setRole("user")}
                         className="mt-0.5"
                       />
                       <span className="font-medium">Candidate</span>
                     </label>
 
-                    <label className={`flex gap-2 p-3 border-2 rounded-xl cursor-pointer transition-colors ${
-                      role === "recruiter" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
-                    }`}>
-                      <input 
-                        type="radio" 
-                        name="role" 
-                        value="recruiter" 
-                        checked={role === "recruiter"} 
+                    <label className={`flex gap-2 p-3 border-2 rounded-xl cursor-pointer transition-colors ${role === "recruiter" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+                      }`}>
+                      <input
+                        type="radio"
+                        name="role"
+                        value="recruiter"
+                        checked={role === "recruiter"}
                         onChange={() => setRole("recruiter")}
                         className="mt-0.5"
                       />

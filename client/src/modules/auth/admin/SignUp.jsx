@@ -51,7 +51,7 @@ export default function AdminSignUp() {
       
       // Redirect to admin dashboard
       setTimeout(() => {
-        window.location.href = "/admin-dashboard";
+        window.location.href = "/admin";
       }, 1500);
       
     } catch (err) {

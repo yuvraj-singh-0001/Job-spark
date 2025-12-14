@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  Briefcase, 
-  User, 
-  Users, 
-  Menu, 
-  Clock, 
+import {
+  LayoutDashboard,
+  Briefcase,
+  User,
+  Users,
+  Menu,
+  Clock,
   CheckCircle,
   FileText,
   XCircle,
@@ -38,11 +38,12 @@ const AdminSidebar = () => {
 
   const handleLogout = async () => {
     try {
-      await api.post('/auth/logout');
-      localStorage.removeItem('token');
+      await api.post('/admin/auth/logout');
       navigate('/admin/signin');
     } catch (error) {
       console.error('Logout error:', error);
+      // Even if logout fails, redirect to signin
+      navigate('/admin/signin');
     }
   };
 

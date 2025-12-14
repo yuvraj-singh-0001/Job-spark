@@ -27,7 +27,6 @@ const getCandidateProfile = async (req, res) => {
 
     res.json({ success: true, user: profile });
   } catch (error) {
-    console.error('GET profile error:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   } finally {
     connection.release();

@@ -30,7 +30,7 @@ export default function AdminUsers() {
   };
 // Navigate back to dashboard
   const handleBack = () => {
-    navigate("/admin-dashboard");
+    navigate("/admin");
   };
 
   if (loading) {

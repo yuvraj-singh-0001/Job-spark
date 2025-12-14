@@ -33,8 +33,8 @@ const { requireAuth, authCheck } = require('../../../middlewares/auth');
  * So the final endpoints become:
  *   POST   /api/auth/signup
  *   POST   /api/auth/login
- *   GET    /api/auth/authcheck
- *   ( optional alias ) /api/auth/me
+ *   GET    /api/auth/session
+ *   PUT    /api/auth/me (update profile)
  */
 
 // Create new user
@@ -46,11 +46,9 @@ router.post('/login', signIn);
 // Google OAuth authentication
 router.post('/google', googleAuth);
 
-// Validate token + return currently authenticated user
-router.get('/authcheck', requireAuth, authCheck);
+// Get current session (validates cookie and returns authenticated user)
+router.get('/session', requireAuth, authCheck);
 
-// Alias if you want cleaner endpoint:
-router.get('/me', requireAuth, authCheck);
 // Update profile (authenticated)
 router.put('/me', requireAuth, updateProfile);
 // Logout user by clearing the cookie

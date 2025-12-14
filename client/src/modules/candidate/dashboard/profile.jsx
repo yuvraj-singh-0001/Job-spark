@@ -67,10 +67,10 @@ export default function ProfilePage() {
         setForm(mapUserToForm(res.data.user));
       }
     } catch (err) {
-      console.warn("Could not load profile:", err?.response?.status || err.message);
+      // Error loading profile
     } finally {
       try {
-        const auth = await api.get('/auth/authcheck');
+        const auth = await api.get('/auth/session');
         const authUser = auth?.data?.user;
         if (authUser) {
           setForm((s) => (s.user_id ? s : { ...s, user_id: authUser.id || authUser.sub || s.user_id }));
@@ -120,7 +120,7 @@ export default function ProfilePage() {
       city: u.city || "",
       state: u.state || "",
       country: u.country || "India",
-      highest_qualification: u.highest_qualification || u.highest_education || "",
+      highest_qualification: u.highest_qualification || "",
       trade_stream: u.trade_stream || "",
       key_skills: keySkillsArray,
       skill_level: u.skill_level || "",
@@ -165,7 +165,6 @@ export default function ProfilePage() {
         setError(res?.data?.message || "Failed to create resume");
       }
     } catch (err) {
-      console.error("Create resume error:", err);
       setError(err?.response?.data?.message || err.message || "Failed to create resume");
     } finally {
       setCreatingResume(false);
@@ -191,7 +190,7 @@ export default function ProfilePage() {
       let payloadUserId = form.user_id;
       if (!payloadUserId) {
         try {
-          const auth = await api.get('/auth/authcheck');
+          const auth = await api.get('/auth/session');
           const authUser = auth?.data?.user;
           if (authUser) {
             payloadUserId = authUser.id || authUser.sub || payloadUserId;
@@ -222,7 +221,7 @@ export default function ProfilePage() {
             resumePathToSend = createResumeRes.data.resume_path;
           }
         } catch (err) {
-          console.warn("Could not create resume:", err);
+          // Could not create resume
         }
       }
 
@@ -272,29 +271,34 @@ export default function ProfilePage() {
         github_url: toNullIfEmpty(form.github_url),
       };
 
-      console.log("=== Sending payload to backend ===");
-      console.log("Payload:", JSON.stringify(payload, null, 2));
-      console.log("Payload keys:", Object.keys(payload));
-      console.log("Payload values:", Object.entries(payload).map(([k, v]) => `${k}: ${v !== null && v !== undefined ? (typeof v === 'object' ? JSON.stringify(v) : v) : 'NULL'}`).join(', '));
-
       const res = await api.put("/profile/user", payload);
-
-      console.log("Backend response:", res?.data);
 
       if (res?.data?.success) {
         setUser(res.data.user || payload);
         setForm(mapUserToForm(res.data.user || payload));
         setIsEditing(false);
         setSelectedResumeFile(null);
-        alert("Profile saved successfully!");
+
+        // Check if user came from apply flow
+        const applyJobId = localStorage.getItem("postLoginApplyJobId");
+        const redirectPath = localStorage.getItem("postLoginRedirect");
+
+        if (applyJobId && redirectPath) {
+          // Profile is now complete - redirect back to job page
+          // User will need to click Apply Now button manually
+          localStorage.removeItem("postLoginApplyJobId");
+          localStorage.removeItem("postLoginRedirect");
+          alert("Profile saved successfully! You can now apply for the job.");
+          window.location.href = redirectPath;
+          return;
+        } else {
+          alert("Profile saved successfully!");
+        }
       } else {
         const errorMsg = res?.data?.message || res?.data?.error || "Unknown server response";
-        console.error("Save failed:", errorMsg, res?.data);
         setError(errorMsg);
       }
     } catch (err) {
-      console.error("Save profile error:", err);
-      console.error("Error response:", err?.response?.data);
       const errorMsg = err?.response?.data?.message || err?.response?.data?.error || err.message || "Failed to save profile";
       setError(errorMsg);
     } finally {
@@ -834,7 +838,7 @@ function ProfileView({ user, onEdit }) {
           </div>
           <div className="flex-1">
             <h3 className="font-semibold text-slate-900 text-lg">{user.full_name}</h3>
-            <p className="text-slate-600 text-sm">{user.highest_education || "Add education"}</p>
+            <p className="text-slate-600 text-sm">{user.highest_qualification || "Add education"}</p>
             <div className="flex items-center gap-4 mt-2 text-sm">
               <span className="text-slate-700">{user.experience_years ?? 0} years experience</span>
               <span className="text-slate-700">{user.phone || "No phone"}</span>
@@ -852,7 +856,7 @@ function ProfileView({ user, onEdit }) {
             <InfoItem label="Phone" value={user.phone} />
             <InfoItem label="Date of Birth" value={user.date_of_birth} />
             <InfoItem label="Gender" value={user.gender} />
-            <InfoItem label="Highest Qualification" value={user.highest_qualification || user.highest_education} />
+            <InfoItem label="Highest Qualification" value={user.highest_qualification || user.highest_qualification} />
             <InfoItem label="Trade/Stream" value={user.trade_stream} />
             <InfoItem label="Key Skills" value={Array.isArray(user.key_skills) ? user.key_skills.join(", ") : user.key_skills} />
             <InfoItem label="Skill Level" value={user.skill_level} />
@@ -897,21 +901,34 @@ function ProfileView({ user, onEdit }) {
       </div>
 
       {/* Resume */}
-      {user.resume_path && (
-        <div className="border-t border-slate-200 pt-4">
-          <a
-            href={user.resume_path}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            View Resume
-          </a>
-        </div>
-      )}
+      {user.resume_path && (() => {
+        // Construct the resume URL - use full server URL if relative path
+        let resumeUrl = user.resume_path;
+        if (!resumeUrl.startsWith('http')) {
+          // Get the API base URL (without /api)
+          const apiBase = import.meta.env.VITE_API_BASE || "http://localhost:5000/api";
+          const serverBase = apiBase.replace('/api', '');
+          // Ensure resume_path starts with / if it doesn't already
+          const resumePath = resumeUrl.startsWith('/') ? resumeUrl : `/${resumeUrl}`;
+          resumeUrl = `${serverBase}${resumePath}`;
+        }
+
+        return (
+          <div className="border-t border-slate-200 pt-4">
+            <a
+              href={resumeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              View Resume
+            </a>
+          </div>
+        );
+      })()}
     </div>
   );
 }

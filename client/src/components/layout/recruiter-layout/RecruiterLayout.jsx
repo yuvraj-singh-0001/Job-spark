@@ -1,13 +1,17 @@
 import React from "react";
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation, Navigate } from "react-router-dom";
 import RecruiterSidebar from "./RecruiterSidebar.jsx";
+import RecruiterHeader from "./RecruiterHeader.jsx";
+import { useRecruiterProfile } from "../../../hooks/useRecruiterProfile";
 
 /**
  * Recruiter Layout - For recruiter dashboard pages
- * Includes Sidebar for navigation
+ * Shows header when profile is complete, profile form when incomplete
  */
 export default function RecruiterLayout() {
   const location = useLocation();
+  const { loading, isComplete } = useRecruiterProfile();
+  const isProfileFormPage = location.pathname === "/recruiter-profile-form";
 
   // Check if current route is active for mobile tabs
   const isActive = (path) => {
@@ -36,74 +40,38 @@ export default function RecruiterLayout() {
     return 'Manage your recruiting activities.';
   };
 
-  return (
-    <div className="min-h-screen flex bg-slate-50 text-slate-900">
-      {/* Sidebar */}
-      <RecruiterSidebar />
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
-      {/* Mobile top nav */}
-      <header className="md:hidden fixed inset-x-0 top-0 z-20 bg-white border-b border-slate-200">
-        <div className="flex items-center justify-between px-4 py-3">
-          <span className="font-semibold">HireSpark</span>
-          <span className="text-xs text-slate-500">Recruiter</span>
-        </div>
-      </header>
+  // If profile is not complete and not on profile form page, redirect to profile form
+  if (!isComplete && !isProfileFormPage) {
+    return <Navigate to="/recruiter-profile-form" replace />;
+  }
+
+  // If on profile form page, show form without header
+  if (isProfileFormPage) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <Outlet />
+      </div>
+    );
+  }
+
+  // Profile is complete - show header layout
+  return (
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
+      {/* Header matching the image design */}
+      <RecruiterHeader />
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col bg-slate-50 md:pt-0 pt-16 md:ml-20 lg:ml-64 transition-all duration-300">
-        {/* Top bar for desktop */}
-        <div className="hidden md:flex items-center justify-between px-8 py-4 border-b border-slate-200 bg-white">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight">
-              {getPageTitle()}
-            </h2>
-            <p className="text-xs text-slate-500 mt-1">
-              {getPageDescription()}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link 
-              to="/create-job"
-              className="px-3 py-1.5 text-sm rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-colors"
-            >
-              + Post Job
-            </Link>
-            <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-medium text-slate-600">
-              R
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Navigation Tabs */}
-        <div className="md:hidden flex flex-wrap gap-3 p-4 border-b border-gray-200 overflow-x-auto">
-          <Link 
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${isActive('/recruiter-dashboard') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'}`} 
-            to="/recruiter-dashboard"
-          >
-            Overview
-          </Link>
-          <Link 
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${isActive('/recruiter-profile') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'}`} 
-            to="/recruiter-profile"
-          >
-            Profile
-          </Link>
-          <Link 
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${isActive('/job-posted') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'}`} 
-            to="/job-posted"
-          >
-            Posted Jobs
-          </Link>
-          <Link 
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${isActive('/create-job') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'}`} 
-            to="/create-job"
-          >
-            Create Job
-          </Link>
-        </div>
-
-        {/* Content area where child components will render */}
-        <div className="flex-1 p-4 md:p-8">
+      <main className="flex-1">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
           <Outlet />
         </div>
       </main>

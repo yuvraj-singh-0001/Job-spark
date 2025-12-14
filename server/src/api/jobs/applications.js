@@ -59,7 +59,30 @@ const postApplication = async (req, res) => {
       return res.status(409).json({ ok: false, error: "You have already applied to this job" });
     }
 
-    const resumePath = req.file ? path.join("uploads", "resumes", req.file.filename) : null;
+    // Determine resume path: prioritize uploaded file, then body resume_path, then profile resume_path
+    let resumePath = null;
+    if (req.file) {
+      // New file uploaded
+      resumePath = path.join("uploads", "resumes", req.file.filename);
+    } else if (req.body.resume_path) {
+      // Resume path provided in body (from profile)
+      resumePath = req.body.resume_path;
+    } else {
+      // Try to get resume from user's profile
+      try {
+        const [profileRows] = await conn.query(
+          "SELECT resume_path FROM candidate_profiles WHERE user_id = ? LIMIT 1",
+          [userId]
+        );
+        if (profileRows.length > 0 && profileRows[0].resume_path) {
+          resumePath = profileRows[0].resume_path;
+        }
+      } catch (profileErr) {
+        // Profile doesn't exist or error - resume will be null
+        console.error("Error fetching profile resume:", profileErr);
+      }
+    }
+
     const status = "applied";
 
     const insertSql = `
@@ -77,6 +100,17 @@ const postApplication = async (req, res) => {
     ]);
 
     const insertedId = result.insertId;
+
+    // Remove job from saved jobs if it exists (since user has now applied)
+    try {
+      await conn.query(
+        'DELETE FROM saved_jobs WHERE user_id = ? AND job_id = ?',
+        [userId, job_id]
+      );
+    } catch (savedJobErr) {
+      // Log error but don't fail the application if removing from saved jobs fails
+      console.error("Error removing from saved jobs:", savedJobErr);
+    }
 
     res.status(201).json({
       ok: true,

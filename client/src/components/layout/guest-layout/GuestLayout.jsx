@@ -36,7 +36,7 @@ const GuestLayout = () => {
 
     async function checkAuth() {
       try {
-        const { data } = await api.get("/auth/authcheck");
+        const { data } = await api.get("/auth/session");
         if (mounted) setUser(data?.user || null);
       } catch (err) {
         if (mounted) setUser(null);

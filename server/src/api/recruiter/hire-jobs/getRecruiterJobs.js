@@ -8,7 +8,7 @@ function parseSkills(skills) {
 async function getRecruiterJobs(req, res) {
   try {
     const recruiterId = req.user?.id;
-    
+
     if (!recruiterId) {
       return res.status(401).json({ ok: false, message: "Unauthorized" });
     }
@@ -30,13 +30,14 @@ async function getRecruiterJobs(req, res) {
         contact_email,
         contact_phone,
         interview_address,
+        status,
         posted_at,
         created_at
       FROM jobs
       WHERE recruiter_id = ?
       ORDER BY created_at DESC
     `;
-    
+
     const [rows] = await pool.query(sql, [recruiterId]);
 
     // Fetch tags from normalized tables
@@ -65,12 +66,25 @@ async function getRecruiterJobs(req, res) {
       else if (r.min_experience == null && r.max_experience != null) experience = `Up to ${r.max_experience} yrs`;
       else experience = `${r.min_experience}-${r.max_experience} yrs`;
 
+      // Build location string safely handling null/undefined values
+      let location = '';
+      if (r.city) {
+        location = r.city;
+        if (r.locality) {
+          location += `, ${r.locality}`;
+        }
+      } else if (r.locality) {
+        location = r.locality;
+      } else {
+        location = 'Not specified';
+      }
+
       return {
         id: r.id,
         title: r.title,
         company: r.company,
         type: r.job_type || 'Full-time',
-        location: r.city + (r.locality ? `, ${r.locality}` : ''),
+        location,
         tags: tagMap[r.id] || [],
         salary: r.salary || 'Not specified',
         vacancies: r.vacancies,
@@ -79,6 +93,7 @@ async function getRecruiterJobs(req, res) {
         contactEmail: r.contact_email,
         contactPhone: r.contact_phone,
         interviewAddress: r.interview_address,
+        status: r.status || 'pending',
         postedAt: r.posted_at,
         createdAt: r.created_at,
         experience,

@@ -9,7 +9,6 @@ async function getTableColumns(connection, tableName) {
     const [columns] = await connection.execute(`SHOW COLUMNS FROM ${tableName}`);
     return columns.map(col => col.Field);
   } catch (error) {
-    console.error(`Error getting columns for ${tableName}:`, error);
     return [];
   }
 }
@@ -23,14 +22,8 @@ const candidateProfile = async (req, res) => {
   const connection = await pool.getConnection();
 
   try {
-    // Debug: Log the request
-    console.log('=== Profile Update Request ===');
-    console.log('User ID:', req.user?.id);
-    console.log('Body user_id:', req.body?.user_id);
-    
     // Verify table structure
     const tableColumns = await getTableColumns(connection, 'candidate_profiles');
-    console.log('Available columns in candidate_profiles:', tableColumns);
     // If you expect requireAuth to run before this handler, req.user should exist.
     // If not present, respond with 401 so caller knows to apply auth middleware.
     const authUserId = req.user?.id;
@@ -91,8 +84,6 @@ const candidateProfile = async (req, res) => {
       [finalUserId]
     );
 
-    console.log('Existing profiles found:', existingProfiles.length);
-
     const now = new Date();
 
     // Handle key_skills - convert array to JSON string if needed
@@ -144,8 +135,6 @@ const candidateProfile = async (req, res) => {
 
     if (existingProfiles.length > 0) {
       // Update existing profile
-      console.log('Updating existing profile for user_id:', finalUserId);
-      
       const updateValues = [
         full_name,
         phone !== undefined ? phone : null,
@@ -173,7 +162,7 @@ const candidateProfile = async (req, res) => {
         now,
         finalUserId
       ];
-      
+
       const updateColumns = [
         'full_name', 'phone', 'date_of_birth', 'gender', 'city', 'state', 'country',
         'highest_qualification', 'trade_stream', 'key_skills', 'skill_level',
@@ -182,12 +171,7 @@ const candidateProfile = async (req, res) => {
         'willing_to_relocate', 'experience_years', 'resume_path',
         'linkedin_url', 'github_url', 'updated_at'
       ];
-      
-      console.log('Update data mapping:');
-      updateColumns.forEach((col, idx) => {
-        console.log(`  ${col}: ${updateValues[idx] !== null && updateValues[idx] !== undefined ? (typeof updateValues[idx] === 'object' ? JSON.stringify(updateValues[idx]) : updateValues[idx]) : 'NULL'}`);
-      });
-      
+
       const updateResult = await connection.execute(
         `UPDATE candidate_profiles
          SET full_name = ?, phone = ?, date_of_birth = ?, gender = ?, city = ?, state = ?, country = ?,
@@ -199,18 +183,13 @@ const candidateProfile = async (req, res) => {
          WHERE user_id = ?`,
         updateValues
       );
-      console.log('Update result:', updateResult);
-      console.log('Rows affected:', updateResult[0]?.affectedRows);
 
       await connection.commit();
-      console.log('Transaction committed (UPDATE)');
 
       const [updatedProfiles] = await connection.execute(
         'SELECT * FROM candidate_profiles WHERE user_id = ?',
         [finalUserId]
       );
-
-      console.log('Updated profile data:', JSON.stringify(updatedProfiles[0], null, 2));
 
       // Parse key_skills JSON for response
       if (updatedProfiles[0] && updatedProfiles[0].key_skills) {
@@ -228,9 +207,6 @@ const candidateProfile = async (req, res) => {
       });
     } else {
       // Create new profile
-      console.log('Creating new profile for user_id:', finalUserId);
-      
-      // Prepare all values for logging
       const insertValues = [
         finalUserId,
         full_name,
@@ -259,7 +235,7 @@ const candidateProfile = async (req, res) => {
         now,
         now
       ];
-      
+
       const columnNames = [
         'user_id', 'full_name', 'phone', 'date_of_birth', 'gender', 'city', 'state', 'country',
         'highest_qualification', 'trade_stream', 'key_skills', 'skill_level', 'experience_type',
@@ -267,14 +243,7 @@ const candidateProfile = async (req, res) => {
         'preferred_contact_method', 'willing_to_relocate', 'experience_years', 'resume_path',
         'linkedin_url', 'github_url', 'created_at', 'updated_at'
       ];
-      
-      console.log('Column count:', columnNames.length);
-      console.log('Values count:', insertValues.length);
-      console.log('Insert data mapping:');
-      columnNames.forEach((col, idx) => {
-        console.log(`  ${col}: ${insertValues[idx] !== null && insertValues[idx] !== undefined ? (typeof insertValues[idx] === 'object' ? JSON.stringify(insertValues[idx]) : insertValues[idx]) : 'NULL'}`);
-      });
-      
+
       const insertResult = await connection.execute(
         `INSERT INTO candidate_profiles
          (user_id, full_name, phone, date_of_birth, gender, city, state, country,
@@ -285,17 +254,13 @@ const candidateProfile = async (req, res) => {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         insertValues
       );
-      console.log('Insert result:', insertResult);
 
       await connection.commit();
-      console.log('Transaction committed (INSERT)');
 
       const [newProfiles] = await connection.execute(
         'SELECT * FROM candidate_profiles WHERE user_id = ?',
         [finalUserId]
       );
-
-      console.log('New profile data:', JSON.stringify(newProfiles[0], null, 2));
 
       // Parse key_skills JSON for response
       if (newProfiles[0] && newProfiles[0].key_skills) {
@@ -313,19 +278,11 @@ const candidateProfile = async (req, res) => {
       });
     }
   } catch (error) {
-    try { 
-      await connection.rollback(); 
-      console.log('Transaction rolled back');
-    } catch (e) { 
-      console.error('Rollback error:', e);
+    try {
+      await connection.rollback();
+    } catch (e) {
+      // Rollback error
     }
-    console.error('=== Profile handler error ===');
-    console.error('Error message:', error.message);
-    console.error('Error code:', error.code);
-    console.error('Error sqlState:', error.sqlState);
-    console.error('Error sqlMessage:', error.sqlMessage);
-    console.error('Error stack:', error.stack);
-    console.error('Request body:', JSON.stringify(req.body, null, 2));
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -336,7 +293,6 @@ const candidateProfile = async (req, res) => {
   } finally {
     if (connection) {
       connection.release();
-      console.log('Connection released');
     }
   }
 };

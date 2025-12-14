@@ -10,7 +10,7 @@ export default function Profile() {
 
   async function fetchProfile() {
     try {
-      const res = await api.get('/auth/me');
+      const res = await api.get('/auth/session');
       const data = res.data;
       setUser(data.user);
     } catch (err) {

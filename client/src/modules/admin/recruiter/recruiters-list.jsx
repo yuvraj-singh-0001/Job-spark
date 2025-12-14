@@ -31,7 +31,7 @@ export default function AdminRecruiters() {
   };
 
   const handleBack = () => {
-    navigate("/admin-dashboard");
+    navigate("/admin");
   };
 
   const toggleVerification = async (recruiterId, currentVerified) => {

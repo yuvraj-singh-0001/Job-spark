@@ -18,8 +18,7 @@ const getAdminRecruiters = async (req, res) => {
         rp.verification_notes,
         rp.created_at,
         rp.updated_at,
-        u.email,
-        u.username
+        u.email
       FROM recruiter_profiles rp
       LEFT JOIN users u ON rp.user_id = u.id
       ORDER BY rp.created_at DESC

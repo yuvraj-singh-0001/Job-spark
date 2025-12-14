@@ -31,7 +31,7 @@ export default function AdminJobs() {
   };
 // Navigate back to dashboard
   const handleBack = () => {
-    navigate("/admin-dashboard");
+    navigate("/admin");
   };
 
   const formatSalary = (salary) => {

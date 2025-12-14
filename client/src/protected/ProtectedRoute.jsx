@@ -11,7 +11,7 @@ export default function ProtectedRoute({ children, roles }) {
     let alive = true;
     (async () => {
       try {
-        const { data } = await api.get("/auth/authcheck");
+        const { data } = await api.get("/auth/session");
         if (alive) setUser(data?.user || null);
       } catch (e) {
         if (alive) setUser(null);
@@ -42,19 +42,17 @@ export default function ProtectedRoute({ children, roles }) {
   }
 
   const role = user?.role;
-  
+
   // Check if user has required role
-  // Treat "candidate" and "user" as equivalent for backward compatibility
-  const normalizedRole = role === "candidate" ? "user" : role;
-  const normalizedRoles = roles?.map(r => r === "candidate" ? "user" : r) || [];
-  const hasAccess = normalizedRoles.length === 0 || normalizedRoles.includes(normalizedRole);
-  
+  // Only three roles in system: candidate, recruiter, admin
+  const hasAccess = roles?.length === 0 || (roles && roles.includes(role)) || false;
+
   if (roles && roles.length > 0 && !hasAccess) {
     // If user tries to access wrong role's pages, redirect them to appropriate page
     if (role === "admin") {
-      return <Navigate to="/admin-dashboard" replace />;
+      return <Navigate to="/admin" replace />;
     } else if (role === "recruiter") {
-      return <Navigate to="/recruiter-dashboard" replace />;
+      return <Navigate to="/create-job" replace />;
     } else {
       return <Navigate to="/home" replace />;
     }

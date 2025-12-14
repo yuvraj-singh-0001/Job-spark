@@ -1,6 +1,7 @@
 import React from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import ProtectedRoute from "../protected/ProtectedRoute.jsx";
+import ProtectedRecruiterRoute from "../protected/ProtectedRecruiterRoute.jsx";
 
 // Import Layouts
 import GuestLayout from "../components/layout/guest-layout/GuestLayout.jsx";
@@ -15,6 +16,9 @@ import CareerGuide from "../modules/guest/guide/career-guide.jsx";
 import Jobs from "../modules/guest/jobs/job-list.jsx";
 import JobDetail from "../modules/guest/jobs/job-list-details.jsx";
 import Profile from "../components/profile/profile.jsx";
+import TermsAndConditions from "../modules/guest/legal/TermsAndConditions.jsx";
+import PrivacyPolicy from "../modules/guest/legal/PrivacyPolicy.jsx";
+import RefundCancellation from "../modules/guest/legal/RefundCancellation.jsx";
 
 // Import Auth Components (Candidate/Recruiter - Google Login Only)
 import SignIn from "../modules/auth/candidate-recruiter/SignIn.jsx";
@@ -64,6 +68,9 @@ const router = createBrowserRouter([
       { path: "career-guide", element: <CareerGuide /> },
       { path: "jobs", element: <Jobs /> },
       { path: "jobs/:id", element: <JobDetail /> },
+      { path: "terms", element: <TermsAndConditions /> },
+      { path: "privacy", element: <PrivacyPolicy /> },
+      { path: "refund", element: <RefundCancellation /> },
 
       // Auth pages (accessible without login) - No footer on these
       { path: "sign-in", element: <SignIn /> },
@@ -86,7 +93,7 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: (
-      <ProtectedRoute roles={["user", "candidate"]}>
+      <ProtectedRoute roles={["candidate"]}>
         <CandidateLayout />
       </ProtectedRoute>
     ),
@@ -133,11 +140,19 @@ const router = createBrowserRouter([
       },
       {
         path: "create-job",
-        element: <RecruiterPostJob />,
+        element: (
+          <ProtectedRecruiterRoute>
+            <RecruiterPostJob />
+          </ProtectedRecruiterRoute>
+        ),
       },
       {
         path: "job-posted",
-        element: <JobPosted />,
+        element: (
+          <ProtectedRecruiterRoute>
+            <JobPosted />
+          </ProtectedRecruiterRoute>
+        ),
       },
       {
         path: "recruiter/jobs/:jobId/applicants",

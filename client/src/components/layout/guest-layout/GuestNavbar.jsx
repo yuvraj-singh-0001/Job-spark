@@ -24,7 +24,7 @@ export default function GuestNavbar() {
 
     async function fetchProfile() {
       try {
-        const res = await api.get("/auth/me");
+        const res = await api.get("/auth/session");
         if (mounted) setUser(res.data.user || null);
       } catch (err) {
         if (mounted) setUser(null);
@@ -127,7 +127,7 @@ export default function GuestNavbar() {
               Browse Jobs
             </Link>
             <Link
-              to="/post-job"
+              to="/sign-in?role=recruiter&redirect=post-job"
               className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
             >
               Post a Job
@@ -162,12 +162,12 @@ export default function GuestNavbar() {
                     <div className="mb-4">
                       <div className="text-xs text-slate-500">Name</div>
                       <div className="font-semibold text-lg">
-                        {user.name || user.fullname || user.username}
+                        {user.name || user.fullname || user.username || "-"}
                       </div>
                     </div>
                     <div className="mb-4">
                       <div className="text-xs text-slate-500">Username</div>
-                      <div className="font-medium text-sm">{user.username}</div>
+                      <div className="font-medium text-sm">{user.username || user.email || "-"}</div>
                     </div>
                     <div className="mb-4">
                       <div className="text-xs text-slate-500">Role</div>
@@ -253,7 +253,7 @@ export default function GuestNavbar() {
                 Browse Jobs
               </Link>
               <Link
-                to="/post-job"
+                to="/sign-in?role=recruiter&redirect=post-job"
                 onClick={() => setMobileMenuOpen(false)}
                 className="block text-slate-700 hover:text-blue-600 transition-colors font-medium"
               >

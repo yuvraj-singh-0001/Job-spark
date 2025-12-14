@@ -1,21 +1,37 @@
-import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useLocation, useSearchParams, Link } from "react-router-dom";
 import api from "../../../components/apiconfig/apiconfig";
 
 export default function SignIn() {
-  const [role, setRole] = useState("candidate");
+  const [searchParams] = useSearchParams();
+  const roleParam = searchParams.get("role");
+  const redirectParam = searchParams.get("redirect");
+
+  const [role, setRole] = useState(roleParam === "recruiter" ? "recruiter" : "candidate");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const location = useLocation();
+  const handleGoogleSuccessRef = useRef(null);
+
+  // Update role when query parameter changes
+  useEffect(() => {
+    if (roleParam === "recruiter") {
+      setRole("recruiter");
+    } else if (roleParam === "candidate") {
+      setRole("candidate");
+    }
+  }, [roleParam]);
 
   // Decide where to send the user based on role + profile existence
-  const resolveRedirect = async (resolvedRole) => {
+  const resolveRedirect = useCallback(async (resolvedRole) => {
     try {
       if (resolvedRole === "recruiter") {
         // Recruiter profile exists?
         await api.get("/recruiter-profile/recruiter");
-        return "/recruiter-profile";
+        // Profile exists - redirect to Post Job page (default dashboard view)
+        return "/create-job";
       }
 
       // Candidate profile exists?
@@ -25,16 +41,20 @@ export default function SignIn() {
       // 404 means profile not created yet
       const status = err?.response?.status;
       if (status === 404) {
+        // If coming from "post a job" flow and profile doesn't exist, go to profile form
+        if (resolvedRole === "recruiter" && redirectParam === "post-job") {
+          return "/recruiter-profile-form";
+        }
         return resolvedRole === "recruiter"
           ? "/recruiter-profile-form"
           : "/dashboard/profile";
       }
       // Fallback to default destinations on other errors
-      return resolvedRole === "recruiter" ? "/recruiter-profile" : "/dashboard";
+      return resolvedRole === "recruiter" ? "/create-job" : "/dashboard";
     }
-  };
+  }, [redirectParam]);
 
-  const consumePostLoginTasks = async (userRoleFallback) => {
+  const consumePostLoginTasks = useCallback(async (userRoleFallback) => {
     const getItem = (key) => {
       try {
         return window.localStorage.getItem(key);
@@ -52,8 +72,10 @@ export default function SignIn() {
     };
 
     const pendingJobId = getItem("postLoginSaveJobId");
+    const pendingApplyJobId = getItem("postLoginApplyJobId");
     const pendingRedirect = getItem("postLoginRedirect");
 
+    // Handle save job flow
     if (pendingJobId) {
       try {
         await api.post(`/jobs/save/${pendingJobId}`);
@@ -61,9 +83,50 @@ export default function SignIn() {
       } catch (err) {
         setMessage("Signed in, but we could not save the job automatically.");
       }
+      removeItem("postLoginSaveJobId");
     }
 
-    removeItem("postLoginSaveJobId");
+    // Handle apply job flow (only for candidates)
+    // Don't auto-apply, just redirect back to job page so user can click Apply Now manually
+    if (pendingApplyJobId && userRoleFallback === "candidate") {
+      // Check if profile exists and is complete
+      let profileComplete = false;
+      try {
+        const profileRes = await api.get("/profile/user");
+        if (profileRes?.data?.success && profileRes.data.user) {
+          const profile = profileRes.data.user;
+          const sessionRes = await api.get("/auth/session");
+          const userEmail = sessionRes?.data?.user?.email;
+          // Check if profile has required fields: name, email, and resume
+          profileComplete = !!(
+            profile.full_name &&
+            userEmail &&
+            profile.resume_path
+          );
+        }
+      } catch (err) {
+        // Profile doesn't exist or incomplete
+        profileComplete = false;
+      }
+
+      if (!profileComplete) {
+        // Profile incomplete - redirect to complete profile
+        // Keep the apply job ID and redirect path for after profile completion
+        // Don't remove them yet - profile page will handle the apply and cleanup
+        return "/dashboard/profile";
+      }
+
+      // Profile is complete - just redirect back to job page
+      // User will need to click Apply Now button manually
+      removeItem("postLoginApplyJobId");
+      if (pendingRedirect) {
+        removeItem("postLoginRedirect");
+        return pendingRedirect;
+      }
+      // Fallback: redirect to jobs page if no redirect path
+      return "/jobs";
+    }
+
     removeItem("postLoginRedirect");
 
     const fallbackRedirect = await resolveRedirect(userRoleFallback);
@@ -74,38 +137,64 @@ export default function SignIn() {
       "/dashboard";
 
     return next;
-  };
+  }, [resolveRedirect, location.state?.from?.pathname, setMessage]);
 
   // GOOGLE LOGIN SUCCESS HANDLER
-  const handleGoogleSuccess = async (response) => {
+  const handleGoogleSuccess = useCallback(async (response) => {
+    if (!termsAccepted) {
+      setError("Please accept the Terms & Conditions and Privacy Policy to continue.");
+      return;
+    }
+
     setLoading(true);
     setError("");
     setMessage("");
 
     try {
+      console.log("Google sign-in: Sending credential to backend...");
       const { data } = await api.post("/auth/google", {
         credential: response.credential,
         role: role,
       });
 
+      console.log("Google sign-in: Backend response received", data);
       const userRole = data?.user?.role || role;
-      const next = await consumePostLoginTasks(userRole);
-      window.location.href = next;
+
+      // Determine redirect path
+      let redirectPath = null;
+
+      try {
+        redirectPath = await consumePostLoginTasks(userRole);
+        console.log("Google sign-in: Post-login tasks completed, redirect path:", redirectPath);
+      } catch (redirectErr) {
+        console.error("Google sign-in: Error in post-login tasks", redirectErr);
+        // Continue with fallback even if post-login tasks fail
+      }
+
+      // Ensure we always have a redirect path
+      if (!redirectPath) {
+        redirectPath = userRole === "recruiter" ? "/create-job" : "/dashboard";
+        console.log("Google sign-in: Using fallback redirect path", redirectPath);
+      }
+
+      // Perform redirect - use replace to avoid adding to history
+      console.log("Google sign-in: Redirecting to", redirectPath);
+      // Use replace instead of href to avoid back button issues
+      window.location.replace(redirectPath);
     } catch (err) {
+      console.error("Google sign-in: Error", err);
       setError(err?.response?.data?.message || "Google login failed");
-    } finally {
       setLoading(false);
     }
-  };
+  }, [termsAccepted, role, consumePostLoginTasks]);
+
+  // Keep ref updated
+  useEffect(() => {
+    handleGoogleSuccessRef.current = handleGoogleSuccess;
+  }, [handleGoogleSuccess]);
 
   // LOAD GOOGLE BUTTON
   useEffect(() => {
-    // Make sure we are in the browser and the Google script has loaded
-    if (typeof window === "undefined" || !window.google || !window.google.accounts?.id) {
-      console.error("Google Identity script not loaded or window.google is undefined.");
-      return;
-    }
-
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
     if (!clientId) {
@@ -113,20 +202,50 @@ export default function SignIn() {
       return;
     }
 
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: handleGoogleSuccess,
-    });
+    // Wait for Google script to load
+    let retryCount = 0;
+    const maxRetries = 50; // 5 seconds max wait time
+    const initializeGoogleAuth = () => {
+      if (typeof window === "undefined" || !window.google || !window.google.accounts?.id) {
+        retryCount++;
+        if (retryCount < maxRetries) {
+          // Retry after a short delay if script not loaded yet
+          setTimeout(initializeGoogleAuth, 100);
+        } else {
+          console.error("Google Identity script failed to load after multiple retries.");
+        }
+        return;
+      }
 
-    const buttonContainer = document.getElementById("google-login-btn");
-    if (buttonContainer) {
-      window.google.accounts.id.renderButton(buttonContainer, {
-        theme: "outline",
-        size: "large",
-        width: "100%",
-      });
-    }
-  }, [role]);
+      try {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: (response) => {
+            if (handleGoogleSuccessRef.current) {
+              handleGoogleSuccessRef.current(response);
+            }
+          },
+        });
+
+        const buttonContainer = document.getElementById("google-login-btn");
+        if (buttonContainer) {
+          // Clear previous button if exists
+          buttonContainer.innerHTML = "";
+          window.google.accounts.id.renderButton(buttonContainer, {
+            theme: "outline",
+            size: "large",
+            width: "100%",
+            disabled: !termsAccepted,
+          });
+        }
+      } catch (err) {
+        console.error("Error initializing Google auth:", err);
+      }
+    };
+
+    // Start initialization
+    initializeGoogleAuth();
+  }, [role, termsAccepted]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4 py-12">
@@ -182,6 +301,29 @@ export default function SignIn() {
                 </div>
 
                 <div id="google-login-btn" className="flex justify-center"></div>
+
+                {/* Terms & Conditions Checkbox */}
+                <div className="flex items-start gap-2 pt-2">
+                  <input
+                    type="checkbox"
+                    id="terms-checkbox"
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    required
+                  />
+                  <label htmlFor="terms-checkbox" className="text-xs text-gray-700 cursor-pointer">
+                    I agree to the{" "}
+                    <Link to="/terms" target="_blank" className="text-blue-600 hover:underline">
+                      Terms & Conditions
+                    </Link>{" "}
+                    and{" "}
+                    <Link to="/privacy" target="_blank" className="text-blue-600 hover:underline">
+                      Privacy Policy
+                    </Link>{" "}
+                    of HireSpark.
+                  </label>
+                </div>
 
                 {message && <p className="text-green-600 text-sm text-center">{message}</p>}
                 {error && <p className="text-red-600 text-sm text-center">{error}</p>}

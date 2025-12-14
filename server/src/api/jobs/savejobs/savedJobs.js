@@ -4,7 +4,7 @@ const saveJob = async (req, res) => {
   const connection = await pool.getConnection();
   try {
     const userId = req.user.id;
-    const { job_id } = req.params; 
+    const { job_id } = req.params;
 
     if (!job_id) {
       return res.status(400).json({ success: false, message: 'Job ID is required' });
@@ -18,6 +18,16 @@ const saveJob = async (req, res) => {
 
     if (jobExists.length === 0) {
       return res.status(404).json({ success: false, message: 'Job not found' });
+    }
+
+    // Check if user has already applied to this job
+    const [applicationExists] = await connection.execute(
+      'SELECT id FROM job_applications WHERE user_id = ? AND job_id = ? LIMIT 1',
+      [userId, job_id]
+    );
+
+    if (applicationExists.length > 0) {
+      return res.status(409).json({ success: false, message: 'Cannot save a job you have already applied to' });
     }
 
     // Check if job is already saved
@@ -36,8 +46,8 @@ const saveJob = async (req, res) => {
       [userId, job_id]
     );
 
-    res.status(201).json({ 
-      success: true, 
+    res.status(201).json({
+      success: true,
       message: 'Job saved successfully',
       data: { user_id: userId, job_id, saved_at: new Date().toISOString() }
     });

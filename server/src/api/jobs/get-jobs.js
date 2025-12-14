@@ -1,5 +1,5 @@
 const express = require('express');
-const pool = require('../config/db'); 
+const pool = require('../config/db');
 const router = express.Router();
 
 function parseSkills(skills) {
@@ -7,7 +7,7 @@ function parseSkills(skills) {
   return skills.split(',').map(s => s.trim()).filter(Boolean);
 }
 
-async function getjobs (req, res) {
+async function getjobs(req, res) {
   try {
     const limit = Math.max(1, Math.min(100, parseInt(req.query.limit || '10', 10)));
     const sql = `
@@ -57,18 +57,31 @@ async function getjobs (req, res) {
       else if (r.min_experience == null && r.max_experience != null) experiance = `Up to ${r.max_experience} yrs`;
       else experiance = `${r.min_experience}-${r.max_experience} yrs`;
 
+      // Build location string safely handling null/undefined values
+      let location = '';
+      if (r.city) {
+        location = r.city;
+        if (r.locality) {
+          location += `, ${r.locality}`;
+        }
+      } else if (r.locality) {
+        location = r.locality;
+      } else {
+        location = 'Not specified';
+      }
+
       return {
         id: r.id,
         title: r.title,
         company: r.company,
         type: r.job_type || 'Full-time',
-        location: r.city + (r.locality ? `, ${r.locality}` : ''),
+        location,
         tags: tagMap[r.id] || parseSkills(r.skills || r.tags || r.skill || ''),
         salary: r.salary || null,
         vacancies: r.vacancies,
         description: r.description,
         logoPath: r.logo_path || null,
-        status: r.status, // Include status
+        status: r.status || 'approved', // Include status, default to approved for public listing
         createdAt: r.created_at,
         experiance,
       };

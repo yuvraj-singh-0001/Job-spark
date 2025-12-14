@@ -13,13 +13,12 @@ const getAdminUsers = async (req, res) => {
         up.experience_years,
         up.highest_education,
         up.created_at,
-        u.email,
-        u.username
+        u.email
       FROM candidate_profiles up
       LEFT JOIN users u ON up.user_id = u.id
       ORDER BY up.created_at DESC
     `);
-// Send response
+    // Send response
     res.json({
       success: true,
       users: users || []

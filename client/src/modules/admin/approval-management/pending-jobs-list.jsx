@@ -6,17 +6,30 @@ export default function PendingJobs() {
   const [loading, setLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [processingJobId, setProcessingJobId] = useState(null);
+  const [notification, setNotification] = useState({ show: false, message: "", type: "" });
 
   useEffect(() => {
     fetchJobs();
   }, []);
 
+  const showNotification = (message, type = "success") => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => {
+      setNotification({ show: false, message: "", type: "" });
+    }, 3000);
+  };
+
   const fetchJobs = async () => {
     try {
+      setLoading(true);
       const response = await api.get("/admin/auth/jobs?status=pending");
       setJobs(response.data.jobs || []);
     } catch (error) {
       console.error("Error fetching pending jobs:", error);
+      showNotification("Failed to fetch pending jobs. Please try again.", "error");
     } finally {
       setLoading(false);
     }
@@ -27,20 +40,59 @@ export default function PendingJobs() {
     setShowModal(true);
   };
 
-  const updateJobStatus = async (jobId, newStatus) => {
+  const handleApprove = async (jobId, jobTitle) => {
+    if (!window.confirm(`Are you sure you want to approve "${jobTitle}"?`)) {
+      return;
+    }
+    await updateJobStatus(jobId, 'approved');
+  };
+
+  const handleRejectClick = (job) => {
+    setSelectedJob(job);
+    setRejectionReason("");
+    setShowRejectModal(true);
+  };
+
+  const handleRejectConfirm = async () => {
+    if (!selectedJob) return;
+    await updateJobStatus(selectedJob.id, 'rejected', rejectionReason);
+    setShowRejectModal(false);
+    setRejectionReason("");
+  };
+
+  const updateJobStatus = async (jobId, newStatus, reason = null) => {
+    if (processingJobId === jobId) return; // Prevent double submission
+
     try {
-      await api.put(`/admin/auth/jobs/${jobId}/status`, {
-        status: newStatus
-      });
-      
-      // Remove from list immediately
+      setProcessingJobId(jobId);
+
+      const payload = { status: newStatus };
+      if (reason && reason.trim()) {
+        payload.rejection_reason = reason.trim();
+      }
+
+      const response = await api.put(`/admin/auth/jobs/${jobId}/status`, payload);
+
+      // Optimize: Remove from list immediately without full refresh
       setJobs(prevJobs => prevJobs.filter(job => job.id !== jobId));
-      
-      // Refresh data
-      fetchJobs();
+
+      // Show success message
+      const action = newStatus === 'approved' ? 'approved' : 'rejected';
+      showNotification(`Job ${action} successfully!`, "success");
+
+      // Close modals if open
+      if (showModal) setShowModal(false);
+      if (showRejectModal) setShowRejectModal(false);
+
     } catch (error) {
       console.error("Error updating job status:", error);
-      alert("Failed to update job status. Please try again.");
+      const errorMessage = error.response?.data?.message || "Failed to update job status. Please try again.";
+      showNotification(errorMessage, "error");
+
+      // Refresh on error to ensure consistency
+      fetchJobs();
+    } finally {
+      setProcessingJobId(null);
     }
   };
 
@@ -56,6 +108,16 @@ export default function PendingJobs() {
     return salary;
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "Not specified";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -66,6 +128,22 @@ export default function PendingJobs() {
 
   return (
     <div className="max-w-full mx-auto">
+      {/* Notification Toast */}
+      {notification.show && (
+        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 ${notification.type === "success"
+            ? "bg-green-500 text-white"
+            : "bg-red-500 text-white"
+          }`}>
+          <span>{notification.message}</span>
+          <button
+            onClick={() => setNotification({ show: false, message: "", type: "" })}
+            className="text-white hover:text-gray-200"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <div>
@@ -76,9 +154,10 @@ export default function PendingJobs() {
         </div>
         <button
           onClick={fetchJobs}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full sm:w-auto"
+          disabled={loading}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
         >
-          Refresh
+          {loading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 
@@ -105,6 +184,9 @@ export default function PendingJobs() {
                   </th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
                     Location
+                  </th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                    Posted
                   </th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -134,23 +216,38 @@ export default function PendingJobs() {
                     <td className="px-3 py-4 hidden lg:table-cell">
                       <div className="text-sm text-gray-900 truncate max-w-[120px]">{job.location}</div>
                     </td>
+                    <td className="px-3 py-4 hidden md:table-cell">
+                      <div className="text-sm text-gray-900">
+                        {formatDate(job.created_at)}
+                      </div>
+                    </td>
                     <td className="px-3 py-4 text-sm font-medium">
                       <div className="flex flex-col sm:flex-row gap-2">
                         <button
                           onClick={() => handleViewDetails(job)}
-                          className="text-blue-600 hover:text-blue-900 text-xs sm:text-sm px-2 py-1 rounded border border-blue-200 hover:bg-blue-50"
+                          disabled={processingJobId === job.id}
+                          className="text-blue-600 hover:text-blue-900 text-xs sm:text-sm px-2 py-1 rounded border border-blue-200 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           View
                         </button>
                         <button
-                          onClick={() => updateJobStatus(job.id, 'approved')}
-                          className="text-green-600 hover:text-green-900 border border-green-200 hover:bg-green-50 text-xs sm:text-sm px-2 py-1 rounded"
+                          onClick={() => handleApprove(job.id, job.title)}
+                          disabled={processingJobId === job.id}
+                          className="text-green-600 hover:text-green-900 border border-green-200 hover:bg-green-50 text-xs sm:text-sm px-2 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                         >
-                          Approve
+                          {processingJobId === job.id ? (
+                            <>
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-green-600"></div>
+                              Processing...
+                            </>
+                          ) : (
+                            "Approve"
+                          )}
                         </button>
                         <button
-                          onClick={() => updateJobStatus(job.id, 'rejected')}
-                          className="text-red-600 hover:text-red-900 border border-red-200 hover:bg-red-50 text-xs sm:text-sm px-2 py-1 rounded"
+                          onClick={() => handleRejectClick(job)}
+                          disabled={processingJobId === job.id}
+                          className="text-red-600 hover:text-red-900 border border-red-200 hover:bg-red-50 text-xs sm:text-sm px-2 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Reject
                         </button>
@@ -188,7 +285,7 @@ export default function PendingJobs() {
                   ✕
                 </button>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <div>
                   <h3 className="text-base md:text-lg font-semibold mb-3">Job Information</h3>
@@ -239,12 +336,11 @@ export default function PendingJobs() {
                     <div>
                       <label className="text-xs md:text-sm font-medium text-gray-500">Status</label>
                       <p className="text-gray-900">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          selectedJob.status === 'approved' ? 'bg-green-100 text-green-800' :
-                          selectedJob.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                          selectedJob.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${selectedJob.status === 'approved' ? 'bg-green-100 text-green-800' :
+                            selectedJob.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                              selectedJob.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-gray-100 text-gray-800'
+                          }`}>
                           {selectedJob.status.charAt(0).toUpperCase() + selectedJob.status.slice(1)}
                         </span>
                       </p>
@@ -302,27 +398,102 @@ export default function PendingJobs() {
               <div className="mt-6 flex flex-col sm:flex-row justify-end gap-3">
                 <button
                   onClick={() => {
-                    updateJobStatus(selectedJob.id, 'approved');
+                    handleApprove(selectedJob.id, selectedJob.title);
                     setShowModal(false);
                   }}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm md:text-base"
+                  disabled={processingJobId === selectedJob.id}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base flex items-center gap-2"
                 >
-                  Approve Job
+                  {processingJobId === selectedJob.id ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    "Approve Job"
+                  )}
                 </button>
                 <button
                   onClick={() => {
-                    updateJobStatus(selectedJob.id, 'rejected');
                     setShowModal(false);
+                    handleRejectClick(selectedJob);
                   }}
-                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm md:text-base"
+                  disabled={processingJobId === selectedJob.id}
+                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
                 >
                   Reject Job
                 </button>
                 <button
                   onClick={() => setShowModal(false)}
-                  className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 text-sm md:text-base"
+                  disabled={processingJobId === selectedJob.id}
+                  className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
                 >
                   Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rejection Reason Modal */}
+      {showRejectModal && selectedJob && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl w-full max-w-md">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg md:text-xl font-bold text-gray-900">Reject Job</h2>
+                <button
+                  onClick={() => {
+                    setShowRejectModal(false);
+                    setRejectionReason("");
+                  }}
+                  className="text-gray-400 hover:text-gray-600 text-xl"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">
+                  Are you sure you want to reject <span className="font-semibold">"{selectedJob.title}"</span>?
+                </p>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Rejection Reason (Optional)
+                </label>
+                <textarea
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  placeholder="Provide a reason for rejection (optional)..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
+                  rows="4"
+                />
+              </div>
+
+              <div className="flex flex-col sm:flex-row justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowRejectModal(false);
+                    setRejectionReason("");
+                  }}
+                  disabled={processingJobId === selectedJob.id}
+                  className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleRejectConfirm}
+                  disabled={processingJobId === selectedJob.id}
+                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base flex items-center justify-center gap-2"
+                >
+                  {processingJobId === selectedJob.id ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    "Confirm Rejection"
+                  )}
                 </button>
               </div>
             </div>

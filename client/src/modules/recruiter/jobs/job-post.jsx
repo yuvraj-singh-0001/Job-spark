@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../../../components/apiconfig/apiconfig";
 // Component for creating a new job posting
 export default function AdminPostJob() {
@@ -23,12 +24,13 @@ export default function AdminPostJob() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(null);
-// Update form field
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  // Update form field
   function updateField(name, value) {
     setForm((s) => ({ ...s, [name]: value }));
     setErrors((e) => ({ ...e, [name]: "" }));
   }
-// Handle logo file change
+  // Handle logo file change
   function handleLogoChange(e) {
     const file = e.target.files?.[0] ?? null;
     updateField("logoFile", file);
@@ -57,6 +59,12 @@ export default function AdminPostJob() {
   async function handleSubmit(e) {
     e.preventDefault();
     setSuccess(null);
+
+    if (!termsAccepted) {
+      setErrors((e) => ({ ...e, submit: "Please confirm that this is a genuine job opening and accept the Terms & Conditions." }));
+      return;
+    }
+
     if (!validate()) return;
 
     setSubmitting(true);
@@ -84,7 +92,7 @@ export default function AdminPostJob() {
       payload.append("interviewAddress", form.interviewAddress);
       payload.append("contactEmail", form.contactEmail);
       payload.append("contactPhone", form.contactPhone);
-      
+
       if (form.logoFile) {
         payload.append("logo", form.logoFile);
       }
@@ -97,7 +105,7 @@ export default function AdminPostJob() {
       });
 
       setSuccess(data?.message || "Job posted successfully.");
-      
+
       // clear form
       setForm({
         title: "",
@@ -265,6 +273,26 @@ export default function AdminPostJob() {
                   {logoPreview && <img src={logoPreview} alt="logo" className="mt-3 h-16 w-16 object-contain rounded-md border" />}
                 </div>
 
+                {/* Terms & Conditions Acceptance */}
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-start gap-2">
+                    <input
+                      type="checkbox"
+                      id="terms-checkbox-job"
+                      checked={termsAccepted}
+                      onChange={(e) => setTermsAccepted(e.target.checked)}
+                      className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      required
+                    />
+                    <label htmlFor="terms-checkbox-job" className="text-sm text-gray-700 cursor-pointer">
+                      I confirm this is a genuine job opening and I agree to HireSpark's{" "}
+                      <Link to="/terms" target="_blank" className="text-blue-600 hover:underline">
+                        job posting policies
+                      </Link>.
+                    </label>
+                  </div>
+                </div>
+
                 <div className="flex items-center justify-end gap-3 mt-4">
                   <button
                     type="button"
@@ -295,7 +323,7 @@ export default function AdminPostJob() {
                     Reset
                   </button>
 
-                  <button type="submit" className="rounded-full px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={submitting}>
+                  <button type="submit" className="rounded-full px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={submitting || !termsAccepted}>
                     {submitting ? "Publishing..." : "Publish Job"}
                   </button>
                 </div>

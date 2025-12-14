@@ -85,7 +85,7 @@ export default function Jobs() {
     let alive = true;
     (async () => {
       try {
-        const { data } = await api.get("/auth/authcheck");
+        const { data } = await api.get("/auth/session");
         if (alive) setIsAuthenticated(Boolean(data?.user));
       } catch (err) {
         if (alive) setIsAuthenticated(false);
@@ -177,7 +177,7 @@ export default function Jobs() {
       // If auth status is still being checked, try one more quick check
       if (!authChecked) {
         try {
-          const { data } = await api.get("/auth/authcheck");
+          const { data } = await api.get("/auth/session");
           if (data?.user) {
             setIsAuthenticated(true);
           } else {
