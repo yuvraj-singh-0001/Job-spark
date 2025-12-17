@@ -8,7 +8,7 @@ import api from "../../apiconfig/apiconfig";
 /**
  * Guest Layout - For public pages (home, jobs, companies, etc.)
  * Includes Navbar and Footer (footer hidden on auth pages)
- * Shows CandidateHeader if user is logged in as candidate/user
+ * Shows CandidateHeader if user is logged in as candidate
  */
 const GuestLayout = () => {
   const { pathname } = useLocation();
@@ -54,11 +54,11 @@ const GuestLayout = () => {
 
   const hideFooter = isAuthRoute;
 
-  // Show CandidateHeader if user is logged in as candidate/user and not on auth pages
+  // Show CandidateHeader if user is logged in as candidate and not on auth pages
   const showCandidateHeader =
     !loading &&
     user &&
-    (user.role === "user" || user.role === "candidate") &&
+    user.role === "candidate" &&
     !isAuthRoute;
 
   return (

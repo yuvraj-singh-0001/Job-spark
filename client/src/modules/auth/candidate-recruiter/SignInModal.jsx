@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import api from "../../../components/apiconfig/apiconfig.jsx";
 
-export default function SignInModal({ role = "user", onClose, redirectTo = null }) {
+export default function SignInModal({ role = "candidate", onClose, redirectTo = null }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -164,8 +164,6 @@ export default function SignInModal({ role = "user", onClose, redirectTo = null 
 
           <div className="px-6 pb-6 space-y-4">
             <div className="flex flex-col items-center gap-4">
-              <div id="google-login-btn" className="flex justify-center w-full" />
-
               {/* Terms & Conditions Checkbox */}
               <div className="flex items-start gap-2 w-full pt-2">
                 <input
@@ -188,6 +186,8 @@ export default function SignInModal({ role = "user", onClose, redirectTo = null 
                   of HireSpark.
                 </label>
               </div>
+
+              <div id="google-login-btn" className="flex justify-center w-full" />
 
               {loading && (
                 <p className="text-sm text-slate-500 text-center">

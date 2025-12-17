@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import api from "../../../components/apiconfig/apiconfig";
 
 export default function SignUp() {
-  const [role, setRole] = useState("user");
+  // Use "candidate" as the default/normal user role
+  const [role, setRole] = useState("candidate");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -117,14 +118,14 @@ export default function SignUp() {
                     I want to sign up as:
                   </label>
                   <div className="grid grid-cols-2 gap-3 text-sm">
-                    <label className={`flex gap-2 p-3 border-2 rounded-xl cursor-pointer transition-colors ${role === "user" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+                    <label className={`flex gap-2 p-3 border-2 rounded-xl cursor-pointer transition-colors ${role === "candidate" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
                       }`}>
                       <input
                         type="radio"
                         name="role"
-                        value="user"
-                        checked={role === "user"}
-                        onChange={() => setRole("user")}
+                        value="candidate"
+                        checked={role === "candidate"}
+                        onChange={() => setRole("candidate")}
                         className="mt-0.5"
                       />
                       <span className="font-medium">Candidate</span>

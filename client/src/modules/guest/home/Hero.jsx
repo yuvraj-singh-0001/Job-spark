@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, MapPin, ChevronRight } from "lucide-react";
-import { PRIMARY, jobCategories } from "./data";
+import { PRIMARY } from "./data";
 
 function useFadeInOnScroll() {
   const ref = useRef(null);
@@ -32,7 +32,6 @@ export default function Hero() {
   const [sectionRef, sectionVisible] = useFadeInOnScroll();
   const [searchTerm, setSearchTerm] = useState("");
   const [location, setLocation] = useState("");
-  const [category, setCategory] = useState("");
   const [experience, setExperience] = useState("");
   const [chips, setChips] = useState([]);
   const [activeField, setActiveField] = useState("title");
@@ -77,7 +76,6 @@ export default function Hero() {
     const params = new URLSearchParams();
     if (searchTerm) params.set("q", searchTerm);
     if (location) params.set("location", location);
-    if (category) params.set("category", category);
     if (experience) params.set("experience", experience);
     chips.forEach((chip) => {
       params.append(`chip_${chip.field}`, chip.value);
@@ -104,12 +102,12 @@ export default function Hero() {
               Trusted Opportunities for{" "}
               <span className="text-primary-500">Fresh Talent</span>
             </h1>
-            
+
             {/* Advanced search */}
             <div className="w-full bg-gray-100 rounded-card border border-border">
               <div className="p-4 sm:p-5 md:p-6">
                 <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     <div className="relative sm:col-span-2 lg:col-span-1">
                       <label className="label text-text-muted">
                         Job title or skill
@@ -166,25 +164,6 @@ export default function Hero() {
                           className="flex-1 bg-transparent text-sm sm:text-base outline-none border-none text-text-dark placeholder:text-text-muted"
                         />
                       </div>
-                    </div>
-
-                    <div>
-                      <label className="label text-text-muted">
-                        Category
-                      </label>
-                      <select
-                        value={category}
-                        onChange={(e) => setCategory(e.target.value)}
-                        onFocus={() => setActiveField("category")}
-                        className="w-full rounded-input px-3.5 py-2.5 sm:py-3 bg-white border border-border text-sm sm:text-base outline-none text-text-dark focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all cursor-pointer"
-                      >
-                        <option value="">All categories</option>
-                        {jobCategories.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.label}
-                          </option>
-                        ))}
-                      </select>
                     </div>
 
                     <div>

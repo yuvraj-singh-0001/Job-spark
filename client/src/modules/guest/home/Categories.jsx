@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, MapPin, Clock, Users, UserPlus, Send, Building2, Briefcase, ArrowRight } from "lucide-react";
 import { jobCategories } from "./data";
+import api from "../../../components/apiconfig/apiconfig";
 
 function useFadeInOnScroll() {
   const ref = useRef(null);
@@ -42,9 +43,37 @@ const iconMap = {
 export default function Categories() {
   const [sectionRef, sectionVisible] = useFadeInOnScroll();
   const navigate = useNavigate();
+  const [categoryCounts, setCategoryCounts] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  // Fetch category counts from API
+  useEffect(() => {
+    const fetchCategoryCounts = async () => {
+      try {
+        const response = await api.get('/jobs/category-counts');
+        if (response.data.ok && response.data.counts) {
+          setCategoryCounts(response.data.counts);
+        }
+      } catch (error) {
+        console.error('Error fetching category counts:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategoryCounts();
+  }, []);
 
   const handleClick = (categoryId) => {
     navigate(`/jobs?category=${encodeURIComponent(categoryId)}`);
+  };
+
+  // Get count for a category (use API count if available, otherwise fallback to hardcoded count)
+  const getCategoryCount = (categoryId, defaultCount) => {
+    if (categoryCounts[categoryId] !== undefined && categoryCounts[categoryId] !== null) {
+      return categoryCounts[categoryId];
+    }
+    return defaultCount;
   };
 
   return (
@@ -92,7 +121,11 @@ export default function Categories() {
                       {cat.label}
                     </p>
                     <p className="text-sm text-text-muted mt-1">
-                      {cat.count.toLocaleString()} open roles
+                      {loading ? (
+                        'Loading...'
+                      ) : (
+                        `${getCategoryCount(cat.id, cat.count).toLocaleString()} open roles`
+                      )}
                     </p>
                   </div>
                   <ChevronRight size={20} className="text-primary-500 transition-transform group-hover:translate-x-1 flex-shrink-0" strokeWidth={2} />

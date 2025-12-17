@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Building2,
@@ -12,26 +12,9 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import api from "../../../components/apiconfig/apiconfig";
+import { CATEGORY_FILTER_MAPPING } from "../home/data";
 
-const CITY_OPTIONS = [
-  "Delhi",
-  "Ghaziabad",
-  "Noida",
-  "Faridabad",
-  "Greater Noida",
-  "Gurgaon",
-];
-
-const ROLE_OPTIONS = [
-  { label: "Trainer", value: "trainer" },
-  { label: "Recruiter / HR / Admin", value: "recruiter" },
-  { label: "Event Management", value: "event management" },
-  { label: "Back Office / Data Entry", value: "data entry" },
-  { label: "Content Writer", value: "content writer" },
-  { label: "Receptionist", value: "receptionist" },
-  { label: "+ 1 More", value: "assistant" },
-];
-
+// Static filter options (frontend constants)
 const SALARY_OPTIONS = [
   { label: "More than ₹ 5000", value: 5000 },
   { label: "More than ₹ 10000", value: 10000 },
@@ -41,12 +24,28 @@ const SALARY_OPTIONS = [
   { label: "More than ₹ 50000", value: 50000 },
 ];
 
-const OTHER_CATEGORIES = [
-  "Event Management (304)",
-  "Back Office / Data Entry (12258)",
-  "Content Writer (419)",
-  "Receptionist (2481)",
-  "Accountant (7733)",
+// Static job type filter options (from jobs.job_type enum)
+const JOB_TYPE_OPTIONS = [
+  { label: "Full-time", value: "full-time" },
+  { label: "Part-time", value: "part-time" },
+  { label: "Internship", value: "internship" },
+  { label: "Contract", value: "contract" },
+];
+
+// Static work mode filter options (from jobs.work_mode enum)
+const WORK_MODE_OPTIONS = [
+  { label: "Remote", value: "remote" },
+  { label: "Hybrid", value: "hybrid" },
+  { label: "Office", value: "office" },
+];
+
+// Static experience filter ranges
+const EXPERIENCE_OPTIONS = [
+  { label: "Fresher (0 years)", value: "0" },
+  { label: "0-2 years", value: "0-2" },
+  { label: "2-5 years", value: "2-5" },
+  { label: "5-10 years", value: "5-10" },
+  { label: "10+ years", value: "10+" },
 ];
 
 const pageSize = 6;
@@ -79,6 +78,9 @@ export default function Jobs() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCities, setSelectedCities] = useState([]);
   const [selectedRoles, setSelectedRoles] = useState([]);
+  const [selectedJobTypes, setSelectedJobTypes] = useState([]);
+  const [selectedWorkModes, setSelectedWorkModes] = useState([]);
+  const [selectedExperience, setSelectedExperience] = useState("");
   const [salaryFilter, setSalaryFilter] = useState("");
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -88,8 +90,14 @@ export default function Jobs() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
 
+  // Dynamic filter options (from backend)
+  const [cityOptions, setCityOptions] = useState([]);
+  const [titleOptions, setTitleOptions] = useState([]);
+  const [tagOptions, setTagOptions] = useState([]);
+
   const locationHook = useLocation();
   const navigate = useNavigate();
+  const isClearingFilters = useRef(false);
 
   useEffect(() => {
     let alive = true;
@@ -110,12 +118,165 @@ export default function Jobs() {
   }, []);
 
   useEffect(() => {
+    // Skip if we're in the process of clearing filters
+    if (isClearingFilters.current) {
+      isClearingFilters.current = false;
+      return;
+    }
+
     const searchParams = new URLSearchParams(locationHook.search);
     const searchQuery = searchParams.get("search") || "";
+    const categoryParam = searchParams.get("category") || "";
+    const qParam = searchParams.get("q") || "";
+    const locationParam = searchParams.get("location") || "";
+    const experienceParam = searchParams.get("experience") || "";
+
+    // Set search term from URL params
     if (searchQuery) {
       setSearchTerm(searchQuery);
+    } else if (qParam) {
+      setSearchTerm(qParam);
+    } else if (!searchQuery && !qParam) {
+      // Clear search term if no search params in URL
+      setSearchTerm("");
+    }
+
+    // Apply category filters if category parameter is present
+    if (categoryParam && CATEGORY_FILTER_MAPPING[categoryParam]) {
+      const categoryFilters = CATEGORY_FILTER_MAPPING[categoryParam].filters;
+
+      // Set job types filter
+      if (categoryFilters.jobTypes && Array.isArray(categoryFilters.jobTypes)) {
+        setSelectedJobTypes(categoryFilters.jobTypes);
+      }
+
+      // Set work modes filter
+      if (categoryFilters.workModes && Array.isArray(categoryFilters.workModes)) {
+        setSelectedWorkModes(categoryFilters.workModes);
+      }
+
+      // Set experience filter
+      if (categoryFilters.experience) {
+        setSelectedExperience(categoryFilters.experience);
+      }
+
+      // Set cities filter
+      if (categoryFilters.cities && Array.isArray(categoryFilters.cities)) {
+        setSelectedCities(categoryFilters.cities);
+      }
+
+      // Set roles filter
+      if (categoryFilters.roles && Array.isArray(categoryFilters.roles)) {
+        setSelectedRoles(categoryFilters.roles);
+      }
+    } else if (!categoryParam) {
+      // Clear category-based filters if no category param
+      // Only clear if we're not in the middle of auto-selecting from q/location/experience params
+      if (!qParam && !locationParam && !experienceParam) {
+        setSelectedJobTypes([]);
+        setSelectedWorkModes([]);
+        // Don't clear experience, cities, roles here as they might be set by auto-select useEffect
+      }
     }
   }, [locationHook]);
+
+  // Fetch filter options from backend
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      try {
+        const { data } = await api.get("/jobs/filters");
+        if (!alive) return;
+
+        if (data.ok && data.filters) {
+          setCityOptions(data.filters.cities || []);
+          setTitleOptions(data.filters.titles || []);
+          setTagOptions(data.filters.tags || []);
+        }
+      } catch (err) {
+        console.error("Error fetching filters:", err);
+        // Continue without filters if endpoint fails
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // Auto-select filters from URL params (q, location, experience) after filter options are loaded
+  useEffect(() => {
+    // Skip if we're in the process of clearing filters
+    if (isClearingFilters.current) {
+      isClearingFilters.current = false;
+      return;
+    }
+
+    const searchParams = new URLSearchParams(locationHook.search);
+    const qParam = searchParams.get("q") || "";
+    const locationParam = searchParams.get("location") || "";
+    const experienceParam = searchParams.get("experience") || "";
+
+    // If no URL params, skip
+    if (!qParam && !locationParam && !experienceParam) {
+      return;
+    }
+
+    // Match job role from q param (wait for titleOptions to be loaded)
+    if (qParam && titleOptions.length > 0) {
+      const matchedRole = titleOptions.find((title) =>
+        title.toLowerCase().includes(qParam.toLowerCase()) ||
+        qParam.toLowerCase().includes(title.toLowerCase())
+      );
+      if (matchedRole) {
+        setSelectedRoles((prev) => {
+          if (prev.includes(matchedRole)) return prev;
+          return [...prev, matchedRole];
+        });
+      }
+    }
+
+    // Match city from location param (wait for cityOptions to be loaded)
+    if (locationParam && cityOptions.length > 0) {
+      const matchedCity = cityOptions.find((city) =>
+        city.toLowerCase() === locationParam.toLowerCase() ||
+        city.toLowerCase().includes(locationParam.toLowerCase()) ||
+        locationParam.toLowerCase().includes(city.toLowerCase())
+      );
+      if (matchedCity) {
+        setSelectedCities((prev) => {
+          if (prev.includes(matchedCity)) return prev;
+          return [...prev, matchedCity];
+        });
+      }
+    }
+
+    // Map experience param to experience filter value (can be set immediately, no need to wait)
+    if (experienceParam) {
+      let experienceValue = "";
+      switch (experienceParam.toLowerCase()) {
+        case "fresher":
+          experienceValue = "0";
+          break;
+        case "mid":
+          experienceValue = "0-2";
+          break;
+        case "senior":
+          experienceValue = "2-5"; // Default for "2+ years"
+          break;
+        default:
+          // If it's already a valid experience value, use it directly
+          if (EXPERIENCE_OPTIONS.some((opt) => opt.value === experienceParam)) {
+            experienceValue = experienceParam;
+          }
+          break;
+      }
+      if (experienceValue) {
+        setSelectedExperience(experienceValue);
+      }
+    }
+  }, [locationHook.search, cityOptions, titleOptions]);
 
   useEffect(() => {
     let alive = true;
@@ -123,7 +284,13 @@ export default function Jobs() {
     (async () => {
       try {
         setLoading(true);
-        const { data } = await api.get("/jobs", { params: { limit: 100 } });
+        const searchParams = new URLSearchParams(locationHook.search);
+        const categoryParam = searchParams.get("category") || "";
+        const apiParams = { limit: 100 };
+        if (categoryParam) {
+          apiParams.category = categoryParam;
+        }
+        const { data } = await api.get("/jobs", { params: apiParams });
 
         if (!alive) return;
 
@@ -133,13 +300,20 @@ export default function Jobs() {
             title: j.title || j.jobTitle || "",
             company: j.company || j.companyName || "",
             location: j.location || j.jobLocation || "",
+            city: j.city || "", // Store city separately for filtering (from backend)
             type: j.type || j.jobType || "Full Time",
+            // Normalize job type for filtering (handle variations like "Full-time", "Full Time", "full-time")
+            jobType: (j.type || j.jobType || "full-time").toLowerCase().replace(/\s+/g, "-"),
             workMode: j.workMode || j.mode || j.workType || "Office",
+            // Normalize work mode for filtering (handle variations like "Office", "office", "Remote", "remote")
+            workModeValue: (j.workMode || j.mode || j.workType || "office").toLowerCase(),
             experience: j.experience || j.experiance || j.exp || "",
+            minExperience: j.minExperience != null ? j.minExperience : j.min_experience != null ? j.min_experience : null,
+            maxExperience: j.maxExperience != null ? j.maxExperience : j.max_experience != null ? j.max_experience : null,
             skills: j.skills || j.tags || [],
             salary: j.salary || "",
-            minSalary: j.minSalary,
-            maxSalary: j.maxSalary,
+            minSalary: j.minSalary != null ? j.minSalary : j.min_salary != null ? j.min_salary : null,
+            maxSalary: j.maxSalary != null ? j.maxSalary : j.max_salary != null ? j.max_salary : null,
             vacancies: j.vacancies || "",
             description: j.description || "",
           }));
@@ -158,7 +332,7 @@ export default function Jobs() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [locationHook]);
 
   const checkSavedStatusForJobs = async (jobs) => {
     const status = {};
@@ -245,20 +419,64 @@ export default function Jobs() {
 
     if (selectedCities.length) {
       data = data.filter((job) =>
-        selectedCities.some((city) =>
-          (job.location || "").toLowerCase().includes(city.toLowerCase())
-        )
+        selectedCities.some((city) => {
+          // Match against city field or location string
+          const jobCity = (job.city || "").toLowerCase();
+          const jobLocation = (job.location || "").toLowerCase();
+          return jobCity === city.toLowerCase() || jobLocation.includes(city.toLowerCase());
+        })
       );
     }
 
     if (selectedRoles.length) {
+      data = data.filter((job) =>
+        selectedRoles.some((role) =>
+          job.title.toLowerCase().includes(role.toLowerCase())
+        )
+      );
+    }
+
+    if (selectedJobTypes.length) {
       data = data.filter((job) => {
-        const haystack = `${job.title} ${job.company} ${(job.skills || []).join(
-          " "
-        )}`.toLowerCase();
-        return selectedRoles.some((role) =>
-          haystack.includes(role.toLowerCase())
-        );
+        // Normalize job type for comparison
+        const normalizedJobType = job.jobType.toLowerCase().replace(/\s+/g, "-");
+        return selectedJobTypes.some((type) => {
+          const normalizedType = type.toLowerCase().replace(/\s+/g, "-");
+          return normalizedJobType === normalizedType || normalizedJobType.includes(normalizedType);
+        });
+      });
+    }
+
+    if (selectedWorkModes.length) {
+      data = data.filter((job) => {
+        // Normalize work mode for comparison
+        const normalizedWorkMode = job.workModeValue.toLowerCase();
+        return selectedWorkModes.some((mode) => {
+          const normalizedMode = mode.toLowerCase();
+          return normalizedWorkMode === normalizedMode;
+        });
+      });
+    }
+
+    if (selectedExperience) {
+      data = data.filter((job) => {
+        const minExp = job.minExperience != null ? job.minExperience : 0;
+        const maxExp = job.maxExperience != null ? job.maxExperience : 100;
+
+        switch (selectedExperience) {
+          case "0":
+            return minExp === 0 && (maxExp === 0 || maxExp === null);
+          case "0-2":
+            return minExp >= 0 && maxExp <= 2;
+          case "2-5":
+            return minExp >= 2 && maxExp <= 5;
+          case "5-10":
+            return minExp >= 5 && maxExp <= 10;
+          case "10+":
+            return minExp >= 10;
+          default:
+            return true;
+        }
       });
     }
 
@@ -282,7 +500,7 @@ export default function Jobs() {
     if (query) params.set("search", query);
     const newUrl = params.toString() ? `/jobs?${params.toString()}` : "/jobs";
     window.history.replaceState({}, "", newUrl);
-  }, [jobList, searchTerm, selectedCities, selectedRoles, salaryFilter]);
+  }, [jobList, searchTerm, selectedCities, selectedRoles, selectedJobTypes, selectedWorkModes, selectedExperience, salaryFilter]);
 
   useEffect(() => {
     applyFilters();
@@ -316,6 +534,9 @@ export default function Jobs() {
   const hasSidebarFilters =
     selectedCities.length > 0 ||
     selectedRoles.length > 0 ||
+    selectedJobTypes.length > 0 ||
+    selectedWorkModes.length > 0 ||
+    Boolean(selectedExperience) ||
     Boolean(salaryFilter);
 
   const toggleValue = (value, setFn) => {
@@ -325,16 +546,42 @@ export default function Jobs() {
   };
 
   const clearFilters = () => {
+    // Set flag to prevent useEffects from re-applying filters
+    isClearingFilters.current = true;
+
+    // Clear all filter states
     setSelectedCities([]);
     setSelectedRoles([]);
+    setSelectedJobTypes([]);
+    setSelectedWorkModes([]);
+    setSelectedExperience("");
     setSalaryFilter("");
+    setSearchTerm("");
+
+    // Clear all query parameters from URL
+    navigate("/jobs", { replace: true });
+  };
+
+  // Helper to count jobs for each filter option
+  const getJobCountForCity = (city) => {
+    return jobList.filter((job) => {
+      const jobCity = (job.city || "").toLowerCase();
+      const jobLocation = (job.location || "").toLowerCase();
+      return jobCity === city.toLowerCase() || jobLocation.includes(city.toLowerCase());
+    }).length;
+  };
+
+  const getJobCountForTitle = (title) => {
+    return jobList.filter((job) =>
+      job.title.toLowerCase().includes(title.toLowerCase())
+    ).length;
   };
 
   return (
     <div className="min-h-screen bg-bg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col gap-4 sm:gap-6 mb-6 sm:mb-8">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <p className="text-sm text-text-muted mb-1">
                 {filteredWithoutSaved.length || jobList.length} jobs near you
@@ -379,50 +626,132 @@ export default function Jobs() {
             </div>
 
             <div className="space-y-6">
-              <div>
-                <p className="text-sm font-semibold text-text-dark mb-3">City</p>
-                <div className="flex flex-wrap gap-2">
-                  {CITY_OPTIONS.map((city) => {
-                    const active = selectedCities.includes(city);
-                    return (
-                      <button
-                        key={city}
-                        onClick={() => toggleValue(city, setSelectedCities)}
-                        className={`rounded-chip px-3 py-1.5 text-xs font-medium transition-colors ${active
+              {/* Dynamic City Filter */}
+              {cityOptions.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold text-text-dark mb-3">City</p>
+                  <div className="flex flex-wrap gap-2">
+                    {cityOptions.map((city) => {
+                      const active = selectedCities.includes(city);
+                      const jobCount = getJobCountForCity(city);
+                      if (jobCount === 0) return null; // Hide filters with zero jobs
+                      return (
+                        <button
+                          key={city}
+                          onClick={() => toggleValue(city, setSelectedCities)}
+                          className={`rounded-chip px-3 py-1.5 text-xs font-medium transition-colors ${active
                             ? "bg-primary-50 border-2 border-primary-200 text-primary-700"
                             : "bg-white border-2 border-border text-text-muted hover:bg-gray-50"
-                          }`}
-                      >
-                        {city}
-                      </button>
-                    );
-                  })}
+                            }`}
+                        >
+                          {city}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
 
+              {/* Dynamic Job Title/Role Filter */}
+              {titleOptions.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold text-text-dark mb-3">
+                    Job Role(s)
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {titleOptions.map((title) => {
+                      const active = selectedRoles.includes(title);
+                      const jobCount = getJobCountForTitle(title);
+                      if (jobCount === 0) return null; // Hide filters with zero jobs
+                      return (
+                        <button
+                          key={title}
+                          onClick={() => toggleValue(title, setSelectedRoles)}
+                          className={`rounded-chip px-3 py-1.5 text-xs font-medium transition-colors ${active
+                            ? "bg-primary-50 border-2 border-primary-200 text-primary-700"
+                            : "bg-white border-2 border-border text-text-muted hover:bg-gray-50"
+                            }`}
+                        >
+                          {title}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Static Job Type Filter */}
               <div>
                 <p className="text-sm font-semibold text-text-dark mb-3">
-                  Job Role(s)
+                  Job Type
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {ROLE_OPTIONS.map((role) => {
-                    const active = selectedRoles.includes(role.value);
+                  {JOB_TYPE_OPTIONS.map((option) => {
+                    const active = selectedJobTypes.includes(option.value);
                     return (
                       <button
-                        key={role.value}
-                        onClick={() => toggleValue(role.value, setSelectedRoles)}
+                        key={option.value}
+                        onClick={() => toggleValue(option.value, setSelectedJobTypes)}
                         className={`rounded-chip px-3 py-1.5 text-xs font-medium transition-colors ${active
-                            ? "bg-primary-50 border-2 border-primary-200 text-primary-700"
-                            : "bg-white border-2 border-border text-text-muted hover:bg-gray-50"
+                          ? "bg-primary-50 border-2 border-primary-200 text-primary-700"
+                          : "bg-white border-2 border-border text-text-muted hover:bg-gray-50"
                           }`}
                       >
-                        {role.label}
+                        {option.label}
                       </button>
                     );
                   })}
                 </div>
               </div>
 
+              {/* Static Work Mode Filter */}
+              <div>
+                <p className="text-sm font-semibold text-text-dark mb-3">
+                  Work Mode
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {WORK_MODE_OPTIONS.map((option) => {
+                    const active = selectedWorkModes.includes(option.value);
+                    return (
+                      <button
+                        key={option.value}
+                        onClick={() => toggleValue(option.value, setSelectedWorkModes)}
+                        className={`rounded-chip px-3 py-1.5 text-xs font-medium transition-colors ${active
+                          ? "bg-primary-50 border-2 border-primary-200 text-primary-700"
+                          : "bg-white border-2 border-border text-text-muted hover:bg-gray-50"
+                          }`}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Static Experience Filter */}
+              <div>
+                <p className="text-sm font-semibold text-text-dark mb-3">Experience</p>
+                <div className="space-y-2">
+                  {EXPERIENCE_OPTIONS.map((opt) => (
+                    <label
+                      key={opt.value}
+                      className="flex items-center gap-2.5 text-sm text-text-dark cursor-pointer hover:text-primary-600 transition-colors"
+                    >
+                      <input
+                        type="radio"
+                        name="experience"
+                        value={opt.value}
+                        checked={selectedExperience === opt.value}
+                        onChange={(e) => setSelectedExperience(e.target.value)}
+                        className="w-4 h-4 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                      />
+                      <span>{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Static Salary Filter */}
               <div>
                 <p className="text-sm font-semibold text-text-dark mb-3">Salary</p>
                 <div className="space-y-2">
@@ -550,33 +879,26 @@ export default function Jobs() {
                         )}
                       </div>
 
-                      {r.skills && r.skills.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {r.skills.map((skill) => (
-                            <span
-                              key={skill}
-                              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs border border-border text-text-muted bg-gray-50"
-                            >
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
-                      )}
+
 
                       <div className="flex flex-col gap-3 pt-2 border-t border-border sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex flex-wrap gap-2">
                           <span className="badge badge-primary text-xs">
                             New
                           </span>
-                          {r.vacancies && (
-                            <span className="badge badge-warning text-xs">
-                              {r.vacancies} Vacancies
-                            </span>
+
+                          {r.skills && r.skills.length > 0 && (
+                            r.skills.map((skill) => (
+                              <span
+                                key={skill}
+                                className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs border border-border text-text-muted bg-gray-50"
+                              >
+                                {skill}
+                              </span>
+                            ))
                           )}
-                          <span className="badge badge-success text-xs">
-                            Full Time
-                          </span>
                         </div>
+
 
                         <div className="flex items-center gap-2">
                           <a
@@ -611,8 +933,8 @@ export default function Jobs() {
                     key={pageNum}
                     onClick={() => setPage(pageNum)}
                     className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm rounded-full border transition-colors ${active
-                        ? "bg-primary-500 text-white border-primary-500 shadow-soft"
-                        : "bg-white text-text-dark border-border hover:bg-primary-50"
+                      ? "bg-primary-500 text-white border-primary-500 shadow-soft"
+                      : "bg-white text-text-dark border-border hover:bg-primary-50"
                       }`}
                   >
                     {pageNum}
@@ -629,21 +951,6 @@ export default function Jobs() {
               </button>
             </div>
 
-            <div className="mt-6 card card-padding">
-              <p className="flex items-center gap-2 text-sm font-semibold text-text-dark mb-4">
-                Explore jobs in other categories
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {OTHER_CATEGORIES.map((cat) => (
-                  <span
-                    key={cat}
-                    className="badge badge-gray"
-                  >
-                    {cat}
-                  </span>
-                ))}
-              </div>
-            </div>
           </section>
         </div>
       </div>

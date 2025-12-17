@@ -22,7 +22,7 @@ function signToken(payload) {
  * ----------------------
  * Steps:
  * 1. Validate required input fields.
- * 2. Enforce role safety (only "recruiter" or default to "user").
+ * 2. Enforce role safety (only "candidate" | "recruiter" | "admin").
  * 3. Get DB connection from pool.
  * 4. Check if user already exists (email OR username).
  * 5. Hash the password using bcrypt.
@@ -41,8 +41,14 @@ async function signUp(req, res) {
       return res.status(400).json({ message: 'name, email and password are required' });
     }
 
-    // Prevent clients from setting arbitrary roles
-    const role = (inputRole === 'recruiter' ? 'recruiter' : 'user');
+    // Normalize and validate role.
+    // Database enum allows: "candidate" | "recruiter" | "admin"
+    // - recruiter/admin are preserved
+    // - anything else (including "user" or missing) becomes "candidate"
+    let role = 'candidate';
+    if (inputRole === 'recruiter' || inputRole === 'admin') {
+      role = inputRole;
+    }
 
     // Get a DB connection from the pool
     const conn = await pool.getConnection();

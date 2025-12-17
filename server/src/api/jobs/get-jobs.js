@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const jwt = require('jsonwebtoken');
+const CATEGORY_FILTER_MAPPING = require('../config/category-filters');
 
 function parseSkills(skills) {
   if (!skills) return [];
@@ -19,70 +20,177 @@ function getUserIdFromToken(req) {
   }
 }
 
+// Helper function to expand category into filters
+function expandCategoryToFilters(category) {
+  if (!category || !CATEGORY_FILTER_MAPPING[category]) {
+    return null;
+  }
+  return CATEGORY_FILTER_MAPPING[category].filters;
+}
+
+// Helper function to build WHERE conditions from filters
+function buildFilterConditions(filters, isAuthenticated) {
+  const conditions = [];
+  const params = [];
+  let needsTagJoin = false;
+
+  // jobTypes filter
+  if (filters.jobTypes && Array.isArray(filters.jobTypes) && filters.jobTypes.length > 0) {
+    const placeholders = filters.jobTypes.map(() => '?').join(',');
+    conditions.push(`j.job_type IN (${placeholders})`);
+    params.push(...filters.jobTypes);
+  }
+
+  // workModes filter
+  if (filters.workModes && Array.isArray(filters.workModes) && filters.workModes.length > 0) {
+    const placeholders = filters.workModes.map(() => '?').join(',');
+    conditions.push(`j.work_mode IN (${placeholders})`);
+    params.push(...filters.workModes);
+  }
+
+  // experience filter (fresher = 0 years)
+  if (filters.experience === "0") {
+    conditions.push(`(j.min_experience = 0 OR j.min_experience IS NULL) AND (j.max_experience = 0 OR j.max_experience IS NULL)`);
+  }
+
+  // cities filter
+  if (filters.cities && Array.isArray(filters.cities) && filters.cities.length > 0) {
+    const placeholders = filters.cities.map(() => '?').join(',');
+    conditions.push(`j.city IN (${placeholders})`);
+    params.push(...filters.cities);
+  }
+
+  // roles filter (search in title)
+  if (filters.roles && Array.isArray(filters.roles) && filters.roles.length > 0) {
+    const roleConditions = filters.roles.map((role) => {
+      params.push(`%${role}%`);
+      return `j.title LIKE ?`;
+    });
+    conditions.push(`(${roleConditions.join(' OR ')})`);
+  }
+
+  // tags filter (requires JOIN with job_tag_map and job_tags)
+  if (filters.tags && Array.isArray(filters.tags) && filters.tags.length > 0) {
+    needsTagJoin = true;
+    const tagConditions = filters.tags.map((tag) => {
+      params.push(tag);
+      return `jt.name = ?`;
+    });
+    conditions.push(`(${tagConditions.join(' OR ')})`);
+  }
+
+  return { conditions, params, needsTagJoin };
+}
+
 async function getjobs(req, res) {
   try {
     const limit = Math.max(1, Math.min(100, parseInt(req.query.limit || '10', 10)));
     const userId = getUserIdFromToken(req);
+    const category = req.query.category;
+
+    // Expand category into filters if provided
+    const filters = expandCategoryToFilters(category);
+    const filterInfo = filters ? buildFilterConditions(filters, !!userId) : { conditions: [], params: [], needsTagJoin: false };
 
     // Build SQL query - exclude jobs user has already applied for if authenticated
     let sql;
-    let params;
+    let params = [];
+    // Use table alias 'j' if we have filters, tag joins, or authenticated user
+    const useAlias = userId || filterInfo.needsTagJoin || filterInfo.conditions.length > 0;
+    const tableAlias = useAlias ? 'j' : null;
+    const prefix = tableAlias ? `${tableAlias}.` : '';
 
+    // Base SELECT clause - use DISTINCT if we have tag joins to avoid duplicate rows
+    const selectKeyword = filterInfo.needsTagJoin ? 'SELECT DISTINCT' : 'SELECT';
+    const selectClause = `
+      ${selectKeyword}
+        ${prefix}id,
+        ${prefix}title,
+        ${prefix}company,
+        ${prefix}job_type,
+        ${prefix}work_mode,
+        ${prefix}city,
+        ${prefix}locality,
+        ${prefix}min_experience,
+        ${prefix}max_experience,
+        ${prefix}min_salary,
+        ${prefix}max_salary,
+        ${prefix}vacancies,
+        ${prefix}description,
+        ${prefix}logo_path,
+        ${prefix}status,
+        ${prefix}created_at
+    `;
+
+    // Build FROM and JOIN clauses
+    let fromClause;
     if (userId) {
       // User is authenticated - exclude applied jobs
-      sql = `
-        SELECT
-          j.id,
-          j.title,
-          j.company,
-          j.job_type,
-          j.work_mode,
-          j.city,
-          j.locality,
-          j.min_experience,
-          j.max_experience,
-          j.min_salary,
-          j.max_salary,
-          j.vacancies,
-          j.description,
-          j.logo_path,
-          j.status,
-          j.created_at
-        FROM jobs j
-        LEFT JOIN job_applications ja ON j.id = ja.job_id AND ja.user_id = ?
-        WHERE j.status = 'approved' 
-          AND ja.id IS NULL
-        ORDER BY j.created_at DESC
-        LIMIT ?
-      `;
-      params = [userId, limit];
+      if (filterInfo.needsTagJoin) {
+        fromClause = `
+          FROM jobs j
+          LEFT JOIN job_applications ja ON j.id = ja.job_id AND ja.user_id = ?
+          LEFT JOIN job_tag_map jtm ON j.id = jtm.job_id
+          LEFT JOIN job_tags jt ON jtm.tag_id = jt.id
+        `;
+      } else {
+        fromClause = `
+          FROM jobs j
+          LEFT JOIN job_applications ja ON j.id = ja.job_id AND ja.user_id = ?
+        `;
+      }
     } else {
-      // User not authenticated - show all approved jobs
-      sql = `
-        SELECT
-          id,
-          title,
-          company,
-          job_type,
-          work_mode,
-          city,
-          locality,
-          min_experience,
-          max_experience,
-          min_salary,
-          max_salary,
-          vacancies,
-          description,
-          logo_path,
-          status,
-          created_at
-        FROM jobs
-        WHERE status = 'approved'
-        ORDER BY created_at DESC
-        LIMIT ?
-      `;
-      params = [limit];
+      // User not authenticated
+      if (filterInfo.needsTagJoin) {
+        fromClause = `
+          FROM jobs j
+          LEFT JOIN job_tag_map jtm ON j.id = jtm.job_id
+          LEFT JOIN job_tags jt ON jtm.tag_id = jt.id
+        `;
+      } else if (useAlias) {
+        fromClause = `FROM jobs j`;
+      } else {
+        fromClause = `FROM jobs`;
+      }
     }
+
+    // Build WHERE clause
+    const whereConditions = [];
+
+    // Base condition: only approved jobs
+    whereConditions.push(`${prefix}status = 'approved'`);
+
+    // Exclude applied jobs if authenticated
+    if (userId) {
+      whereConditions.push(`ja.id IS NULL`);
+    }
+
+    // Add filter conditions
+    if (filterInfo.conditions.length > 0) {
+      whereConditions.push(...filterInfo.conditions);
+    }
+
+    // Add userId param if authenticated (must be first param for JOIN)
+    if (userId) {
+      params.push(userId);
+    }
+
+    // Add filter params
+    params.push(...filterInfo.params);
+
+    // Add limit
+    params.push(limit);
+
+    // Build final SQL
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+
+    sql = `
+      ${selectClause}
+      ${fromClause}
+      ${whereClause}
+      ORDER BY ${prefix}created_at DESC
+      LIMIT ?
+    `;
 
     const [rows] = await pool.query(sql, params);
 
@@ -140,11 +248,14 @@ async function getjobs(req, res) {
         company: r.company,
         type: r.job_type || 'Full-time',
         workMode: r.work_mode || 'Office',
+        city: r.city || null, // Include city field for filtering
         location,
         tags: tagMap[r.id] || parseSkills(r.skills || r.tags || r.skill || ''),
         salary: formatSalary(r.min_salary, r.max_salary),
         minSalary: r.min_salary,
         maxSalary: r.max_salary,
+        minExperience: r.min_experience,
+        maxExperience: r.max_experience,
         vacancies: r.vacancies,
         description: r.description,
         logoPath: r.logo_path || null,

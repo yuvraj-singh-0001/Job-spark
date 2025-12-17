@@ -275,8 +275,8 @@ export default function SignIn() {
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <label className={`flex items-center gap-2.5 p-3 sm:p-4 border-2 rounded-card cursor-pointer transition-all ${role === "candidate"
-                        ? "border-primary-500 bg-primary-50 shadow-soft"
-                        : "border-border hover:border-primary-300 hover:bg-gray-50"
+                      ? "border-primary-500 bg-primary-50 shadow-soft"
+                      : "border-border hover:border-primary-300 hover:bg-gray-50"
                       }`}>
                       <input
                         type="radio"
@@ -290,8 +290,8 @@ export default function SignIn() {
                     </label>
 
                     <label className={`flex items-center gap-2.5 p-3 sm:p-4 border-2 rounded-card cursor-pointer transition-all ${role === "recruiter"
-                        ? "border-primary-500 bg-primary-50 shadow-soft"
-                        : "border-border hover:border-primary-300 hover:bg-gray-50"
+                      ? "border-primary-500 bg-primary-50 shadow-soft"
+                      : "border-border hover:border-primary-300 hover:bg-gray-50"
                       }`}>
                       <input
                         type="radio"
@@ -305,8 +305,6 @@ export default function SignIn() {
                     </label>
                   </div>
                 </div>
-
-                <div id="google-login-btn" className="flex justify-center"></div>
 
                 {/* Terms & Conditions Checkbox */}
                 <div className="flex items-start gap-2.5 pt-2">
@@ -330,6 +328,8 @@ export default function SignIn() {
                     of HireSpark.
                   </label>
                 </div>
+
+                <div id="google-login-btn" className="flex justify-center"></div>
 
                 {message && (
                   <div className="text-success-600 text-sm text-center bg-success-light border border-success-300 rounded-lg px-4 py-2.5">

@@ -17,7 +17,7 @@ export default function GuestNavbar() {
 
   // auth popup
   const [authOpen, setAuthOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState("user"); // "user" (candidate) | "recruiter"
+  const [selectedRole, setSelectedRole] = useState("candidate"); // "candidate" (normal user) | "recruiter"
 
   useEffect(() => {
     let mounted = true;
@@ -91,7 +91,7 @@ export default function GuestNavbar() {
   }
 
   function handleOpenAuth(role) {
-    setSelectedRole(role); // "user" or "recruiter"
+    setSelectedRole(role); // "candidate" or "recruiter"
     setAuthOpen(true);
     setMobileMenuOpen(false); // Close mobile menu if open
   }
