@@ -16,6 +16,52 @@ export default function JobApplicants() {
     message: ""
   });
 
+  // Helper function to validate URLs
+  const isValidUrl = (url) => {
+    if (!url || typeof url !== 'string') return false;
+    try {
+      const urlObj = new URL(url);
+      //log the urlObj
+      console.log(urlObj);
+      return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  };
+
+  // Helper function to calculate age from date of birth
+  const calculateAge = (dateOfBirth) => {
+    if (!dateOfBirth) return null;
+
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    // If birthday hasn't occurred this year yet, subtract 1
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    return age;
+  };
+
+  // Helper function to convert text to sentence case
+  const toSentenceCase = (text) => {
+    if (!text || typeof text !== 'string') return text;
+
+    // Convert to lowercase and trim
+    let result = text.trim().toLowerCase();
+
+    // Capitalize first letter of the text
+    result = result.replace(/^./, (char) => char.toUpperCase());
+
+    // Capitalize first letter after each period followed by space
+    result = result.replace(/\. +([a-z])/g, (match, letter) => `. ${letter.toUpperCase()}`);
+
+    return result;
+  };
+
   useEffect(() => {
     if (jobId) {
       fetchApplicants();
@@ -369,6 +415,12 @@ export default function JobApplicants() {
                             </div>
                           )}
                           <div className="flex flex-wrap items-center gap-4 text-gray-700">
+                            {applicant.user.dateOfBirth && (
+                              <div className="text-sm text-gray-700">
+                                <strong>Age:</strong> {calculateAge(applicant.user.dateOfBirth)} years
+                              </div>
+                            )}
+
                             {applicant.user.location && (
                               <div className="font-semibold">
                                 Location: {applicant.user.location}
@@ -377,11 +429,6 @@ export default function JobApplicants() {
                             {applicant.user.availability && (
                               <div className="text-green-600 font-medium">
                                 {getAvailabilityText(applicant.user.availability)}
-                              </div>
-                            )}
-                            {applicant.user.experienceYears && (
-                              <div>
-                                Experience: {applicant.user.experienceYears} years
                               </div>
                             )}
                           </div>
@@ -412,6 +459,23 @@ export default function JobApplicants() {
                         {/* Expanded Details Section */}
                         {isExpanded && (
                           <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
+                            {/* 🎯 COVER LETTER - Most Important Content */}
+                            {applicant.coverLetter && (
+                              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+                                <div className="text-sm">
+                                  <strong className="text-blue-900 text-base flex items-center gap-2">
+                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+                                    </svg>
+                                    Cover Letter
+                                  </strong>
+                                  <p className="mt-2 text-blue-800 whitespace-pre-line leading-relaxed">
+                                    {toSentenceCase(applicant.coverLetter)}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
                             {applicant.user.email && (
                               <div className="text-sm text-gray-700">
                                 <strong>Email:</strong> {applicant.user.email}
@@ -422,24 +486,26 @@ export default function JobApplicants() {
                                 <strong>Education:</strong> {applicant.user.highestEducation}
                               </div>
                             )}
-                            {applicant.coverLetter && (
+
+                            {/* Additional Education Details */}
+                            {applicant.user.tradeStream && (
                               <div className="text-sm text-gray-700">
-                                <strong>Cover Letter:</strong>
-                                <p className="mt-1 bg-gray-50 p-3 rounded-lg">{applicant.coverLetter}</p>
+                                <strong>Trade/Stream:</strong> {applicant.user.tradeStream}
                               </div>
                             )}
-                            {applicant.user.linkedinUrl && (
-                              <div>
-                                <a
-                                  href={applicant.user.linkedinUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 hover:text-blue-800 text-sm"
-                                >
-                                  LinkedIn Profile
-                                </a>
+
+
+
+
+
+
+                            {/* Career Information */}
+                            {applicant.user.experienceType && (
+                              <div className="text-sm text-gray-700">
+                                <strong>Experience Type:</strong> {applicant.user.experienceType}
                               </div>
                             )}
+
                             {applicant.resumePath && (
                               <button
                                 onClick={() => downloadResume(applicant.resumePath, applicant.user.fullName || 'applicant')}
@@ -448,6 +514,49 @@ export default function JobApplicants() {
                                 Download Resume
                               </button>
                             )}
+
+                            {applicant.idProofPath && (
+                              <button
+                                onClick={() => downloadResume(applicant.idProofPath, `${applicant.user.fullName || 'applicant'}_id_proof`)}
+                                className="text-sm text-gray-600 hover:text-gray-800 underline"
+                              >
+                                Download ID Proof
+                              </button>
+                            )}
+
+                            <div className="text-sm text-gray-700">
+                              <strong>Experience:</strong> {applicant.user.experienceYears === 0 ? 'Fresher' : `${applicant.user.experienceYears} years`}
+                            </div>
+
+                            {/* Social Links */}
+                            <div className="flex gap-3 pt-2">
+                              {applicant.user.linkedinUrl && isValidUrl(applicant.user.linkedinUrl) && (
+                                <a
+                                  href={applicant.user.linkedinUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                >
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                                  </svg>
+                                  LinkedIn
+                                </a>
+                              )}
+                              {applicant.user.githubUrl && isValidUrl(applicant.user.githubUrl) && (
+                                <a
+                                  href={applicant.user.githubUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-gray-700 hover:text-gray-900 text-sm font-medium"
+                                >
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                                  </svg>
+                                  GitHub
+                                </a>
+                              )}
+                            </div>
                           </div>
                         )}
 

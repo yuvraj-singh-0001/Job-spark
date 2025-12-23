@@ -3,6 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import GuestNavbar from "./GuestNavbar.jsx";
 import GuestFooter from "./GuestFooter.jsx";
 import CandidateHeader from "../candidate-layout/CandidateHeader.jsx";
+import { ToastContainer } from "../../toast";
 import api from "../../apiconfig/apiconfig";
 
 /**
@@ -76,6 +77,7 @@ const GuestLayout = () => {
           <GuestFooter />
         </footer>
       )}
+      <ToastContainer />
     </div>
   );
 };

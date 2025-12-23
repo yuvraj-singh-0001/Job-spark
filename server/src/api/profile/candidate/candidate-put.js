@@ -46,10 +46,7 @@ const candidateProfile = async (req, res) => {
       highest_qualification,
       trade_stream,
       key_skills,
-      skill_level,
-      experience_type,
       job_type,
-      preferred_work_type,
       availability,
       expected_salary,
       id_proof_available,
@@ -146,10 +143,7 @@ const candidateProfile = async (req, res) => {
         highest_qualification || null,
         trade_stream || null,
         keySkillsJson,
-        skill_level || null,
-        experience_type || null,
         job_type || null,
-        preferred_work_type || null,
         availability || null,
         expected_salary || null,
         id_proof_available || null,
@@ -165,8 +159,7 @@ const candidateProfile = async (req, res) => {
 
       const updateColumns = [
         'full_name', 'phone', 'date_of_birth', 'gender', 'city', 'state', 'country',
-        'highest_qualification', 'trade_stream', 'key_skills', 'skill_level',
-        'experience_type', 'job_type', 'preferred_work_type', 'availability',
+        'highest_qualification', 'trade_stream', 'key_skills', 'job_type', 'availability',
         'expected_salary', 'id_proof_available', 'preferred_contact_method',
         'willing_to_relocate', 'experience_years', 'resume_path',
         'linkedin_url', 'github_url', 'updated_at'
@@ -175,8 +168,7 @@ const candidateProfile = async (req, res) => {
       const updateResult = await connection.execute(
         `UPDATE candidate_profiles
          SET full_name = ?, phone = ?, date_of_birth = ?, gender = ?, city = ?, state = ?, country = ?,
-             highest_qualification = ?, trade_stream = ?, key_skills = ?, skill_level = ?,
-             experience_type = ?, job_type = ?, preferred_work_type = ?, availability = ?,
+             highest_qualification = ?, trade_stream = ?, key_skills = ?, job_type = ?, availability = ?,
              expected_salary = ?, id_proof_available = ?, preferred_contact_method = ?,
              willing_to_relocate = ?, experience_years = ?, resume_path = ?,
              linkedin_url = ?, github_url = ?, updated_at = ?
@@ -219,10 +211,7 @@ const candidateProfile = async (req, res) => {
         highest_qualification || null,
         trade_stream || null,
         keySkillsJson,
-        skill_level || null,
-        experience_type || null,
         job_type || null,
-        preferred_work_type || null,
         availability || null,
         expected_salary || null,
         id_proof_available || null,
@@ -238,8 +227,7 @@ const candidateProfile = async (req, res) => {
 
       const columnNames = [
         'user_id', 'full_name', 'phone', 'date_of_birth', 'gender', 'city', 'state', 'country',
-        'highest_qualification', 'trade_stream', 'key_skills', 'skill_level', 'experience_type',
-        'job_type', 'preferred_work_type', 'availability', 'expected_salary', 'id_proof_available',
+        'highest_qualification', 'trade_stream', 'key_skills', 'job_type', 'availability', 'expected_salary', 'id_proof_available',
         'preferred_contact_method', 'willing_to_relocate', 'experience_years', 'resume_path',
         'linkedin_url', 'github_url', 'created_at', 'updated_at'
       ];
@@ -247,11 +235,10 @@ const candidateProfile = async (req, res) => {
       const insertResult = await connection.execute(
         `INSERT INTO candidate_profiles
          (user_id, full_name, phone, date_of_birth, gender, city, state, country,
-          highest_qualification, trade_stream, key_skills, skill_level, experience_type,
-          job_type, preferred_work_type, availability, expected_salary, id_proof_available,
+          highest_qualification, trade_stream, key_skills, job_type, availability, expected_salary, id_proof_available,
           preferred_contact_method, willing_to_relocate, experience_years, resume_path,
           linkedin_url, github_url, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         insertValues
       );
 

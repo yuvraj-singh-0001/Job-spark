@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import CandidateHeader from './CandidateHeader.jsx';
+import { ToastContainer } from '../../toast';
 
 /**
  * Candidate Layout - For user/candidate dashboard pages
@@ -13,6 +14,7 @@ const CandidateLayout = () => {
       <main className="flex-1">
         <Outlet />
       </main>
+      <ToastContainer />
     </div>
   );
 };

@@ -11,7 +11,7 @@ const getAdminUsers = async (req, res) => {
         up.state,
         up.country,
         up.experience_years,
-        up.highest_education,
+        up.highest_qualification,
         up.created_at,
         u.email
       FROM candidate_profiles up

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, MapPin, Briefcase, GraduationCap, Star, Trash2, Eye, Clock } from 'lucide-react';
+import { useToast } from '../../../components/toast';
 import api from '../../../components/apiconfig/apiconfig';
 
 export default function Saved() {
+  const { showSuccess, showError } = useToast();
   const [savedJobs, setSavedJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -40,12 +42,13 @@ export default function Saved() {
 
       if (response.data.success) {
         setSavedJobs(prev => prev.filter(job => job.job_id !== jobId));
+        showSuccess('Job removed from saved list');
       } else {
-        alert(response.data.message || 'Failed to remove job');
+        showError(response.data.message || 'Failed to remove job');
       }
     } catch (err) {
       console.error('Error removing job:', err);
-      alert(err.message || 'Error removing job. Please try again.');
+      showError(err.message || 'Error removing job. Please try again.');
     }
   };
 
@@ -70,7 +73,7 @@ export default function Saved() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="card animate-pulse">
+            <div key={i} className="bg-white rounded-xl border border-gray-200 overflow-hidden animate-pulse">
               <div className="p-6">
                 <div className="flex gap-4">
                   <div className="w-16 h-16 bg-gray-200 rounded-lg"></div>
@@ -94,16 +97,22 @@ export default function Saved() {
   if (error) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="card">
-          <div className="card-padding text-center py-12">
-            <div className="text-5xl mb-4">⚠️</div>
-            <h3 className="text-xl font-semibold text-text-dark mb-2">Unable to Load Saved Jobs</h3>
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="p-12 text-center">
+            <div className="text-4xl mb-4">⚠️</div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Unable to Load Saved Jobs</h3>
             <p className="text-red-600 mb-6 text-sm">{error}</p>
-            <div className="flex gap-3 justify-center">
-              <button onClick={fetchSavedJobs} className="btn btn-primary">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={fetchSavedJobs}
+                className="btn btn-primary px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              >
                 Try Again
               </button>
-              <button onClick={() => navigate('/jobs')} className="btn btn-outline">
+              <button
+                onClick={() => navigate('/jobs')}
+                className="btn btn-ghost px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
                 Browse Jobs
               </button>
             </div>
@@ -119,44 +128,42 @@ export default function Saved() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-text-dark">Saved Jobs</h1>
-            <p className="text-text-muted mt-1">Your favorite job opportunities</p>
+            <h1 className="text-2xl font-semibold text-gray-900">Saved Jobs</h1>
+            <p className="text-sm text-gray-600 mt-1">Your favorite job opportunities</p>
           </div>
-          <div className="badge badge-primary">
+          <div className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-sm font-medium">
             {savedJobs.length} Saved
           </div>
         </div>
 
         {savedJobs.length === 0 ? (
-          <div className="card">
-            <div className="card-padding text-center py-16">
-              <div className="text-6xl mb-4">⭐</div>
-              <h3 className="text-xl font-semibold text-text-dark mb-2">No Saved Jobs Yet</h3>
-              <p className="text-text-muted mb-6">
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="p-16 text-center">
+              <div className="text-5xl mb-4">⭐</div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Saved Jobs Yet</h3>
+              <p className="text-gray-600 mb-6">
                 Start building your job collection! Save positions that interest you to review and apply later.
               </p>
-              <div className="flex gap-3 p-2 justify-center">
-              <button
-  onClick={() => navigate('/jobs')}
-  className="btn btn-primary px-6 py-3"
->
-  Browse Jobs
-</button>
-
-<button
-  onClick={() => navigate('/dashboard')}
-  className="btn btn-outline px-6 py-3"
->
-  Back to Dashboard
-</button>
-
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={() => navigate('/jobs')}
+                  className="btn btn-primary px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Browse Jobs
+                </button>
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="btn btn-ghost px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Back to Dashboard
+                </button>
               </div>
             </div>
           </div>
         ) : (
           <div className="space-y-4">
             {savedJobs.map((job) => (
-              <div key={job.job_id} className="card hover:shadow-lg transition-shadow">
+              <div key={job.job_id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="p-6">
                   <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
                     {/* Job Logo/Icon */}
@@ -181,7 +188,7 @@ export default function Saved() {
                           </h3>
                           <p className="text-base font-semibold text-gray-700">{job.company}</p>
                         </div>
-                        <span className="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-sm font-medium inline-flex items-center gap-1.5 self-start">
+                        <span className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-sm font-medium inline-flex items-center gap-1.5 self-start">
                           <Star size={14} />
                           Saved
                         </span>
@@ -221,14 +228,14 @@ export default function Saved() {
                     <div className="flex gap-2 lg:flex-col">
                       <button
                         onClick={() => handleViewJob(job.id)}
-                        className="btn btn-primary btn-sm flex items-center gap-1.5 flex-1 lg:flex-none"
+                        className="btn btn-primary px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1.5 flex-1 lg:flex-none justify-center"
                       >
                         <Eye size={16} />
                         View Job
                       </button>
                       <button
                         onClick={() => removeSavedJob(job.job_id)}
-                        className="btn btn-outline btn-sm text-red-600 hover:bg-red-50 border-red-200 flex items-center gap-1.5 flex-1 lg:flex-none"
+                        className="btn btn-ghost px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-1.5 flex-1 lg:flex-none justify-center"
                       >
                         <Trash2 size={16} />
                         Remove

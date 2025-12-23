@@ -1,6 +1,7 @@
-import { MapPin, Clock, Briefcase, GraduationCap, Bookmark, BookmarkCheck, Mail, Phone, MapPinned, Users, Lock, CheckCircle2 } from "lucide-react";
+import { MapPin, Clock, Briefcase, GraduationCap, Bookmark, BookmarkCheck, Mail, Phone, MapPinned, Users, Lock, CheckCircle2, FileText } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useToast } from "../../../components/toast";
 import api from "../../../components/apiconfig/apiconfig";
 
 // Utility functions to mask contact information
@@ -35,6 +36,7 @@ const maskAddress = (address) => {
 export default function JobDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { showSuccess, showError } = useToast();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -55,8 +57,6 @@ export default function JobDetail() {
   const [updateResumeFile, setUpdateResumeFile] = useState(null);
 
   const [applying, setApplying] = useState(false);
-  const [applyError, setApplyError] = useState(null);
-  const [applySuccess, setApplySuccess] = useState(null);
   const [applied, setApplied] = useState(false);
 
   // Determine user access level for contact info
@@ -181,15 +181,19 @@ export default function JobDetail() {
     }
   };
 
-  // Check if profile is complete (has name, email, and resume)
+  // Check if profile is complete (has name and email - resume is always optional)
   const isProfileComplete = () => {
     if (!candidateProfile) return false;
-    return !!(
+
+    const hasBasicInfo = !!(
       candidateProfile.full_name &&
-      userEmail &&
-      candidateProfile.resume_path
+      userEmail
     );
+
+    // Resume is always optional regardless of qualification
+    return hasBasicInfo;
   };
+
 
   // Check if job is saved
   const checkSavedStatus = async (jobId) => {
@@ -311,8 +315,6 @@ export default function JobDetail() {
   };
 
   const submitApplication = async () => {
-    setApplyError(null);
-    setApplySuccess(null);
 
     // Check authentication first
     if (!isAuthenticated) {
@@ -322,19 +324,22 @@ export default function JobDetail() {
 
     // For logged-in users: check if profile is complete
     if (isAuthenticated && !isProfileComplete()) {
-      // Redirect to complete profile, then come back to apply
-      try {
-        localStorage.setItem("postLoginApplyJobId", id);
-        localStorage.setItem("postLoginRedirect", window.location.pathname + window.location.search);
-      } catch (err) {
-        // ignore storage failures
+      const missingFields = [];
+      if (!candidateProfile?.full_name) missingFields.push("full name");
+      if (!userEmail) missingFields.push("email address");
+
+      if (missingFields.length > 0) {
+        const fieldText = missingFields.join(", ");
+        showError(`Please provide: ${fieldText}`);
+        return;
       }
-      navigate("/dashboard/profile");
+
+      showError("Please complete your profile first before applying for jobs");
       return;
     }
 
     if (!id) {
-      setApplyError("Job ID missing.");
+      showError("Job ID missing.");
       return;
     }
 
@@ -369,7 +374,10 @@ export default function JobDetail() {
       });
 
       if (res.data && res.data.ok) {
-        setApplySuccess("You have successfully applied for this job");
+        const successMessage = updateResumeFile
+          ? "You have successfully applied for this job! Your resume has been uploaded."
+          : "You have successfully applied for this job!";
+        showSuccess(successMessage);
         setApplied(true);
         setIsApplied(true); // Mark as applied
         // Remove from saved jobs (if it was saved) - backend handles this automatically
@@ -378,11 +386,11 @@ export default function JobDetail() {
         setCoverLetter("");
         setUpdateResumeFile(null);
       } else {
-        setApplyError(res.data?.error || res.data?.message || "Failed to submit application");
+        showError(res.data?.error || res.data?.message || "Failed to submit application");
       }
     } catch (err) {
       console.error("Apply error:", err);
-      setApplyError(err?.response?.data?.error || err?.response?.data?.message || err.message || "Server error while applying");
+      showError(err?.response?.data?.error || err?.response?.data?.message || err.message || "Server error while applying");
     } finally {
       setApplying(false);
     }
@@ -402,13 +410,6 @@ export default function JobDetail() {
   return (
     <div className="min-h-screen bg-bg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* Breadcrumb */}
-        <div className="mb-4 text-sm text-text-muted">
-          <a href="/jobs" className="hover:underline text-primary-600 font-medium">Jobs</a>
-          <span className="mx-2">/</span>
-          <span className="text-text-dark">{job.title}</span>
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Main Content - Job Details */}
           <div className="lg:col-span-2 space-y-6">
@@ -469,44 +470,44 @@ export default function JobDetail() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border">
                   {job.company && (
                     <div>
-                      <label className="text-xs font-medium text-text-muted uppercase tracking-wider">Company</label>
-                      <p className="text-text-dark mt-1">{job.company}</p>
+                      <label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Company</label>
+                      <p className="text-sm font-semibold text-gray-700 mt-1">{job.company}</p>
                     </div>
                   )}
                   {job.type && (
                     <div>
-                      <label className="text-xs font-medium text-text-muted uppercase tracking-wider">Job Type</label>
-                      <p className="text-text-dark mt-1">{job.type}</p>
+                      <label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Job Type</label>
+                      <p className="text-sm font-medium text-gray-700 mt-1">{job.type}</p>
                     </div>
                   )}
                   {job.workMode && (
                     <div>
-                      <label className="text-xs font-medium text-text-muted uppercase tracking-wider">Work Mode</label>
-                      <p className="text-text-dark mt-1">{job.workMode}</p>
+                      <label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Work Mode</label>
+                      <p className="text-sm font-medium text-gray-700 mt-1">{job.workMode}</p>
                     </div>
                   )}
                   {job.location && (
                     <div>
-                      <label className="text-xs font-medium text-text-muted uppercase tracking-wider">Location</label>
-                      <p className="text-text-dark mt-1">{job.location}</p>
+                      <label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Location</label>
+                      <p className="text-sm font-medium text-gray-700 mt-1">{job.location}</p>
                     </div>
                   )}
                   {experience && (
                     <div>
-                      <label className="text-xs font-medium text-text-muted uppercase tracking-wider">Experience</label>
-                      <p className="text-text-dark mt-1">{experience}</p>
+                      <label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Experience</label>
+                      <p className="text-sm font-medium text-gray-700 mt-1">{experience}</p>
                     </div>
                   )}
                   {salary && (
                     <div>
-                      <label className="text-xs font-medium text-text-muted uppercase tracking-wider">Salary</label>
-                      <p className="text-text-dark mt-1 font-semibold text-primary-600">{salary}</p>
+                      <label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Salary</label>
+                      <p className="text-sm font-semibold text-gray-700 mt-1">{salary}</p>
                     </div>
                   )}
                   {job.vacancies && job.vacancies > 0 && (
                     <div>
-                      <label className="text-xs font-medium text-text-muted uppercase tracking-wider">Vacancies</label>
-                      <p className="text-text-dark mt-1">{job.vacancies}</p>
+                      <label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Vacancies</label>
+                      <p className="text-sm font-medium text-gray-700 mt-1">{job.vacancies}</p>
                     </div>
                   )}
                 </div>
@@ -671,32 +672,7 @@ export default function JobDetail() {
               </div>
               <div className="p-4 sm:p-6">
                 {/* Quick Summary */}
-                <div className="space-y-3 text-sm text-text-dark mb-5 sm:mb-6 pb-4 border-b border-border">
-                  {salary && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-text-muted">Compensation</span>
-                      <span className="font-semibold text-primary-600">{salary}</span>
-                    </div>
-                  )}
-                  {job.workMode && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-text-muted">Work Mode</span>
-                      <span className="font-semibold">{job.workMode}</span>
-                    </div>
-                  )}
-                  {experience && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-text-muted">Experience</span>
-                      <span className="font-semibold">{experience}</span>
-                    </div>
-                  )}
-                  {job.vacancies && job.vacancies > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-text-muted">Vacancies</span>
-                      <span className="font-semibold">{job.vacancies}</span>
-                    </div>
-                  )}
-                </div>
+
 
                 {/* STATE 4 & 5: Recruiter or Admin viewing job - No action buttons */}
                 {shouldHideActionButtons() && (
@@ -724,11 +700,11 @@ export default function JobDetail() {
                         Applied ✓
                       </div>
                       <p className="text-success-600 text-sm mt-2">
-                        You have already applied to this job
+                        You have successfully applied to this job
                       </p>
                     </div>
                     <p className="text-xs text-text-muted text-center">
-                      Contact details are now unlocked above
+                      Contact details are now unlocked for you
                     </p>
                   </div>
                 )}
@@ -736,25 +712,23 @@ export default function JobDetail() {
                 {/* STATE 2: Logged-in candidate who hasn't applied */}
                 {!shouldHideActionButtons() && isAuthenticated && !isApplied && candidateProfile && (
                   <div className="space-y-4">
+
                     <div className="bg-primary-50 border border-primary-200 rounded-lg p-3 sm:p-4 text-sm">
                       <div className="font-semibold text-primary-900 mb-1.5">Applying as:</div>
                       <div className="text-text-dark font-medium">{candidateProfile.full_name || "Your name"}</div>
                       <div className="text-text-muted text-xs mt-1">{userEmail}</div>
-                      {candidateProfile.resume_path && (
-                        <div className="text-success-600 text-xs mt-1.5 font-medium">✓ Resume on file</div>
-                      )}
                     </div>
 
                     {candidateProfile.resume_path && (
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <label className="label text-sm">Resume</label>
+                          <label className="label text-sm">Resume (Optional)</label>
                           <button
                             type="button"
                             onClick={() => document.getElementById('update-resume-input')?.click()}
                             className="text-xs text-primary-600 hover:text-primary-700 underline font-medium"
                           >
-                            Update Resume
+                            Update Resume (Optional)
                           </button>
                         </div>
                         <input
@@ -791,6 +765,7 @@ export default function JobDetail() {
                       </div>
                     )}
 
+
                     <div>
                       <label className="label text-sm">Cover letter (optional)</label>
                       <textarea
@@ -802,28 +777,23 @@ export default function JobDetail() {
                       />
                     </div>
 
-                    {applyError && (
-                      <div className="text-error-600 text-sm bg-error-light border border-error-300 p-3 rounded-lg">
-                        {applyError}
-                      </div>
-                    )}
-                    {applySuccess && (
-                      <div className="text-success-600 text-sm bg-success-light border border-success-300 p-3 rounded-lg">
-                        {applySuccess}
-                      </div>
+                    {/* Resume Section */}
+                    {candidateProfile && (
+                      <>
+                        <div className="space-y-3">
+                          <button
+                            className="btn btn-primary btn-md w-full"
+                            onClick={submitApplication}
+                            disabled={applying || applied || profileLoading}
+                          >
+                            {applied ? "Applied" : applying ? "Applying..." : "Apply Now"}
+                          </button>
+
+
+                        </div>
+                      </>
                     )}
 
-                    <button
-                      className="btn btn-primary btn-md w-full"
-                      onClick={submitApplication}
-                      disabled={applying || applied || profileLoading}
-                    >
-                      {applied ? "Applied" : applying ? "Applying..." : "Apply Now"}
-                    </button>
-
-                    <p className="text-xs text-center text-amber-600 bg-amber-50 p-2 rounded">
-                      🔓 Apply to unlock recruiter contact details
-                    </p>
                   </div>
                 )}
 
@@ -832,12 +802,22 @@ export default function JobDetail() {
                   <div className="space-y-4">
                     <button
                       className="btn btn-primary btn-md w-full"
-                      onClick={submitApplication}
+                      onClick={() => {
+                        // Store job info for redirect after profile creation
+                        try {
+                          const currentPath = window.location.pathname + window.location.search;
+                          localStorage.setItem("postLoginApplyJobId", id);
+                          localStorage.setItem("postLoginRedirect", currentPath || `/jobs/${id}`);
+                        } catch (err) {
+                          // ignore storage failures
+                        }
+                        navigate("/dashboard/profile");
+                      }}
                     >
-                      Apply Now
+                      Create Profile to Apply Now
                     </button>
                     <p className="text-xs text-center text-amber-600 bg-amber-50 p-2 rounded">
-                      🔓 Apply to unlock recruiter contact details
+                      🔓 Create your profile to apply and unlock recruiter contact details
                     </p>
                   </div>
                 )}

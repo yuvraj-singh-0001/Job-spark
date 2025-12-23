@@ -2,20 +2,292 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../../components/apiconfig/apiconfig";
 
+// Indian States and Cities data - Complete list (sorted alphabetically)
+// All Indian states and union territories sorted alphabetically
+const stateOptions = [
+  "Select State",
+  // States (28) - sorted alphabetically
+  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat",
+  "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh",
+  "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
+  "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh",
+  "Uttarakhand", "West Bengal",
+  // Union Territories (8) - sorted alphabetically
+  "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
+];
+
+// Cities grouped by state (comprehensive list - all cities/districts sorted alphabetically)
+const citiesByState = {
+  "Andhra Pradesh": [
+    "Addanki", "Adoni", "Amalapuram", "Anakapalle", "Anantapur", "Araku Valley", "Bapatla", "Bheemunipatnam", "Bhimavaram",
+    "Chilakaluripet", "Chirala", "Chittoor", "Dharmavaram", "Eluru", "Gooty", "Gudivada", "Guntur", "Hindupur", "Kadapa",
+    "Kakinada", "Kandukur", "Kavali", "Kurnool", "Machilipatnam", "Madanapalle", "Mangalagiri", "Markapur", "Nandyal",
+    "Narasaraopet", "Nellore", "Nidadavole", "Nuzvid", "Ongole", "Palakollu", "Palasa", "Palkonda", "Parvathipuram",
+    "Piduguralla", "Ponnur", "Proddatur", "Pulivendla", "Punganur", "Puttaparthi", "Rajahmundry", "Rajampet", "Ramachandrapuram",
+    "Rayachoti", "Rayadurg", "Renigunta", "Repalle", "Salur", "Samalkot", "Sattenapalle", "Siddhout", "Srikakulam", "Srisailam",
+    "Sullurpeta", "Tadepalligudem", "Tadipatri", "Tanuku", "Tenali", "Tirupati", "Tiruvuru", "Tuni", "Uravakonda", "Venkatagiri",
+    "Vijayawada", "Vinukonda", "Visakhapatnam", "Vizianagaram", "Yemmiganur"
+  ],
+  "Arunachal Pradesh": [
+    "Along", "Anini", "Basar", "Bomdila", "Changlang", "Daporijo", "Deomali", "Dirang", "Hawai", "Itanagar",
+    "Jairampur", "Khonsa", "Koloriang", "Longding", "Miao", "Naharlargun", "Namsai", "Pangin", "Pasighat", "Roing",
+    "Rupa", "Sagalee", "Seppa", "Tawang", "Tezu", "Tuting", "Yingkiong", "Ziro"
+  ],
+  "Assam": [
+    "Abhayapuri", "Amguri", "Badarpur", "Baksa", "Barpeta", "Behali", "Bhairabkunda", "Bihpuria", "Bijni", "Bilasipara",
+    "Biswanath", "Boko", "Bongaigaon", "Cachar", "Chabua", "Chapar", "Chirang", "Darrang", "Dhemaji", "Dhubri",
+    "Dibrugarh", "Digboi", "Dimapur", "Diphu", "Goalpara", "Golaghat", "Guwahati", "Hailakandi", "Hajo", "Hojai",
+    "Jorhat", "Kamrup", "Karbi Anglong", "Karimganj", "Kokrajhar", "Lakhimpur", "Majuli", "Mankachar", "Marigaon",
+    "Nagaon", "Nalbari", "North Cachar Hills", "Rangia", "Sadiya", "Sibsagar", "Silchar", "Sivasagar", "Sonitpur",
+    "Tengakhat", "Tezpur", "Tinsukia", "Udalguri"
+  ],
+  "Bihar": [
+    "Araria", "Arrah", "Arwal", "Aurangabad", "Banka", "Begusarai", "Bettiah", "Bhabua", "Bhagalpur", "Bhojpur",
+    "Bihar Sharif", "Buxar", "Chhapra", "Darbhanga", "Gaya", "Gopalganj", "Hajipur", "Jamui", "Jehanabad", "Kaimur",
+    "Katihar", "Khagaria", "Kishanganj", "Lakhisarai", "Madhepura", "Madhubani", "Munger", "Muzaffarpur", "Nalanda",
+    "Nawada", "Patna", "Purnia", "Rohtas", "Saharsa", "Samastipur", "Saran", "Sheikhpura", "Sheohar", "Sitamarhi",
+    "Siwan", "Supaul", "Vaishali"
+  ],
+  "Chhattisgarh": [
+    "Ambikapur", "Baikunthpur", "Baloda Bazar", "Balrampur", "Bastar", "Bemetara", "Bijapur", "Bilaspur", "Dantewada",
+    "Dhamtari", "Durg", "Gariaband", "Jagdalpur", "Jashpur", "Kabirdham", "Kanker", "Kondagaon", "Korba", "Koriya",
+    "Mahasamund", "Mungeli", "Narayanpur", "Raigarh", "Raipur", "Rajnandgaon", "Sukma", "Surajpur", "Surguja"
+  ],
+  "Goa": [
+    "Bicholim", "Canacona", "Cuncolim", "Curchorem", "Dharbandora", "Goa", "Madgaon", "Mapusa", "Margao", "Mormugao",
+    "Panaji", "Pernem", "Ponda", "Quepem", "Sanguem", "Sanquelim", "Valpoi"
+  ],
+  "Gujarat": [
+    "Ahmedabad", "Amreli", "Anand", "Aravalli", "Banaskantha", "Bharuch", "Bhavnagar", "Botad", "Chhota Udaipur",
+    "Dahod", "Dang", "Devbhoomi Dwarka", "Gandhinagar", "Gir Somnath", "Jamnagar", "Junagadh", "Kheda", "Kutch",
+    "Mahisagar", "Mehsana", "Morbi", "Narmada", "Navsari", "Panchmahal", "Patan", "Porbandar", "Rajkot", "Sabarkantha",
+    "Surat", "Surendranagar", "Tapi", "Vadodara", "Valsad"
+  ],
+  "Haryana": [
+    "Ambala", "Bhiwani", "Charkhi Dadri", "Faridabad", "Fatehabad", "Gurgaon", "Hisar", "Jhajjar", "Jind", "Kaithal",
+    "Karnal", "Kurukshetra", "Mahendragarh", "Mewat", "Palwal", "Panchkula", "Panipat", "Rewari", "Rohtak", "Sirsa",
+    "Sonipat", "Yamunanagar"
+  ],
+  "Himachal Pradesh": [
+    "Bilaspur", "Chamba", "Hamirpur", "Kangra", "Kinnaur", "Kullu", "Lahaul and Spiti", "Mandi", "Shimla", "Sirmaur",
+    "Solan", "Una"
+  ],
+  "Jharkhand": [
+    "Bokaro", "Chatra", "Deoghar", "Dhanbad", "Dumka", "East Singhbhum", "Garhwa", "Giridih", "Godda", "Gumla",
+    "Hazaribagh", "Jamtara", "Khunti", "Koderma", "Latehar", "Lohardaga", "Pakur", "Palamu", "Ramgarh", "Ranchi",
+    "Sahibganj", "Seraikela Kharsawan", "Simdega", "West Singhbhum"
+  ],
+  "Karnataka": [
+    "Bagalkot", "Ballari", "Belagavi", "Bengaluru Rural", "Bengaluru Urban", "Bidar", "Chamarajanagar", "Chikballapur",
+    "Chikkamagaluru", "Chitradurga", "Dakshina Kannada", "Davangere", "Dharwad", "Gadag", "Hassan", "Haveri", "Kalaburagi",
+    "Kodagu", "Kolar", "Koppal", "Mandya", "Mysuru", "Raichur", "Ramanagara", "Shivamogga", "Tumakuru", "Udupi",
+    "Uttara Kannada", "Vijayapura", "Yadgir"
+  ],
+  "Kerala": [
+    "Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", "Kollam", "Kottayam", "Kozhikode", "Malappuram",
+    "Palakkad", "Pathanamthitta", "Thiruvananthapuram", "Thrissur", "Wayanad"
+  ],
+  "Madhya Pradesh": [
+    "Agar Malwa", "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal", "Burhanpur",
+    "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori", "Guna", "Gwalior", "Harda", "Hoshangabad",
+    "Indore", "Jabalpur", "Jhabua", "Katni", "Khandwa", "Khargone", "Mandla", "Mandsaur", "Morena", "Narsinghpur",
+    "Neemuch", "Niwari", "Panna", "Raisen", "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni", "Shahdol",
+    "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh", "Ujjain", "Umaria", "Vidisha"
+  ],
+  "Maharashtra": [
+    "Ahmednagar", "Akola", "Amravati", "Aurangabad", "Beed", "Bhandara", "Buldhana", "Chandrapur", "Dhule", "Gadchiroli",
+    "Gondia", "Hingoli", "Jalgaon", "Jalna", "Kolhapur", "Latur", "Mumbai City", "Mumbai Suburban", "Nagpur", "Nanded",
+    "Nandurbar", "Nashik", "Osmanabad", "Palghar", "Parbhani", "Pune", "Raigad", "Ratnagiri", "Sangli", "Satara",
+    "Sindhudurg", "Solapur", "Thane", "Wardha", "Washim", "Yavatmal"
+  ],
+  "Delhi": [
+    "Central Delhi", "East Delhi", "New Delhi", "North Delhi", "North East Delhi", "North West Delhi", "Shahdara",
+    "South Delhi", "South East Delhi", "South West Delhi", "West Delhi"
+  ],
+  "Karnataka": [
+    "Bagalkot", "Ballari", "Belagavi", "Bengaluru Rural", "Bengaluru Urban", "Bidar", "Chamarajanagar", "Chikballapur",
+    "Chikkamagaluru", "Chitradurga", "Dakshina Kannada", "Davangere", "Dharwad", "Gadag", "Hassan", "Haveri",
+    "Kalaburagi", "Kodagu", "Kolar", "Koppal", "Mandya", "Mysuru", "Raichur", "Ramanagara", "Shivamogga", "Tumakuru",
+    "Udupi", "Uttara Kannada", "Vijayapura", "Yadgir"
+  ],
+  "Tamil Nadu": [
+    "Ariyalur", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri", "Dindigul", "Erode", "Kancheepuram", "Kanyakumari",
+    "Karur", "Krishnagiri", "Madurai", "Nagapattinam", "Namakkal", "Perambalur", "Pudukkottai", "Ramanathapuram",
+    "Salem", "Sivaganga", "Thanjavur", "Theni", "The Nilgiris", "Thiruvallur", "Thiruvarur", "Tiruchirappalli",
+    "Tirunelveli", "Tiruppur", "Tiruvannamalai", "Tiruvarur", "Vellore", "Viluppuram", "Virudhunagar"
+  ],
+  "Uttar Pradesh": [
+    "Agra", "Aligarh", "Allahabad", "Ambedkar Nagar", "Amethi", "Amroha", "Auraiya", "Azamgarh", "Baghpat", "Bahraich",
+    "Ballia", "Balrampur", "Banda", "Barabanki", "Bareilly", "Basti", "Bhadohi", "Bijnor", "Budaun", "Bulandshahr",
+    "Chandauli", "Chitrakoot", "Deoria", "Etah", "Etawah", "Faizabad", "Farrukhabad", "Fatehpur", "Firozabad", "Gautam Buddha Nagar",
+    "Ghaziabad", "Ghazipur", "Gonda", "Gorakhpur", "Hamirpur", "Hapur", "Hardoi", "Hathras", "Jalaun", "Jaunpur", "Jhansi",
+    "Kannauj", "Kanpur Dehat", "Kanpur Nagar", "Kasganj", "Kaushambi", "Kushinagar", "Lakhimpur Kheri", "Lalitpur", "Lucknow",
+    "Maharajganj", "Mahoba", "Mainpuri", "Mathura", "Mau", "Meerut", "Mirzapur", "Moradabad", "Muzaffarnagar", "Pilibhit",
+    "Pratapgarh", "Rae Bareli", "Rampur", "Saharanpur", "Sambhal", "Sant Kabir Nagar", "Shahjahanpur", "Shamli", "Shravasti",
+    "Siddharthnagar", "Sitapur", "Sonbhadra", "Sultanpur", "Unnao", "Varanasi"
+  ],
+  "Gujarat": [
+    "Ahmedabad", "Amreli", "Anand", "Aravalli", "Banaskantha", "Bharuch", "Bhavnagar", "Botad", "Chhota Udaipur",
+    "Dahod", "Dang", "Devbhoomi Dwarka", "Gandhinagar", "Gir Somnath", "Jamnagar", "Junagadh", "Kheda", "Kutch",
+    "Mahisagar", "Mehsana", "Morbi", "Narmada", "Navsari", "Panchmahal", "Patan", "Porbandar", "Rajkot", "Sabarkantha",
+    "Surat", "Surendranagar", "Tapi", "Vadodara", "Valsad"
+  ],
+  "West Bengal": [
+    "Alipurduar", "Bankura", "Birbhum", "Cooch Behar", "Dakshin Dinajpur", "Darjeeling", "Hooghly", "Howrah", "Jalpaiguri",
+    "Jhargram", "Kalimpong", "Kolkata", "Malda", "Murshidabad", "Nadia", "North 24 Parganas", "Paschim Bardhaman",
+    "Paschim Medinipur", "Purba Bardhaman", "Purba Medinipur", "Purulia", "South 24 Parganas", "Uttar Dinajpur"
+  ],
+  "Rajasthan": [
+    "Ajmer", "Alwar", "Banswara", "Baran", "Barmer", "Bharatpur", "Bhilwara", "Bikaner", "Bundi", "Chittorgarh",
+    "Churu", "Dausa", "Dholpur", "Dungarpur", "Hanumangarh", "Jaipur", "Jaisalmer", "Jalore", "Jhalawar", "Jhunjhunun",
+    "Jodhpur", "Karauli", "Kota", "Nagaur", "Pali", "Pratapgarh", "Rajsamand", "Sawai Madhopur", "Sikar", "Sirohi",
+    "Sri Ganganagar", "Tonk", "Udaipur"
+  ],
+  "Andhra Pradesh": [
+    "Alluri Sitharama Raju", "Anakapalli", "Anantapur", "Annamayya", "Bapatla", "Chittoor", "Dr. B.R. Ambedkar Konaseema",
+    "East Godavari", "Eluru", "Guntur", "Kadapa", "Kakinada", "Krishna", "Kurnool", "Nandyal", "Nellore",
+    "NTR", "Palnadu", "Parvathipuram Manyam", "Prakasam", "Sri Balaji", "Sri Sathya Sai", "Srikakulam",
+    "Tirupati", "Visakhapatnam", "Vizianagaram", "West Godavari"
+  ],
+  "Telangana": [
+    "Adilabad", "Bhadradri Kothagudem", "Hyderabad", "Jagtial", "Jangaon", "Jayashankar Bhupalpally", "Jogulamba Gadwal",
+    "Kamareddy", "Karimnagar", "Khammam", "Komaram Bheem", "Mahabubabad", "Mahabubnagar", "Mancherial", "Medak",
+    "Medchal–Malkajgiri", "Mulugu", "Nagarkurnool", "Nalgonda", "Narayanpet", "Nirmal", "Nizamabad", "Peddapalli",
+    "Rajanna Sircilla", "Ranga Reddy", "Sangareddy", "Siddipet", "Suryapet", "Vikarabad", "Wanaparthy",
+    "Warangal Rural", "Warangal Urban", "Yadadri Bhuvanagiri"
+  ],
+  "Kerala": [
+    "Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", "Kollam", "Kottayam", "Kozhikode", "Malappuram",
+    "Palakkad", "Pathanamthitta", "Thiruvananthapuram", "Thrissur", "Wayanad"
+  ],
+  "Punjab": [
+    "Amritsar", "Barnala", "Bathinda", "Faridkot", "Fatehgarh Sahib", "Fazilka", "Ferozepur", "Gurdaspur", "Hoshiarpur",
+    "Jalandhar", "Kapurthala", "Ludhiana", "Mansa", "Moga", "Mohali", "Muktsar", "Nawanshahr", "Pathankot", "Patiala",
+    "Rupnagar", "Sangrur", "Tarn Taran"
+  ],
+  "Haryana": [
+    "Ambala", "Bhiwani", "Charkhi Dadri", "Faridabad", "Fatehabad", "Gurugram", "Hisar", "Jhajjar", "Jind", "Kaithal",
+    "Karnal", "Kurukshetra", "Mahendragarh", "Mewat", "Palwal", "Panchkula", "Panipat", "Rewari", "Rohtak", "Sirsa",
+    "Sonipat", "Yamunanagar"
+  ],
+  "Madhya Pradesh": [
+    "Agar Malwa", "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal", "Burhanpur",
+    "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori", "Guna", "Gwalior", "Harda", "Hoshangabad",
+    "Indore", "Jabalpur", "Jhabua", "Katni", "Khandwa", "Khargone", "Mandla", "Mandsaur", "Morena", "Narsinghpur",
+    "Neemuch", "Panna", "Raisen", "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni", "Shahdol", "Shajapur",
+    "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh", "Ujjain", "Umaria", "Vidisha"
+  ],
+  "Bihar": [
+    "Araria", "Arwal", "Aurangabad", "Banka", "Begusarai", "Bhagalpur", "Bhojpur", "Buxar", "Darbhanga", "East Champaran",
+    "Gaya", "Gopalganj", "Jamui", "Jehanabad", "Kaimur", "Katihar", "Khagaria", "Kishanganj", "Lakhisarai", "Madhepura",
+    "Madhubani", "Munger", "Muzaffarpur", "Nalanda", "Nawada", "Patna", "Purnia", "Rohtas", "Saharsa", "Samastipur",
+    "Saran", "Sheikhpura", "Sheohar", "Sitamarhi", "Siwan", "Supaul", "Vaishali", "West Champaran"
+  ],
+  "Odisha": [
+    "Angul", "Balangir", "Balasore", "Bargarh", "Bhadrak", "Boudh", "Cuttack", "Deogarh", "Dhenkanal", "Gajapati",
+    "Ganjam", "Jagatsinghpur", "Jajpur", "Jharsuguda", "Kalahandi", "Kandhamal", "Kendrapara", "Kendujhar", "Khordha",
+    "Koraput", "Malkangiri", "Mayurbhanj", "Nabarangpur", "Nayagarh", "Nuapada", "Puri", "Rayagada", "Sambalpur",
+    "Sonepur", "Sundargarh"
+  ],
+  "Chhattisgarh": [
+    "Balod", "Baloda Bazar", "Balrampur", "Bastar", "Bemetara", "Bijapur", "Bilaspur", "Dantewada", "Dhamtari", "Durg",
+    "Gariaband", "Janjgir-Champa", "Jashpur", "Kabirdham", "Kanker", "Kondagaon", "Korba", "Koriya", "Mahasamund",
+    "Mungeli", "Narayanpur", "Raigarh", "Raipur", "Rajnandgaon", "Sukma", "Surajpur", "Surguja"
+  ],
+  "Jharkhand": [
+    "Bokaro", "Chatra", "Deoghar", "Dhanbad", "Dumka", "East Singhbhum", "Garhwa", "Giridih", "Godda", "Gumla",
+    "Hazaribagh", "Jamtara", "Khunti", "Kodarma", "Latehar", "Lohardaga", "Pakur", "Palamu", "Ramgarh", "Ranchi",
+    "Sahibganj", "Seraikela Kharsawan", "Simdega", "West Singhbhum"
+  ],
+  "Uttarakhand": [
+    "Almora", "Bageshwar", "Chamoli", "Champawat", "Dehradun", "Haridwar", "Nainital", "Pauri Garhwal", "Pithoragarh",
+    "Rudraprayag", "Tehri Garhwal", "Udham Singh Nagar", "Uttarkashi"
+  ],
+  "Himachal Pradesh": [
+    "Bilaspur", "Chamba", "Hamirpur", "Kangra", "Kinnaur", "Kullu", "Lahaul and Spiti", "Mandi", "Shimla", "Sirmaur",
+    "Solan", "Una"
+  ],
+  "Jammu and Kashmir": [
+    "Anantnag", "Bandipore", "Baramulla", "Budgam", "Doda", "Ganderbal", "Jammu", "Kathua", "Kishtwar", "Kulgam",
+    "Kupwara", "Pulwama", "Punch", "Rajouri", "Ramban", "Reasi", "Samba", "Shopian", "Srinagar", "Udhampur"
+  ],
+  "Goa": [
+    "North Goa", "South Goa"
+  ],
+  "Assam": [
+    "Baksa", "Barpeta", "Biswanath", "Bongaigaon", "Cachar", "Charaideo", "Chirang", "Darrang", "Dhemaji", "Dhubri",
+    "Dibrugarh", "Dima Hasao", "Goalpara", "Golaghat", "Hailakandi", "Hojai", "Jorhat", "Kamrup", "Kamrup Metropolitan",
+    "Karbi Anglong", "Karimganj", "Kokrajhar", "Lakhimpur", "Majuli", "Morigaon", "Nagaon", "Nalbari", "Sivasagar",
+    "Sonitpur", "South Salmara-Mankachar", "Tinsukia", "Udalguri", "West Karbi Anglong"
+  ],
+  "Sikkim": [
+    "East Sikkim", "North Sikkim", "South Sikkim", "West Sikkim"
+  ],
+  "Tripura": [
+    "Dhalai", "Gomati", "Khowai", "North Tripura", "Sepahijala", "South Tripura", "Unakoti", "West Tripura"
+  ],
+  "Manipur": [
+    "Bishnupur", "Chandel", "Churachandpur", "Imphal East", "Imphal West", "Jiribam", "Kakching", "Kamjong", "Kangpokpi",
+    "Noney", "Pherzawl", "Senapati", "Tamenglong", "Tengnoupal", "Thoubal", "Ukhrul"
+  ],
+  "Meghalaya": [
+    "East Garo Hills", "East Jaintia Hills", "East Khasi Hills", "North Garo Hills", "Ri Bhoi", "South Garo Hills",
+    "South West Garo Hills", "South West Khasi Hills", "West Garo Hills", "West Jaintia Hills", "West Khasi Hills"
+  ],
+  "Nagaland": [
+    "Chümoukedima", "Dimapur", "Kiphire", "Kohima", "Longleng", "Mokokchung", "Mon", "Niuland", "Noklak", "Peren",
+    "Phek", "Shamator", "Tseminyü", "Tuensang", "Wokha", "Zunheboto"
+  ],
+  "Mizoram": [
+    "Aizawl", "Lunglei", "Saiha", "Champhai", "Kolasib", "Serchhip", "Lawngtlai", "Mamit", "Khawzawl", "Zawlnuam",
+    "Hnahthial", "Saitual", "Ngopa", "Reiek", "Vairengte", "Kawnpui", "Darlawn", "Sialsuk", "Biate", "Thingsulthliah",
+    "Aizawl", "Lunglei", "Saiha", "Champhai", "Kolasib", "Serchhip", "Lawngtlai", "Mamit", "Khawzawl", "Zawlnuam"
+  ],
+  "Arunachal Pradesh": [
+    "Itanagar", "Naharlagun", "Pasighat", "Along", "Tawang", "Ziro", "Bomdila", "Aalo", "Tezu", "Roing", "Namsai",
+    "Yingkiong", "Daporijo", "Koloriang", "Basar", "Anini", "Mechuka", "Hayuliang", "Chowkham", "Tuting", "Geku",
+    "Mariyang", "Kamba", "L Kra Daadi", "Palin", "Raga", "Daporijo", "Bomdila", "Dirang", "Kalaktang", "Mukto"
+  ],
+  "Puducherry": [
+    "Karaikal", "Mahe", "Puducherry", "Yanam"
+  ],
+  "Chandigarh": [
+    "Chandigarh"
+  ],
+  "Andaman and Nicobar Islands": [
+    "Nicobar", "North and Middle Andaman", "South Andaman"
+  ],
+  "Dadra and Nagar Haveli and Daman and Diu": [
+    "Dadra and Nagar Haveli", "Daman", "Diu"
+  ],
+  "Ladakh": [
+    "Kargil", "Leh"
+  ],
+  "Lakshadweep": [
+    "Agatti", "Amini", "Androth", "Bithra", "Chetlat", "Kadmat", "Kalpeni", "Kavaratti", "Kiltan", "Minicoy"
+  ]
+};
+
+
 export default function RecruiterProfileView() {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [error, setError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [availableCities, setAvailableCities] = useState([]);
   const [form, setForm] = useState({
     company_name: "",
     company_website: "",
     company_type: "",
+    hr_name: "",
+    hr_mobile: "",
     address_line1: "",
     address_line2: "",
     city: "",
     state: "",
-    country: "",
+    country: "India",
     pincode: ""
   });
 
@@ -33,11 +305,13 @@ export default function RecruiterProfileView() {
             company_name: profileData.company_name || "",
             company_website: profileData.company_website || "",
             company_type: profileData.company_type || "",
+            hr_name: profileData.hr_name || "",
+            hr_mobile: profileData.hr_mobile || "",
             address_line1: profileData.address_line1 || "",
             address_line2: profileData.address_line2 || "",
             city: profileData.city || "",
             state: profileData.state || "",
-            country: profileData.country || "",
+            country: "India",
             pincode: profileData.pincode || ""
           });
         }
@@ -64,17 +338,57 @@ export default function RecruiterProfileView() {
     return () => { mounted = false; };
   }, []);
 
+  // Update available cities when state changes
+  useEffect(() => {
+    if (form.state && citiesByState[form.state]) {
+      setAvailableCities(citiesByState[form.state]);
+    } else {
+      setAvailableCities([]);
+    }
+  }, [form.state]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
+
+    // Handle state change to update available cities
+    if (name === 'state') {
+      if (value && citiesByState[value]) {
+        setAvailableCities(citiesByState[value]);
+        // Clear city if selected state doesn't include current city
+        if (form.city && !citiesByState[value].includes(form.city)) {
+          setForm(prev => ({ ...prev, city: '' }));
+        }
+      } else {
+        setAvailableCities([]);
+        setForm(prev => ({ ...prev, city: '' }));
+      }
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+
+    if (form.hr_mobile && !/^\d{10}$/.test(form.hr_mobile)) {
+      errors.hr_mobile = "HR Mobile must be exactly 10 digits";
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     try {
       const res = await api.put("/recruiter-profile/recruiter", form);
       setProfile(res.data?.recruiter);
       setIsEditing(false);
+      setValidationErrors({});
     } catch (err) {
       console.error("Error saving profile:", err);
       setError("Failed to save profile. Please try again.");
@@ -87,11 +401,13 @@ export default function RecruiterProfileView() {
         company_name: profile.company_name || "",
         company_website: profile.company_website || "",
         company_type: profile.company_type || "",
+        hr_name: profile.hr_name || "",
+        hr_mobile: profile.hr_mobile || "",
         address_line1: profile.address_line1 || "",
         address_line2: profile.address_line2 || "",
         city: profile.city || "",
         state: profile.state || "",
-        country: profile.country || "",
+        country: "India",
         pincode: profile.pincode || ""
       });
     }
@@ -193,22 +509,6 @@ export default function RecruiterProfileView() {
               )}
             </div>
 
-            {/* Quick Links */}
-            {form.company_website && (
-              <div className="border-t pt-4">
-                <a
-                  href={form.company_website.startsWith('http') ? form.company_website : `https://${form.company_website}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                  </svg>
-                  Visit Website
-                </a>
-              </div>
-            )}
           </div>
         </div>
 
@@ -270,6 +570,37 @@ export default function RecruiterProfileView() {
                           className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors outline-none"
                         />
                       </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          HR Name
+                        </label>
+                        <input
+                          name="hr_name"
+                          value={form.hr_name}
+                          onChange={handleChange}
+                          placeholder="Enter HR name"
+                          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          HR Mobile
+                        </label>
+                        <input
+                          name="hr_mobile"
+                          value={form.hr_mobile}
+                          onChange={handleChange}
+                          placeholder="Enter HR mobile number"
+                          type="tel"
+                          className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:ring-2 transition-colors outline-none ${validationErrors.hr_mobile
+                            ? "border-red-300 focus:border-red-500 focus:ring-red-200"
+                            : "border-gray-300 focus:border-blue-500 focus:ring-blue-200"
+                            }`}
+                        />
+                        {validationErrors.hr_mobile && (
+                          <p className="mt-1 text-sm text-red-600">{validationErrors.hr_mobile}</p>
+                        )}
+                      </div>
                     </div>
                   </InfoSection>
 
@@ -302,39 +633,51 @@ export default function RecruiterProfileView() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          City
+                          Country
                         </label>
                         <input
-                          name="city"
-                          value={form.city}
-                          onChange={handleChange}
-                          placeholder="City"
-                          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors outline-none"
+                          value="India"
+                          disabled
+                          className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-500 cursor-not-allowed"
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           State
                         </label>
-                        <input
+                        <select
                           name="state"
                           value={form.state}
                           onChange={handleChange}
-                          placeholder="State / Province"
                           className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors outline-none"
-                        />
+                        >
+                          <option value="">Select State</option>
+                          {stateOptions.map(state => (
+                            <option key={state} value={state}>{state}</option>
+                          ))}
+                        </select>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Country
+                          City
                         </label>
-                        <input
-                          name="country"
-                          value={form.country}
+                        <select
+                          name="city"
+                          value={form.city}
                           onChange={handleChange}
-                          placeholder="Country"
-                          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors outline-none"
-                        />
+                          disabled={!form.state}
+                          className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:ring-2 transition-colors outline-none ${!form.state
+                            ? "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed"
+                            : "border-gray-300 focus:border-blue-500 focus:ring-blue-200"
+                            }`}
+                        >
+                          <option value="">
+                            {form.state ? "Select City" : "Select State first"}
+                          </option>
+                          {availableCities.map(city => (
+                            <option key={city} value={city}>{city}</option>
+                          ))}
+                        </select>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -397,6 +740,16 @@ export default function RecruiterProfileView() {
                         value={profile?.verified === 1 ? "Verified" : "Pending Verification"}
                         icon="verified"
                         status={profile?.verified === 1 ? "success" : "warning"}
+                      />
+                      <InfoItem
+                        label="HR Name"
+                        value={profile?.hr_name}
+                        icon="user"
+                      />
+                      <InfoItem
+                        label="HR Mobile"
+                        value={profile?.hr_mobile}
+                        icon="phone"
                       />
                     </div>
                   </InfoSection>
@@ -518,7 +871,9 @@ function InfoItem({ label, value, icon, isLink = false, status }) {
       pin: "M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z",
       notes: "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z",
       calendar: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
-      update: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+      update: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
+      user: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
+      phone: "M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
     };
     return icons[icon] || icons.info;
   };

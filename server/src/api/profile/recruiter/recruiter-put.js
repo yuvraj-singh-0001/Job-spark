@@ -13,6 +13,8 @@ const recruiterProfile = async (req, res) => {
       company_name,
       company_website,
       company_type,
+      hr_name,
+      hr_mobile,
       address_line1,
       address_line2,
       city,
@@ -69,7 +71,8 @@ const recruiterProfile = async (req, res) => {
       // Update existing profile
       await connection.execute(
         `UPDATE recruiter_profiles
-         SET company_name = ?, company_website = ?, company_type = ?, 
+         SET company_name = ?, company_website = ?, company_type = ?,
+             hr_name = ?, hr_mobile = ?,
              address_line1 = ?, address_line2 = ?, city = ?, state = ?, country = ?, pincode = ?,
              status = COALESCE(?, status), verification_notes = ?, updated_at = ?
          WHERE user_id = ?`,
@@ -77,6 +80,8 @@ const recruiterProfile = async (req, res) => {
           company_name,
           company_website || null,
           company_type || null,
+          hr_name || null,
+          hr_mobile || null,
           address_line1 || null,
           address_line2 || null,
           city || null,
@@ -115,14 +120,17 @@ const recruiterProfile = async (req, res) => {
       await connection.execute(
         `INSERT INTO recruiter_profiles
          (user_id, company_name, company_website, company_type,
+          hr_name, hr_mobile,
           address_line1, address_line2, city, state, country, pincode,
           status, verification_notes, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           finalUserId,
           company_name,
           company_website || null,
           company_type || null,
+          hr_name || null,
+          hr_mobile || null,
           address_line1 || null,
           address_line2 || null,
           city || null,

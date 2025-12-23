@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
+import { useToast } from "../../../components/toast";
 import api from "../../../components/apiconfig/apiconfig";
 
 // Role-based auto-fill data
@@ -1291,6 +1292,7 @@ Work Details:
 
 // Component for creating a new job posting
 export default function AdminPostJob() {
+  const { showSuccess, showError } = useToast();
   const [form, setForm] = useState({
     roleId: "",
     company: "",
@@ -1317,6 +1319,66 @@ export default function AdminPostJob() {
   const [roles, setRoles] = useState([]);
   const [rolesLoading, setRolesLoading] = useState(true);
   const [rolesError, setRolesError] = useState(null);
+
+  // Searchable select state
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const dropdownRef = useRef(null);
+  const inputRef = useRef(null);
+
+  // Searchable select functions
+  const filteredRoles = roles.filter(role =>
+    role.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const selectedRoleName = roles.find(role => String(role.id) === String(form.roleId))?.name || "";
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    setIsDropdownOpen(true);
+
+    // If the user is typing something different from the selected role, clear the selection
+    const selectedRoleName = roles.find(role => String(role.id) === String(form.roleId))?.name || "";
+    if (value && form.roleId && value !== selectedRoleName) {
+      handleRoleChange({ target: { value: "" } });
+    }
+    // If the user clears the input completely, also clear the selected value
+    else if (value === "") {
+      handleRoleChange({ target: { value: "" } });
+    }
+  };
+
+  const handleOptionSelect = (roleId) => {
+    const selectedRole = roles.find(role => String(role.id) === String(roleId));
+
+    // Set the search term first
+    setSearchTerm(selectedRole?.name || "");
+
+    // Then handle the role change
+    handleRoleChange({ target: { value: roleId } });
+
+    setIsDropdownOpen(false);
+    inputRef.current?.blur();
+  };
+
+  const handleInputFocus = () => {
+    setIsDropdownOpen(true);
+  };
+
+  const handleInputBlur = () => {
+    // Close dropdown when input loses focus
+    setTimeout(() => setIsDropdownOpen(false), 100);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      setIsDropdownOpen(false);
+      inputRef.current?.blur();
+    } else if (e.key === 'ArrowDown' && !isDropdownOpen) {
+      setIsDropdownOpen(true);
+    }
+  };
 
   // Track which fields were auto-filled
   const [autoFilledFields, setAutoFilledFields] = useState(new Set());
@@ -1347,8 +1409,20 @@ export default function AdminPostJob() {
       };
     }
 
-    // Find auto-fill data for this role
-    const autoFillData = ROLE_AUTO_FILL_DATA[roleName];
+    // Find auto-fill data for this role (case-insensitive)
+    const normalizedRoleName = roleName?.trim();
+    let autoFillData = ROLE_AUTO_FILL_DATA[normalizedRoleName];
+
+    // If not found, try case-insensitive match
+    if (!autoFillData) {
+      const roleKeys = Object.keys(ROLE_AUTO_FILL_DATA);
+      const matchingKey = roleKeys.find(key =>
+        key.toLowerCase() === normalizedRoleName?.toLowerCase()
+      );
+      if (matchingKey) {
+        autoFillData = ROLE_AUTO_FILL_DATA[matchingKey];
+      }
+    }
 
     const newAutoFilledFields = new Set();
     const updates = {
@@ -1362,6 +1436,7 @@ export default function AdminPostJob() {
       workMode: "Office",
       vacancies: 1,
     };
+
 
     if (autoFillData) {
       // Description
@@ -1530,6 +1605,30 @@ export default function AdminPostJob() {
     };
   }, []);
 
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Update searchTerm when form.roleId changes externally
+  useEffect(() => {
+    if (form.roleId) {
+      const selectedRole = roles.find(role => String(role.id) === String(form.roleId));
+      if (selectedRole && searchTerm !== selectedRole.name) {
+        setSearchTerm(selectedRole.name);
+      }
+    }
+  }, [form.roleId, roles]);
+
 
   // Update form field
   function updateField(name, value) {
@@ -1554,22 +1653,25 @@ export default function AdminPostJob() {
     const selectedRole = roles.find(r => String(r.id) === String(selectedId));
     const roleName = selectedRole?.name || null;
 
+
     // Get auto-fill values for the selected role (resets all role-related fields)
     const autoFillUpdates = applyRoleAutoFill(roleName);
 
     // Update form: keep recruiter profile fields, reset and refill role-related fields
-    setForm((currentForm) => ({
+    const newForm = {
       roleId: selectedId,
       // Keep recruiter profile fields unchanged
-      company: currentForm.company,
-      city: currentForm.city,
-      locality: currentForm.locality,
-      interviewAddress: currentForm.interviewAddress,
-      contactEmail: currentForm.contactEmail,
-      contactPhone: currentForm.contactPhone,
+      company: form.company,
+      city: form.city,
+      locality: form.locality,
+      interviewAddress: form.interviewAddress,
+      contactEmail: form.contactEmail,
+      contactPhone: form.contactPhone,
       // Apply auto-fill for role-related fields
       ...autoFillUpdates,
-    }));
+    };
+
+    setForm(newForm);
 
     setErrors({});
   }
@@ -1588,7 +1690,7 @@ export default function AdminPostJob() {
     setSuccess(null);
 
     if (!termsAccepted) {
-      setErrors((e) => ({ ...e, submit: "Please confirm that this is a genuine job opening and accept the Terms & Conditions." }));
+      showError("Please confirm that this is a genuine job opening and accept the Terms & Conditions.");
       return;
     }
 
@@ -1628,7 +1730,7 @@ export default function AdminPostJob() {
         },
       });
 
-      setSuccess(data?.message || "Job posted successfully.");
+      showSuccess(data?.message || "Job posted successfully.");
 
       // clear form - keep recruiter profile defaults for next posting
       setForm({
@@ -1649,12 +1751,13 @@ export default function AdminPostJob() {
         contactEmail: recruiterDefaults.contactEmail,
         contactPhone: recruiterDefaults.contactPhone,
       });
+      setSearchTerm("");
       setErrors({});
       setAutoFilledFields(new Set());
     } catch (err) {
       setSuccess(null);
       const errorMessage = err?.response?.data?.message || err.message || "Submit failed";
-      setErrors((e) => ({ ...e, submit: errorMessage }));
+      showError(errorMessage);
       console.error("Job creation error:", err);
     } finally {
       setSubmitting(false);
@@ -1713,20 +1816,50 @@ export default function AdminPostJob() {
               {/* Job Role */}
               <div>
                 <label className={labelClass}>Job Role <span className="text-red-500">*</span></label>
-                <select
-                  value={form.roleId}
-                  onChange={handleRoleChange}
-                  className={`${selectClass} ${errors.roleId ? '!border-red-400' : ''}`}
-                  disabled={rolesLoading || !!rolesError}
-                  required
-                >
-                  <option value="" className="text-gray-400">
-                    {rolesLoading ? "Loading roles..." : "-- Select a job role --"}
-                  </option>
-                  {roles.map((role) => (
-                    <option key={role.id} value={role.id}>{role.name}</option>
-                  ))}
-                </select>
+                <div className="relative" ref={dropdownRef}>
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={searchTerm}
+                    onChange={handleInputChange}
+                    onFocus={handleInputFocus}
+                    onBlur={handleInputBlur}
+                    onKeyDown={handleKeyDown}
+                    placeholder={rolesLoading ? "Loading roles..." : "-- Select or type to search job role --"}
+                    className={`${selectClass} ${errors.roleId ? '!border-red-400' : ''}`}
+                    disabled={rolesLoading || !!rolesError}
+                    required={!!form.roleId}
+                    autoComplete="off"
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <svg className={`w-5 h-5 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+
+                  {isDropdownOpen && !rolesLoading && !rolesError && (
+                    <div
+                      className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                      onMouseDown={(e) => e.preventDefault()} // Prevent blur when clicking options
+                    >
+                      {filteredRoles.length > 0 ? (
+                        filteredRoles.map((role) => (
+                          <div
+                            key={role.id}
+                            onMouseDown={() => handleOptionSelect(role.id)}
+                            className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-gray-900 border-b border-gray-100 last:border-b-0"
+                          >
+                            {role.name}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                          No roles found matching "{searchTerm}"
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 {rolesError && <p className="text-xs text-red-600 mt-1.5">{rolesError}</p>}
                 {errors.roleId && <p className="text-xs text-red-600 mt-1.5">{errors.roleId}</p>}
                 <p className="text-xs text-gray-400 mt-1.5">Selecting a role will auto-fill related fields</p>
@@ -2010,6 +2143,7 @@ export default function AdminPostJob() {
                       contactEmail: recruiterDefaults.contactEmail,
                       contactPhone: recruiterDefaults.contactPhone,
                     });
+                    setSearchTerm("");
                     setErrors({});
                     setSuccess(null);
                     setTermsAccepted(false);

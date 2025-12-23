@@ -12,7 +12,7 @@ export default function AdminUsers() {
   useEffect(() => {
     fetchUsers();
   }, []);
-// Fetch users from API
+  // Fetch users from API
   const fetchUsers = async () => {
     try {
       const response = await api.get("/admin/auth/users");
@@ -28,7 +28,7 @@ export default function AdminUsers() {
     setSelectedUser(user);
     setShowModal(true);
   };
-// Navigate back to dashboard
+  // Navigate back to dashboard
   const handleBack = () => {
     navigate("/admin");
   };
@@ -40,7 +40,7 @@ export default function AdminUsers() {
       </div>
     );
   }
-// Main render
+  // Main render
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -117,7 +117,7 @@ export default function AdminUsers() {
                       {user.experience_years || 0} years
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {user.highest_education || 'Not specified'}
+                      {user.highest_qualification || 'Not specified'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
@@ -132,7 +132,7 @@ export default function AdminUsers() {
               </tbody>
             </table>
           </div>
-          
+
           {users.length === 0 && (
             <div className="text-center py-12">
               <p className="text-gray-500">No users found</p>
@@ -155,7 +155,7 @@ export default function AdminUsers() {
                   ✕
                 </button>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Personal Information</h3>
@@ -195,7 +195,7 @@ export default function AdminUsers() {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-500">Education</label>
-                      <p className="text-gray-900">{selectedUser.highest_education || 'Not specified'}</p>
+                      <p className="text-gray-900">{selectedUser.highest_qualification || 'Not specified'}</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-500">Member Since</label>
@@ -220,16 +220,7 @@ export default function AdminUsers() {
                       ) : 'Not provided'}
                     </p>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Portfolio</label>
-                    <p className="text-gray-900">
-                      {selectedUser.portfolio_url ? (
-                        <a href={selectedUser.portfolio_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                          {selectedUser.portfolio_url}
-                        </a>
-                      ) : 'Not provided'}
-                    </p>
-                  </div>
+                  
                   <div>
                     <label className="text-sm font-medium text-gray-500">Resume</label>
                     <p className="text-gray-900">

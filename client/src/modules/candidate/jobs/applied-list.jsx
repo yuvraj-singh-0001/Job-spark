@@ -67,7 +67,7 @@ export default function Applied() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="card animate-pulse">
+            <div key={i} className="bg-white rounded-xl border border-gray-200 overflow-hidden animate-pulse">
               <div className="p-6">
                 <div className="flex gap-4">
                   <div className="w-16 h-16 bg-gray-200 rounded-lg"></div>
@@ -91,14 +91,25 @@ export default function Applied() {
   if (error) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="card">
-          <div className="card-padding text-center py-12">
-            <div className="text-5xl mb-4">⚠️</div>
-            <h3 className="text-xl font-semibold text-text-dark mb-2">Unable to Load Applications</h3>
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="p-12 text-center">
+            <div className="text-4xl mb-4">⚠️</div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Unable to Load Applications</h3>
             <p className="text-red-600 mb-6 text-sm">{error}</p>
-            <button onClick={fetchAppliedJobs} className="btn btn-primary">
-              Try Again
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={fetchAppliedJobs}
+                className="btn btn-primary px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={() => window.location.href = '/jobs'}
+                className="btn btn-ghost px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Browse Jobs
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -111,36 +122,42 @@ export default function Applied() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-text-dark">My Applications</h1>
-            <p className="text-text-muted mt-1">Track your job applications</p>
+            <h1 className="text-2xl font-semibold text-gray-900">Applied Jobs</h1>
+            <p className="text-sm text-gray-600 mt-1">Track your job applications</p>
           </div>
-          <div className="badge badge-primary">
-            {applications.length} Total
+          <div className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-sm font-medium">
+            {applications.length} Applied
           </div>
         </div>
 
         {applications.length === 0 ? (
-          <div className="card">
-            <div className="card-padding text-center py-16">
-              <div className="text-6xl mb-4">📝</div>
-              <h3 className="text-xl font-semibold text-text-dark mb-2">No Applications Yet</h3>
-              <p className="text-text-muted mb-6">
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="p-16 text-center">
+              <div className="text-5xl mb-4">📝</div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Applications Yet</h3>
+              <p className="text-gray-600 mb-6">
                 Start your job search journey! Apply to positions that match your skills.
               </p>
-              <div className="flex gap-3 justify-center">
-                <Link to="/jobs" className="btn btn-primary">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={() => window.location.href = '/jobs'}
+                  className="btn btn-primary px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                >
                   Browse Jobs
-                </Link>
-                <Link to="/dashboard/profile" className="btn btn-outline">
+                </button>
+                <button
+                  onClick={() => window.location.href = '/dashboard/profile'}
+                  className="btn btn-ghost px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
                   Update Profile
-                </Link>
+                </button>
               </div>
             </div>
           </div>
         ) : (
           <div className="space-y-4">
             {applications.map((application) => (
-              <div key={application.id} className="card hover:shadow-lg transition-shadow">
+              <div key={application.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="p-6">
                   <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
 

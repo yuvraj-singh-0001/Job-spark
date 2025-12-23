@@ -2,6 +2,7 @@ import React from "react";
 import { Outlet, Link, useLocation, Navigate } from "react-router-dom";
 import RecruiterSidebar from "./RecruiterSidebar.jsx";
 import RecruiterHeader from "./RecruiterHeader.jsx";
+import { ToastContainer } from "../../toast";
 import { useRecruiterProfile } from "../../../hooks/useRecruiterProfile";
 
 /**
@@ -59,6 +60,7 @@ export default function RecruiterLayout() {
     return (
       <div className="min-h-screen bg-slate-50">
         <Outlet />
+        <ToastContainer />
       </div>
     );
   }
@@ -75,6 +77,7 @@ export default function RecruiterLayout() {
           <Outlet />
         </div>
       </main>
+      <ToastContainer />
     </div>
   );
 }

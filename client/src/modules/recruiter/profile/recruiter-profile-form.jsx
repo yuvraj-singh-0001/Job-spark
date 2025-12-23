@@ -1,6 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useToast } from "../../../components/toast";
 import api from "../../../components/apiconfig/apiconfig";
+
+// State → City mapping for recruiter address
+// TODO: Extend/replace with your full list or load dynamically from API if needed
+const STATE_CITY_MAP = {
+  Maharashtra: ["Mumbai", "Pune", "Nagpur", "Nashik"],
+  Karnataka: ["Bengaluru", "Mysuru", "Mangaluru"],
+  Delhi: ["New Delhi"],
+  "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai"]
+};
 
 /**
  * RecruiterProfileForm - Create/Edit recruiter profile
@@ -8,6 +18,7 @@ import api from "../../../components/apiconfig/apiconfig";
  * Redirects to recruiter-profile after successful save
  */
 export default function RecruiterProfileForm({ initialData = null, onSaved = null, onCancel = null }) {
+  const { showSuccess, showError } = useToast();
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -23,6 +34,9 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
     country: "",
     pincode: ""
   });
+
+  // Derived list of cities for currently selected state
+  const citiesForSelectedState = form.state ? STATE_CITY_MAP[form.state] || [] : [];
 
   // Prefill only from initialData
   useEffect(() => {
@@ -51,6 +65,17 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
     setMessage(null);
   };
 
+  // Handle state change separately so we can reset city when state changes
+  const handleStateChange = e => {
+    const { value } = e.target;
+    setForm(f => ({
+      ...f,
+      state: value,
+      city: "" // clear city selection when state changes
+    }));
+    setMessage(null);
+  };
+
   const validate = () => {
     const errors = [];
     if (!form.company_name.trim()) errors.push("Company name is required.");
@@ -65,13 +90,13 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
     setMessage(null);
 
     if (!termsAccepted) {
-      setMessage({ type: "error", text: "Please confirm that all company details are accurate and accept the Terms & Conditions." });
+      showError("Please confirm that all company details are accurate and accept the Terms & Conditions.");
       return;
     }
 
     const errors = validate();
     if (errors.length) {
-      setMessage({ type: "error", text: errors.join(" ") });
+      showError(errors.join(" "));
       return;
     }
 
@@ -81,7 +106,7 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
       const res = await api.put("/recruiter-profile/recruiter", form);
       const payload = res.data || {};
 
-      setMessage({ type: "success", text: payload.message || "Profile saved successfully." });
+      showSuccess(payload.message || "Profile saved successfully.");
 
       // Call callback if provided
       if (typeof onSaved === "function") {
@@ -96,9 +121,9 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
     } catch (err) {
       if (err.response) {
         const msg = err.response.data?.message || "Failed to save profile.";
-        setMessage({ type: "error", text: msg });
+        showError(msg);
       } else {
-        setMessage({ type: "error", text: "Network error while saving." });
+        showError("Network error while saving.");
       }
     } finally {
       setSaving(false);
@@ -185,23 +210,40 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
 
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-sm mb-2">City *</label>
-              <input
-                name="city"
-                value={form.city}
-                onChange={handleChange}
+              <label className="block text-sm mb-2">State</label>
+              <select
+                name="state"
+                value={form.state}
+                onChange={handleStateChange}
                 className="w-full px-4 py-3 rounded border"
-              />
+              >
+                <option value="">Select State</option>
+                {Object.keys(STATE_CITY_MAP).map(stateName => (
+                  <option key={stateName} value={stateName}>
+                    {stateName}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
-              <label className="block text-sm mb-2">State</label>
-              <input
-                name="state"
-                value={form.state}
+              <label className="block text-sm mb-2">City *</label>
+              <select
+                name="city"
+                value={form.city}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded border"
-              />
+                disabled={!form.state || citiesForSelectedState.length === 0}
+                className={`w-full px-4 py-3 rounded border ${!form.state ? "bg-gray-100 cursor-not-allowed" : ""}`}
+              >
+                <option value="">
+                  {form.state ? "Select City" : "Select State first"}
+                </option>
+                {citiesForSelectedState.map(cityName => (
+                  <option key={cityName} value={cityName}>
+                    {cityName}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

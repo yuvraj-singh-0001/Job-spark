@@ -10,6 +10,9 @@ import {
   Clock,
   Search,
   ArrowUpRight,
+  Globe,
+  Monitor,
+  Building
 } from "lucide-react";
 import api from "../../../components/apiconfig/apiconfig";
 import { CATEGORY_FILTER_MAPPING } from "../home/data";
@@ -613,31 +616,31 @@ export default function Jobs() {
   };
 
   return (
-    <div className="min-h-screen bg-bg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <>
         <div className="flex flex-col gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <p className="text-sm text-text-muted mb-1">
-                {filteredWithoutSaved.length || jobList.length} jobs near you
-              </p>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-text-dark">
+              <h1 className="text-2xl font-semibold text-gray-900">
                 Find Jobs
               </h1>
+              <p className="text-sm text-gray-600 mt-1">
+                {filteredWithoutSaved.length || jobList.length} jobs near you
+              </p>
             </div>
             <div className="w-full sm:w-auto sm:min-w-[320px] md:min-w-[420px]">
-              <div className="flex items-center gap-2 card px-3 sm:px-4 py-2.5">
-                <Search size={18} className="text-text-muted flex-shrink-0" />
+              <div className="flex items-center gap-2 bg-white rounded-xl border border-gray-200 px-4 py-3">
+                <Search size={18} className="text-gray-400 flex-shrink-0" />
                 <input
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && applyFilters()}
-                  className="flex-1 text-sm sm:text-base outline-none bg-transparent text-text-dark placeholder:text-text-muted"
+                  className="flex-1 text-sm outline-none bg-transparent text-gray-900 placeholder:text-gray-500"
                   placeholder="Search jobs here"
                 />
                 <button
                   onClick={applyFilters}
-                  className="btn btn-primary btn-sm flex-shrink-0"
+                  className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors flex-shrink-0"
                 >
                   Search
                 </button>
@@ -647,166 +650,168 @@ export default function Jobs() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[280px,1fr] gap-4 sm:gap-6 lg:gap-8">
-          <aside className="card card-padding lg:sticky lg:top-4 lg:self-start">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-base font-semibold text-text-dark">Filters</h2>
-              {hasSidebarFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors"
-                >
-                  Clear All
-                </button>
-              )}
-            </div>
+          <aside className="bg-white rounded-xl border border-gray-200 overflow-hidden lg:sticky lg:top-4 lg:self-start">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-base font-semibold text-gray-900">Filters</h2>
+                {hasSidebarFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
 
-            <div className="space-y-6">
-              {/* Dynamic City Filter */}
-              {cityOptions.length > 0 && (
-                <div>
-                  <p className="text-sm font-semibold text-text-dark mb-3">City</p>
-                  <div className="flex flex-wrap gap-2">
-                    {cityOptions.map((city) => {
-                      const active = selectedCities.includes(city);
-                      const jobCount = getJobCountForCity(city);
-                      if (jobCount === 0) return null; // Hide filters with zero jobs
-                      return (
-                        <button
-                          key={city}
-                          onClick={() => toggleValue(city, setSelectedCities)}
-                          className={`rounded-chip px-3 py-1.5 text-xs font-medium transition-colors ${active
-                            ? "bg-primary-50 border-2 border-primary-200 text-primary-700"
-                            : "bg-white border-2 border-border text-text-muted hover:bg-gray-50"
-                            }`}
-                        >
-                          {city}
-                        </button>
-                      );
-                    })}
+              <div className="space-y-6">
+                {/* Dynamic City Filter */}
+                {cityOptions.length > 0 && (
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900 mb-3">City</p>
+                    <div className="flex flex-wrap gap-2">
+                      {cityOptions.map((city) => {
+                        const active = selectedCities.includes(city);
+                        const jobCount = getJobCountForCity(city);
+                        if (jobCount === 0) return null; // Hide filters with zero jobs
+                        return (
+                          <button
+                            key={city}
+                            onClick={() => toggleValue(city, setSelectedCities)}
+                            className={`px-3 py-1.5 text-xs font-medium transition-colors rounded-lg border text-sm ${active
+                              ? "bg-blue-50 border-blue-200 text-blue-700"
+                              : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {city}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Dynamic Job Role Filter (from job_roles) */}
-              {roleOptions.length > 0 && (
+                {/* Dynamic Job Role Filter (from job_roles) */}
+                {roleOptions.length > 0 && (
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900 mb-3">
+                      Job Role(s)
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {roleOptions.map((role) => {
+                        const label = role.name || role;
+                        const active = selectedRoles.includes(label);
+                        const jobCount = getJobCountForRoleName(label);
+                        if (jobCount === 0) return null; // Hide filters with zero jobs
+                        return (
+                          <button
+                            key={role.id || label}
+                            onClick={() => toggleValue(label, setSelectedRoles)}
+                            className={`px-3 py-1.5 text-xs font-medium transition-colors rounded-lg border text-sm ${active
+                              ? "bg-blue-50 border-blue-200 text-blue-700"
+                              : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Static Job Type Filter */}
                 <div>
-                  <p className="text-sm font-semibold text-text-dark mb-3">
-                    Job Role(s)
+                  <p className="text-sm font-semibold text-gray-900 mb-3">
+                    Job Type
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {roleOptions.map((role) => {
-                      const label = role.name || role;
-                      const active = selectedRoles.includes(label);
-                      const jobCount = getJobCountForRoleName(label);
-                      if (jobCount === 0) return null; // Hide filters with zero jobs
+                    {JOB_TYPE_OPTIONS.map((option) => {
+                      const active = selectedJobTypes.includes(option.value);
                       return (
                         <button
-                          key={role.id || label}
-                          onClick={() => toggleValue(label, setSelectedRoles)}
-                          className={`rounded-chip px-3 py-1.5 text-xs font-medium transition-colors ${active
-                            ? "bg-primary-50 border-2 border-primary-200 text-primary-700"
-                            : "bg-white border-2 border-border text-text-muted hover:bg-gray-50"
+                          key={option.value}
+                          onClick={() => toggleValue(option.value, setSelectedJobTypes)}
+                          className={`px-3 py-1.5 text-xs font-medium transition-colors rounded-lg border text-sm ${active
+                            ? "bg-blue-50 border-blue-200 text-blue-700"
+                            : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                             }`}
                         >
-                          {label}
+                          {option.label}
                         </button>
                       );
                     })}
                   </div>
                 </div>
-              )}
 
-              {/* Static Job Type Filter */}
-              <div>
-                <p className="text-sm font-semibold text-text-dark mb-3">
-                  Job Type
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {JOB_TYPE_OPTIONS.map((option) => {
-                    const active = selectedJobTypes.includes(option.value);
-                    return (
-                      <button
-                        key={option.value}
-                        onClick={() => toggleValue(option.value, setSelectedJobTypes)}
-                        className={`rounded-chip px-3 py-1.5 text-xs font-medium transition-colors ${active
-                          ? "bg-primary-50 border-2 border-primary-200 text-primary-700"
-                          : "bg-white border-2 border-border text-text-muted hover:bg-gray-50"
-                          }`}
+                {/* Static Work Mode Filter */}
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 mb-3">
+                    Work Mode
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {WORK_MODE_OPTIONS.map((option) => {
+                      const active = selectedWorkModes.includes(option.value);
+                      return (
+                        <button
+                          key={option.value}
+                          onClick={() => toggleValue(option.value, setSelectedWorkModes)}
+                          className={`px-3 py-1.5 text-xs font-medium transition-colors rounded-lg border text-sm ${active
+                            ? "bg-purple-50 border-purple-200 text-purple-700"
+                            : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                            }`}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Static Experience Filter */}
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 mb-3">Experience</p>
+                  <div className="space-y-2">
+                    {EXPERIENCE_OPTIONS.map((opt) => (
+                      <label
+                        key={opt.value}
+                        className="flex items-center gap-2.5 text-sm text-gray-700 cursor-pointer hover:text-blue-600 transition-colors"
                       >
-                        {option.label}
-                      </button>
-                    );
-                  })}
+                        <input
+                          type="radio"
+                          name="experience"
+                          value={opt.value}
+                          checked={selectedExperience === opt.value}
+                          onChange={(e) => setSelectedExperience(e.target.value)}
+                          className="w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                        <span>{opt.label}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Static Work Mode Filter */}
-              <div>
-                <p className="text-sm font-semibold text-text-dark mb-3">
-                  Work Mode
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {WORK_MODE_OPTIONS.map((option) => {
-                    const active = selectedWorkModes.includes(option.value);
-                    return (
-                      <button
-                        key={option.value}
-                        onClick={() => toggleValue(option.value, setSelectedWorkModes)}
-                        className={`rounded-chip px-3 py-1.5 text-xs font-medium transition-colors ${active
-                          ? "bg-primary-50 border-2 border-primary-200 text-primary-700"
-                          : "bg-white border-2 border-border text-text-muted hover:bg-gray-50"
-                          }`}
+                {/* Static Salary Filter */}
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 mb-3">Salary</p>
+                  <div className="space-y-2">
+                    {SALARY_OPTIONS.map((opt) => (
+                      <label
+                        key={opt.value}
+                        className="flex items-center gap-2.5 text-sm text-gray-700 cursor-pointer hover:text-blue-600 transition-colors"
                       >
-                        {option.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Static Experience Filter */}
-              <div>
-                <p className="text-sm font-semibold text-text-dark mb-3">Experience</p>
-                <div className="space-y-2">
-                  {EXPERIENCE_OPTIONS.map((opt) => (
-                    <label
-                      key={opt.value}
-                      className="flex items-center gap-2.5 text-sm text-text-dark cursor-pointer hover:text-primary-600 transition-colors"
-                    >
-                      <input
-                        type="radio"
-                        name="experience"
-                        value={opt.value}
-                        checked={selectedExperience === opt.value}
-                        onChange={(e) => setSelectedExperience(e.target.value)}
-                        className="w-4 h-4 text-primary-600 focus:ring-primary-500 cursor-pointer"
-                      />
-                      <span>{opt.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Static Salary Filter */}
-              <div>
-                <p className="text-sm font-semibold text-text-dark mb-3">Salary</p>
-                <div className="space-y-2">
-                  {SALARY_OPTIONS.map((opt) => (
-                    <label
-                      key={opt.value}
-                      className="flex items-center gap-2.5 text-sm text-text-dark cursor-pointer hover:text-primary-600 transition-colors"
-                    >
-                      <input
-                        type="radio"
-                        name="salary"
-                        value={opt.value}
-                        checked={String(salaryFilter) === String(opt.value)}
-                        onChange={(e) => setSalaryFilter(e.target.value)}
-                        className="w-4 h-4 text-primary-600 focus:ring-primary-500 cursor-pointer"
-                      />
-                      <span>{opt.label}</span>
-                    </label>
-                  ))}
+                        <input
+                          type="radio"
+                          name="salary"
+                          value={opt.value}
+                          checked={String(salaryFilter) === String(opt.value)}
+                          onChange={(e) => setSalaryFilter(e.target.value)}
+                          className="w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                        <span>{opt.label}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -814,136 +819,144 @@ export default function Jobs() {
 
           <section className="space-y-4 sm:space-y-6">
             {error && (
-              <div className="text-sm text-error-600 bg-error-light border border-error-300 rounded-lg px-4 py-3">
-                {error}
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="p-4 text-sm text-red-600">
+                  {error}
+                </div>
               </div>
             )}
 
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-text-muted">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-gray-600">
               <span>
                 Showing {startIdx}–{endIdx} of {filteredWithoutSaved.length} roles
               </span>
               {hasSidebarFilters && (
-                <span className="badge badge-primary">
+                <span className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-sm font-medium">
                   Filters applied
                 </span>
               )}
             </div>
 
             {loading ? (
-              <div className="card card-padding text-center text-text-muted text-sm">
-                <div className="animate-pulse">Loading roles…</div>
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="p-12 text-center">
+                  <div className="animate-pulse text-gray-600 text-sm">Loading roles…</div>
+                </div>
               </div>
             ) : paginated.length === 0 ? (
-              <div className="card card-padding text-center text-text-muted text-sm">
-                No roles match these filters.
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="p-12 text-center">
+                  <div className="text-4xl mb-4">🔍</div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Jobs Found</h3>
+                  <p className="text-gray-600 text-sm">
+                    No roles match these filters. Try adjusting your search criteria.
+                  </p>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
                 {paginated.map((r) => (
                   <article
                     key={r.id}
-                    className="relative card card-hover card-padding"
+                    className="relative bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
                   >
-                    <button
-                      onClick={() => toggleSaveJob(r.id, savedStatus[r.id])}
-                      className="absolute right-4 sm:right-6 top-4 sm:top-6 text-text-muted hover:text-primary-600 transition-colors z-10"
-                      aria-label={savedStatus[r.id] ? "Unsave job" : "Save job"}
-                    >
-                      {savedStatus[r.id] ? (
-                        <BookmarkCheck size={18} className="text-primary-600" />
-                      ) : (
-                        <Bookmark size={18} />
-                      )}
-                    </button>
+                    <div className="p-6">
+                      <button
+                        onClick={() => toggleSaveJob(r.id, savedStatus[r.id])}
+                        className="absolute right-4 top-4 text-gray-400 hover:text-blue-600 transition-colors z-10"
+                        aria-label={savedStatus[r.id] ? "Unsave job" : "Save job"}
+                      >
+                        {savedStatus[r.id] ? (
+                          <BookmarkCheck size={18} className="text-blue-600" />
+                        ) : (
+                          <Bookmark size={18} />
+                        )}
+                      </button>
 
-                    <div className="flex flex-col gap-3 sm:gap-4 pr-8 sm:pr-10">
-                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                        <div className="space-y-1.5 flex-1">
-                          <p className="text-xs text-text-muted uppercase tracking-wider font-medium">
-                            {r.workMode || "Work from home"}
-                          </p>
-                          <h3 className="text-lg sm:text-xl font-semibold text-text-dark">
-                            {r.title || "Untitled role"}
-                          </h3>
-                          <div className="flex flex-wrap items-center gap-3 text-sm text-text-muted">
-                            {r.company && (
-                              <span className="inline-flex items-center gap-1.5">
-                                <Building2 size={16} className="text-primary-500" /> {r.company}
-                              </span>
+                      <div className="flex flex-col gap-3 sm:gap-4 pr-8">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                          <div className="space-y-1.5 flex-1">
+
+                            <h3 className="text-xl font-bold text-gray-900">
+                              {r.title || "Untitled role"}
+                            </h3>
+                            <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                              {r.company && (
+                                <span className="inline-flex items-center gap-1.5">
+                                  <Building2 size={16} className="text-blue-500" /> {r.company}
+                                </span>
+                              )}
+                              {r.location && (
+                                <span className="inline-flex items-center gap-1.5">
+                                  <MapPin size={16} className="text-blue-500" /> {r.location}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="text-left sm:text-right">
+                            {(r.minSalary != null || r.maxSalary != null || r.salary) && (
+                              <p className="text-xl font-semibold text-gray-900">
+                                {formatSalary(r.salary, r.minSalary, r.maxSalary)} /Month
+                              </p>
                             )}
-                            {r.location && (
-                              <span className="inline-flex items-center gap-1.5">
-                                <MapPin size={16} className="text-primary-500" /> {r.location}
-                              </span>
+                            {r.vacancies && (
+                              <p className="text-xs text-gray-600 mt-1">{r.vacancies} vacancies</p>
                             )}
                           </div>
                         </div>
 
-                        <div className="text-left sm:text-right">
-                          {(r.minSalary != null || r.maxSalary != null || r.salary) && (
-                            <p className="text-lg sm:text-xl font-semibold text-text-dark">
-                              {formatSalary(r.salary, r.minSalary, r.maxSalary)} /Month
-                            </p>
-                          )}
-                          {r.vacancies && (
-                            <p className="text-xs text-text-muted mt-1">{r.vacancies} vacancies</p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2">
-                        {r.type && (
-                          <span className="badge badge-gray inline-flex items-center gap-1">
-                            <Briefcase size={14} /> {r.type}
-                          </span>
-                        )}
-                        {r.workMode && (
-                          <span className="badge badge-gray inline-flex items-center gap-1">
-                            <Clock size={14} /> {r.workMode}
-                          </span>
-                        )}
-                        {r.experience && (
-                          <span className="badge badge-gray inline-flex items-center gap-1">
-                            <GraduationCap size={14} /> {r.experience}
-                          </span>
-                        )}
-                        {r.vacancies && (
-                          <span className="badge badge-gray">
-                            {r.vacancies} Vacancies
-                          </span>
-                        )}
-                      </div>
-
-
-
-                      <div className="flex flex-col gap-3 pt-2 border-t border-border sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex flex-wrap gap-2">
-                          <span className="badge badge-primary text-xs">
-                            New
-                          </span>
+                          {r.type && (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-sm border border-blue-200">
+                              <Briefcase size={14} />
+                              {r.type}
+                            </span>
+                          )}
+                          {r.experience && (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-50 text-purple-700 rounded-lg text-sm border border-purple-200">
+                              <GraduationCap size={14} />
+                              {r.experience}
+                            </span>
+                          )}
 
-                          {r.skills && r.skills.length > 0 && (
-                            r.skills.map((skill) => (
-                              <span
-                                key={skill}
-                                className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs border border-border text-text-muted bg-gray-50"
-                              >
-                                {skill}
-                              </span>
-                            ))
+                          {r.workMode && (
+                            <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-700 border border-slate-200 rounded-lg text-sm">
+                              {r.workMode === 'Remote' && <Globe size={14} />}
+                              {r.workMode === 'Hybrid' && <Monitor size={14} />}
+                              {(r.workMode === 'Office' || r.workMode === 'On-site') && <Building size={14} />}
+                              {r.workMode}
+                            </span>
                           )}
                         </div>
 
+                        <div className="flex flex-col gap-3 pt-4 border-t border-gray-200 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex flex-wrap gap-2">
+                            <span className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-sm font-medium">
+                              Skills
+                            </span>
 
-                        <div className="flex items-center gap-2">
-                          <a
-                            href={`/jobs/${r.id}`}
-                            className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors"
-                          >
-                            View details
-                            <ArrowUpRight size={16} />
-                          </a>
+                            {r.skills && r.skills.length > 0 && (
+                              r.skills.map((skill) => (
+                                <span
+                                  key={skill}
+                                  className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border border-gray-300 text-gray-600 bg-gray-50"
+                                >
+                                  {skill}
+                                </span>
+                              ))
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => navigate(`/jobs/${r.id}`)}
+                              className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                            >
+                              View details
+                              <ArrowUpRight size={16} />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -954,7 +967,7 @@ export default function Jobs() {
 
             <div className="flex justify-center items-center gap-2 mt-6 sm:mt-8">
               <button
-                className="btn btn-ghost btn-sm rounded-full"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 disabled={page === 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
@@ -968,9 +981,9 @@ export default function Jobs() {
                   <button
                     key={pageNum}
                     onClick={() => setPage(pageNum)}
-                    className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm rounded-full border transition-colors ${active
-                      ? "bg-primary-500 text-white border-primary-500 shadow-soft"
-                      : "bg-white text-text-dark border-border hover:bg-primary-50"
+                    className={`px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${active
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                       }`}
                   >
                     {pageNum}
@@ -979,7 +992,7 @@ export default function Jobs() {
               })}
 
               <button
-                className="btn btn-ghost btn-sm rounded-full"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 disabled={page === totalPages || filteredWithoutSaved.length === 0}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >
@@ -989,7 +1002,7 @@ export default function Jobs() {
 
           </section>
         </div>
-      </div>
+      </>
     </div>
   );
 }
