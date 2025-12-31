@@ -72,7 +72,7 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading admin dashboard...</p>
         </div>
       </div>
@@ -87,7 +87,7 @@ export default function AdminDashboard() {
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
               <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-              <span className="ml-3 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">Admin</span>
+              <span className="ml-3 px-2 py-1 text-xs bg-primary-100 text-primary-800 rounded-full">Admin</span>
             </div>
             <div className="flex items-center space-x-4">
               <button
@@ -98,7 +98,7 @@ export default function AdminDashboard() {
               </button>
               <button
                 onClick={handleLogout}
-                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
               >
                 Logout
               </button>
@@ -118,14 +118,14 @@ export default function AdminDashboard() {
           >
             <div className="flex items-center">
               <div className="p-3 bg-blue-100 rounded-lg">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                 </svg>
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Users</p>
                 <p className="text-2xl font-semibold text-gray-900">{stats.totalUsers}</p>
-                <p className="text-xs text-blue-600 mt-1">Click to view all →</p>
+                <p className="text-xs text-primary-600 mt-1">Click to view all →</p>
               </div>
             </div>
           </div>

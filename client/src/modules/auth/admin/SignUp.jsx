@@ -67,7 +67,7 @@ export default function AdminSignUp() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">HireSpark Admin</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Jobion Admin</h1>
           <p className="text-gray-600">Create your admin account</p>
         </div>
 
@@ -101,7 +101,7 @@ export default function AdminSignUp() {
                   <input
                     name="email"
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors outline-none"
-                    placeholder="admin@hirespark.com"
+                    placeholder="admin@jobion.com"
                     type="email"
                     value={formData.email}
                     onChange={handleChange}
@@ -224,7 +224,7 @@ export default function AdminSignUp() {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-xs text-gray-500">
-            © 2024 HireSpark Admin. All rights reserved.
+            © 2024 Jobion Admin. All rights reserved.
           </p>
         </div>
       </div>

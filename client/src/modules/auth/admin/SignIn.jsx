@@ -52,7 +52,7 @@ export default function AdminSignIn() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            HireSpark Admin
+            Jobion Admin
           </h1>
           <p className="text-gray-600">Manage your platform efficiently</p>
         </div>
@@ -77,7 +77,7 @@ export default function AdminSignIn() {
                   <input
                     name="email"
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors outline-none"
-                    placeholder="admin@hirespark.com"
+                    placeholder="admin@jobion.com"
                     type="email"
                     value={formData.email}
                     onChange={handleChange}
@@ -204,7 +204,7 @@ export default function AdminSignIn() {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-xs text-gray-500">
-            © 2024 HireSpark Admin. Protected admin access.
+            © 2024 Jobion Admin. Protected admin access.
           </p>
         </div>
       </div>

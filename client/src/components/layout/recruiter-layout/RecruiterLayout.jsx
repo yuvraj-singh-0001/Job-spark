@@ -2,6 +2,7 @@ import React from "react";
 import { Outlet, Link, useLocation, Navigate } from "react-router-dom";
 import RecruiterSidebar from "./RecruiterSidebar.jsx";
 import RecruiterHeader from "./RecruiterHeader.jsx";
+import ErrorBoundary from "../../ErrorBoundary";
 import { ToastContainer } from "../../toast";
 import { useRecruiterProfile } from "../../../hooks/useRecruiterProfile";
 
@@ -59,7 +60,9 @@ export default function RecruiterLayout() {
   if (isProfileFormPage) {
     return (
       <div className="min-h-screen bg-slate-50">
-        <Outlet />
+        <ErrorBoundary>
+          <Outlet />
+        </ErrorBoundary>
         <ToastContainer />
       </div>
     );
@@ -74,7 +77,9 @@ export default function RecruiterLayout() {
       {/* Main content */}
       <main className="flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </div>
       </main>
       <ToastContainer />

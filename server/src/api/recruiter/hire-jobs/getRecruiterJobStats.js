@@ -63,8 +63,6 @@ async function getRecruiterJobStats(req, res) {
     // Combined pending review count (both 'pending' and 'applied' statuses)
     const pendingReview = (appStatusMap['pending'] || 0) + (appStatusMap['applied'] || 0);
     const shortlisted = appStatusMap['shortlisted'] || 0;
-    const interviewed = appStatusMap['interviewed'] || 0;
-    const hired = appStatusMap['hired'] || 0;
     const rejectedApps = appStatusMap['rejected'] || 0;
 
     // Get ALL live jobs with their application counts
@@ -174,8 +172,6 @@ async function getRecruiterJobStats(req, res) {
         newApplications,
         pendingReview,
         shortlisted,
-        interviewed,
-        hired,
         rejected: rejectedApps,
 
         // Live jobs list

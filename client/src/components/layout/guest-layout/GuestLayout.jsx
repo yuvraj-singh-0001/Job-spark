@@ -3,6 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import GuestNavbar from "./GuestNavbar.jsx";
 import GuestFooter from "./GuestFooter.jsx";
 import CandidateHeader from "../candidate-layout/CandidateHeader.jsx";
+import ErrorBoundary from "../../ErrorBoundary";
 import { ToastContainer } from "../../toast";
 import api from "../../apiconfig/apiconfig";
 
@@ -69,7 +70,9 @@ const GuestLayout = () => {
       </header>
 
       <main className="flex-1">
-        <Outlet />
+        <ErrorBoundary>
+          <Outlet />
+        </ErrorBoundary>
       </main>
 
       {!hideFooter && (

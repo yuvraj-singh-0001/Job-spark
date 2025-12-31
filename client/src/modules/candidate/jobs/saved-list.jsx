@@ -101,11 +101,11 @@ export default function Saved() {
           <div className="p-12 text-center">
             <div className="text-4xl mb-4">⚠️</div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Unable to Load Saved Jobs</h3>
-            <p className="text-red-600 mb-6 text-sm">{error}</p>
+            <p className="text-primary-600 mb-6 text-sm">{error}</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={fetchSavedJobs}
-                className="btn btn-primary px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                className="btn btn-primary px-6 py-2.5 text-sm font-semibold text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
               >
                 Try Again
               </button>
@@ -131,7 +131,7 @@ export default function Saved() {
             <h1 className="text-2xl font-semibold text-gray-900">Saved Jobs</h1>
             <p className="text-sm text-gray-600 mt-1">Your favorite job opportunities</p>
           </div>
-          <div className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-sm font-medium">
+          <div className="px-3 py-1.5 bg-primary-50 text-primary-700 border border-primary-200 rounded-lg text-sm font-medium">
             {savedJobs.length} Saved
           </div>
         </div>
@@ -147,7 +147,7 @@ export default function Saved() {
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
                   onClick={() => navigate('/jobs')}
-                  className="btn btn-primary px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="btn btn-primary px-6 py-2.5 text-sm font-semibold text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
                 >
                   Browse Jobs
                 </button>
@@ -188,7 +188,7 @@ export default function Saved() {
                           </h3>
                           <p className="text-base font-semibold text-gray-700">{job.company}</p>
                         </div>
-                        <span className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-sm font-medium inline-flex items-center gap-1.5 self-start">
+                        <span className="px-3 py-1.5 bg-primary-50 text-primary-700 border border-primary-200 rounded-lg text-sm font-medium inline-flex items-center gap-1.5 self-start">
                           <Star size={14} />
                           Saved
                         </span>
@@ -228,14 +228,14 @@ export default function Saved() {
                     <div className="flex gap-2 lg:flex-col">
                       <button
                         onClick={() => handleViewJob(job.id)}
-                        className="btn btn-primary px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1.5 flex-1 lg:flex-none justify-center"
+                        className="btn btn-primary px-4 py-2 text-sm font-semibold text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-1.5 flex-1 lg:flex-none justify-center"
                       >
                         <Eye size={16} />
                         View Job
                       </button>
                       <button
                         onClick={() => removeSavedJob(job.job_id)}
-                        className="btn btn-ghost px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-1.5 flex-1 lg:flex-none justify-center"
+                        className="btn btn-ghost px-4 py-2 text-sm font-medium text-primary-600 bg-white border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors flex items-center gap-1.5 flex-1 lg:flex-none justify-center"
                       >
                         <Trash2 size={16} />
                         Remove

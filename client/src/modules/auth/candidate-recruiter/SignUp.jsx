@@ -81,7 +81,6 @@ export default function SignUp() {
           window.google.accounts.id.renderButton(buttonContainer, {
             theme: "outline",
             size: "large",
-            width: "100%",
           });
         }
       } catch (err) {
@@ -100,7 +99,7 @@ export default function SignUp() {
 
           <div className="px-4 md:px-8">
             <h1 className="text-4xl md:text-5xl font-extrabold leading-tight text-slate-800">
-              Talk to HR directly & get a job with better salary!
+              Move your career forward with faster hiring and better pay
             </h1>
           </div>
 

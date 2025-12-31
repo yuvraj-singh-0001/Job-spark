@@ -1,6 +1,7 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar.jsx";
+import ErrorBoundary from "../../ErrorBoundary";
 import { ToastContainer } from "../../toast";
 
 /**
@@ -13,7 +14,9 @@ const AdminLayout = () => {
       <AdminSidebar />
 
       <main className="flex-1 ml-64 p-6 transition-all duration-300">
-        <Outlet />
+        <ErrorBoundary>
+          <Outlet />
+        </ErrorBoundary>
       </main>
       <ToastContainer />
     </div>

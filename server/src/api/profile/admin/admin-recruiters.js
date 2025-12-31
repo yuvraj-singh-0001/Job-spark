@@ -3,11 +3,13 @@ const pool = require('../../config/db');
 const getAdminRecruiters = async (req, res) => {
   try {
     const [recruiters] = await pool.execute(`
-      SELECT 
+      SELECT
         rp.user_id,
         rp.company_name,
         rp.company_website,
         rp.company_type,
+        rp.hr_name,
+        rp.hr_mobile,
         rp.address_line1,
         rp.address_line2,
         rp.city,

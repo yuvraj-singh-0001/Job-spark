@@ -47,7 +47,7 @@ async function updateJobStatus(req, res) {
 
       // Close the job
       await pool.query(
-        "UPDATE jobs SET status = 'closed', closed_at = NOW() WHERE id = ?",
+        "UPDATE jobs SET status = 'closed' WHERE id = ?",
         [jobId]
       );
 
@@ -68,7 +68,7 @@ async function updateJobStatus(req, res) {
 
       // Withdraw the job (set status to 'withdrawn' or delete it)
       await pool.query(
-        "UPDATE jobs SET status = 'withdrawn', withdrawn_at = NOW() WHERE id = ?",
+        "UPDATE jobs SET status = 'withdrawn' WHERE id = ?",
         [jobId]
       );
 

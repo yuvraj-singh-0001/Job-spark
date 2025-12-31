@@ -2,6 +2,8 @@ import React, { useMemo, useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, MapPin, ChevronRight } from "lucide-react";
 import { PRIMARY } from "./data";
+import api from "../../../components/apiconfig/apiconfig";
+import { citiesByState } from "../../../constants/locationData";
 
 function useFadeInOnScroll() {
   const ref = useRef(null);
@@ -36,27 +38,73 @@ export default function Hero() {
   const [chips, setChips] = useState([]);
   const [activeField, setActiveField] = useState("title");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [jobRoles, setJobRoles] = useState([]); // Dynamic job roles from API
+  const [loadingRoles, setLoadingRoles] = useState(true);
+  const [cities, setCities] = useState([]); // All cities from locationData
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
 
   const navigate = useNavigate();
 
-  const suggestions = useMemo(
-    () => [
-      "Frontend Developer",
-      "Backend Developer",
-      "Full Stack Engineer",
-      "Product Manager",
-      "Marketing Manager",
-      "Data Analyst",
-      "UI/UX Designer",
-    ],
-    []
-  );
+  // Fetch job roles from API on component mount
+  useEffect(() => {
+    const fetchJobRoles = async () => {
+      try {
+        const { data } = await api.get("/jobs/roles");
+        if (data.ok && data.roles) {
+          setJobRoles(data.roles);
+        }
+      } catch (err) {
+        console.error("Error fetching job roles:", err);
+        // Fallback to some default roles if API fails
+        setJobRoles([
+          { id: 1, name: "Frontend Developer" },
+          { id: 2, name: "Backend Developer" },
+          { id: 3, name: "Full Stack Engineer" },
+          { id: 4, name: "Product Manager" },
+          { id: 5, name: "Marketing Manager" },
+          { id: 6, name: "Data Analyst" },
+          { id: 7, name: "UI/UX Designer" },
+        ]);
+      } finally {
+        setLoadingRoles(false);
+      }
+    };
+
+    fetchJobRoles();
+  }, []);
+
+  // Load all cities from locationData plus remote option
+  useEffect(() => {
+    const loadCities = () => {
+      const allCities = Object.values(citiesByState).flat();
+      // Add remote option for remote jobs
+      allCities.unshift("Remote");
+      setCities(allCities);
+    };
+
+    loadCities();
+  }, []);
+
+  // Convert job roles to suggestions array for filtering
+  const suggestions = useMemo(() => {
+    return jobRoles.map(role => role.name);
+  }, [jobRoles]);
 
   const filteredSuggestions = useMemo(() => {
-    if (!searchTerm.trim()) return [];
+    if (!searchTerm.trim() || loadingRoles) return [];
     const lower = searchTerm.toLowerCase();
-    return suggestions.filter((s) => s.toLowerCase().includes(lower)).slice(0, 5);
-  }, [searchTerm, suggestions]);
+    return suggestions
+      .filter((s) => s.toLowerCase().includes(lower))
+      .slice(0, 8); // Show up to 8 suggestions
+  }, [searchTerm, suggestions, loadingRoles]);
+
+  const filteredLocationSuggestions = useMemo(() => {
+    if (!location.trim()) return [];
+    const lower = location.toLowerCase();
+    return cities
+      .filter((city) => city.toLowerCase().includes(lower))
+      .slice(0, 8); // Show up to 8 location suggestions
+  }, [location, cities]);
 
   const addChip = (label, field) => {
     if (!label) return;
@@ -87,6 +135,12 @@ export default function Hero() {
     setSearchTerm(value);
     addChip(value, "title");
     setShowSuggestions(false);
+  };
+
+  const handleLocationSuggestionClick = (value) => {
+    setLocation(value);
+    addChip(value, "location");
+    setShowLocationSuggestions(false);
   };
 
   return (
@@ -126,8 +180,9 @@ export default function Hero() {
                             setActiveField("title");
                             setShowSuggestions(true);
                           }}
-                          placeholder="e.g. Delivery, Telecaller"
-                          className="flex-1 bg-transparent text-sm sm:text-base outline-none border-none text-text-dark placeholder:text-text-muted"
+                          placeholder={loadingRoles ? "Loading job roles..." : "e.g. Delivery, Telecaller"}
+                          disabled={loadingRoles}
+                          className="flex-1 bg-transparent text-sm sm:text-base outline-none border-none text-text-dark placeholder:text-text-muted disabled:opacity-50"
                         />
                       </div>
                       {showSuggestions && filteredSuggestions.length > 0 && (
@@ -158,12 +213,36 @@ export default function Hero() {
                         <input
                           type="text"
                           value={location}
-                          onChange={(e) => setLocation(e.target.value)}
-                          onFocus={() => setActiveField("location")}
-                          placeholder="e.g. Delhi, Remote"
+                          onChange={(e) => {
+                            setLocation(e.target.value);
+                            setActiveField("location");
+                            setShowLocationSuggestions(true);
+                          }}
+                          onFocus={() => {
+                            setActiveField("location");
+                            setShowLocationSuggestions(true);
+                          }}
+                          placeholder="e.g. Mumbai, Delhi, Remote"
                           className="flex-1 bg-transparent text-sm sm:text-base outline-none border-none text-text-dark placeholder:text-text-muted"
                         />
                       </div>
+                      {showLocationSuggestions && filteredLocationSuggestions.length > 0 && (
+                        <div className="absolute z-20 mt-1 w-full bg-white rounded-lg shadow-large text-sm sm:text-base max-h-52 overflow-auto border border-border">
+                          {filteredLocationSuggestions.map((city) => (
+                            <button
+                              key={city}
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleLocationSuggestionClick(city);
+                              }}
+                              className="w-full text-left px-3 py-2 hover:bg-primary-50 transition-colors text-text-dark"
+                            >
+                              {city}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     <div>

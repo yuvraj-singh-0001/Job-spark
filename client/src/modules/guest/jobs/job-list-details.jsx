@@ -2,6 +2,7 @@ import { MapPin, Clock, Briefcase, GraduationCap, Bookmark, BookmarkCheck, Mail,
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useToast } from "../../../components/toast";
+import { Helmet } from "react-helmet-async";
 import api from "../../../components/apiconfig/apiconfig";
 
 // Utility functions to mask contact information
@@ -33,11 +34,26 @@ const maskAddress = (address) => {
   return address.substring(0, 15) + '••••••••••';
 };
 
+// Helper function to view resume
+const viewResume = (resumePath, candidateName) => {
+  if (resumePath) {
+    // Construct full URL similar to candidate profile
+    let resumeUrl = resumePath;
+    if (!resumeUrl.startsWith('http')) {
+      const resumePathNormalized = resumeUrl.startsWith('/') ? resumeUrl : `/${resumeUrl}`;
+      resumeUrl = `${window.location.origin}${resumePathNormalized}`;
+    }
+    // Open in new tab instead of downloading
+    window.open(resumeUrl, '_blank');
+  }
+};
+
 export default function JobDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showSuccess, showError } = useToast();
   const [job, setJob] = useState(null);
+  const [jobPostingSchema, setJobPostingSchema] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
@@ -54,7 +70,6 @@ export default function JobDetail() {
 
   // Application form state
   const [coverLetter, setCoverLetter] = useState("");
-  const [updateResumeFile, setUpdateResumeFile] = useState(null);
 
   const [applying, setApplying] = useState(false);
   const [applied, setApplied] = useState(false);
@@ -114,6 +129,7 @@ export default function JobDetail() {
         if (!alive) return;
         if (data.ok && data.job) {
           setJob(data.job);
+          setJobPostingSchema(data.jobPostingSchema);
 
           // Check if job is saved
           await checkSavedStatus(id);
@@ -351,16 +367,11 @@ export default function JobDetail() {
 
       if (isAuthenticated && candidateProfile) {
         // For logged-in users: use profile data
-        // Only send cover letter and optional resume update
+        // Only send cover letter
         if (coverLetter) formData.append("cover_letter", coverLetter);
 
-        // If user wants to update resume, use the new file
-        if (updateResumeFile) {
-          formData.append("resume", updateResumeFile);
-        }
-        // Otherwise, backend should use resume_path from profile
-        // We'll send it in the body if backend supports it
-        if (!updateResumeFile && candidateProfile.resume_path) {
+        // Always use the current resume_path from profile (updated immediately when user selects new file)
+        if (candidateProfile.resume_path) {
           formData.append("resume_path", candidateProfile.resume_path);
         }
       } else {
@@ -374,10 +385,7 @@ export default function JobDetail() {
       });
 
       if (res.data && res.data.ok) {
-        const successMessage = updateResumeFile
-          ? "You have successfully applied for this job! Your resume has been uploaded."
-          : "You have successfully applied for this job!";
-        showSuccess(successMessage);
+        showSuccess("You have successfully applied for this job!");
         setApplied(true);
         setIsApplied(true); // Mark as applied
         // Remove from saved jobs (if it was saved) - backend handles this automatically
@@ -401,7 +409,7 @@ export default function JobDetail() {
 
   // Render
   if (loading) return <div className="p-6 text-gray-600">Loading job...</div>;
-  if (error) return <div className="p-6 text-red-600">{error}</div>;
+  if (error) return <div className="p-6 text-primary-600">{error}</div>;
   if (!job) return <div className="p-6 text-gray-600">Job not found</div>;
 
   const salary = formatSalaryMonthly();
@@ -409,6 +417,40 @@ export default function JobDetail() {
 
   return (
     <div className="min-h-screen bg-bg">
+      {/* Add Helmet for dynamic meta tags and schema */}
+      {job && (
+        <Helmet>
+          <title>{`${job.title} - ${job.company} | Jobion`}</title>
+          <meta name="description" content={job.description?.substring(0, 160) || `Apply for ${job.title} at ${job.company}`} />
+          <meta property="og:title" content={`${job.title} - ${job.company}`} />
+          <meta property="og:description" content={job.description?.substring(0, 160) || `Apply for ${job.title} at ${job.company}`} />
+          <meta property="og:url" content={`${window.location.origin}/jobs/${job.id}`} />
+          <meta property="og:type" content="website" />
+          <link rel="canonical" href={`${window.location.origin}/jobs/${job.id}`} />
+          {/* Inject JobPosting schema only if available */}
+          {jobPostingSchema && (
+            <script type="application/ld+json">
+              {JSON.stringify(jobPostingSchema, null, 2)}
+            </script>
+          )}
+        </Helmet>
+      )}
+
+      {/* Add developer utility for schema copying */}
+      {jobPostingSchema && process.env.NODE_ENV === 'development' && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(JSON.stringify(jobPostingSchema, null, 2));
+              showSuccess('JobPosting schema copied to clipboard!');
+            }}
+            className="bg-primary-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-primary-700"
+          >
+            Copy Schema
+          </button>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Main Content - Job Details */}
@@ -440,12 +482,12 @@ export default function JobDetail() {
                 {/* Quick Info Row */}
                 <div className="flex flex-wrap gap-2">
                   {job.type && (
-                    <span className="badge badge-primary inline-flex items-center gap-1">
+                    <span className="badge badge-gray inline-flex items-center gap-1">
                       <Briefcase size={14} /> {job.type}
                     </span>
                   )}
                   {job.workMode && (
-                    <span className="badge badge-primary inline-flex items-center gap-1">
+                    <span className="badge badge-gray inline-flex items-center gap-1">
                       <Clock size={14} /> {job.workMode}
                     </span>
                   )}
@@ -722,20 +764,30 @@ export default function JobDetail() {
                     {candidateProfile.resume_path && (
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <label className="label text-sm">Resume (Optional)</label>
-                          <button
-                            type="button"
-                            onClick={() => document.getElementById('update-resume-input')?.click()}
-                            className="text-xs text-primary-600 hover:text-primary-700 underline font-medium"
-                          >
-                            Update Resume (Optional)
-                          </button>
+                          <label className="label text-sm">Resume</label>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => viewResume(candidateProfile.resume_path, candidateProfile.full_name || 'candidate')}
+                              className="text-xs text-primary-600 hover:text-primary-700 underline font-medium"
+                            >
+                              View
+                            </button>
+                            <span className="text-xs text-gray-400">|</span>
+                            <button
+                              type="button"
+                              onClick={() => document.getElementById('update-resume-input')?.click()}
+                              className="text-xs text-primary-600 hover:text-primary-700 underline font-medium"
+                            >
+                              Update
+                            </button>
+                          </div>
                         </div>
                         <input
                           id="update-resume-input"
                           type="file"
                           accept=".pdf,.doc,.docx"
-                          onChange={(e) => {
+                          onChange={async (e) => {
                             const f = e.target.files?.[0] || null;
                             if (!f) {
                               setUpdateResumeFile(null);
@@ -744,24 +796,50 @@ export default function JobDetail() {
                             const allowed = [".pdf", ".doc", ".docx"];
                             const ext = f.name.substring(f.name.lastIndexOf(".")).toLowerCase();
                             if (!allowed.includes(ext)) {
-                              setApplyError("Only PDF / DOC / DOCX files are allowed for resume.");
+                              setError("Only PDF / DOC / DOCX files are allowed for resume.");
                               setUpdateResumeFile(null);
                               return;
                             }
                             const maxSize = 5 * 1024 * 1024;
                             if (f.size > maxSize) {
-                              setApplyError("Resume must be smaller than 5 MB.");
+                              setError("Resume must be smaller than 5 MB.");
                               setUpdateResumeFile(null);
                               return;
                             }
-                            setApplyError(null);
-                            setUpdateResumeFile(f);
+
+                            // Clear any previous errors
+                            setError(null);
+
+                            try {
+                              // Upload the file immediately to update profile
+                              const formData = new FormData();
+                              formData.append('resume', f);
+                              formData.append('user_id', userId);
+
+                              const uploadRes = await api.post('/profile/upload-resume', formData, {
+                                headers: { 'Content-Type': 'multipart/form-data' },
+                              });
+
+                              if (uploadRes?.data?.success) {
+                                // Update the candidate profile with new resume path
+                                setCandidateProfile(prev => ({
+                                  ...prev,
+                                  resume_path: uploadRes.data.resume_path
+                                }));
+                                showSuccess('Resume updated successfully!');
+
+                                // Clear the file input
+                                e.target.value = '';
+                              } else {
+                                showError('Failed to upload resume');
+                              }
+                            } catch (err) {
+                              console.error('Resume upload error:', err);
+                              showError(err?.response?.data?.error || 'Failed to upload resume');
+                            }
                           }}
                           className="hidden"
                         />
-                        {updateResumeFile && (
-                          <div className="text-xs mt-1.5 text-primary-600 font-medium">New file: {updateResumeFile.name}</div>
-                        )}
                       </div>
                     )}
 

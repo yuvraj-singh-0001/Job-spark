@@ -57,7 +57,7 @@ export default function AdminJobs() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     );
   }
@@ -70,7 +70,7 @@ export default function AdminJobs() {
           <div>
             <button
               onClick={handleBack}
-              className="flex items-center text-blue-600 hover:text-blue-700 mb-2"
+              className="flex items-center text-primary-600 hover:text-primary-700 mb-2"
             >
               ← Back to Dashboard
             </button>
@@ -79,7 +79,7 @@ export default function AdminJobs() {
           </div>
           <button
             onClick={fetchJobs}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700"
           >
             Refresh
           </button>
@@ -92,7 +92,7 @@ export default function AdminJobs() {
               onClick={() => setFilter("all")}
               className={`px-4 py-2 rounded-lg text-sm font-medium ${
                 filter === "all" 
-                  ? "bg-blue-600 text-white" 
+                  ? "bg-primary-600 text-white" 
                   : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
               }`}
             >
@@ -102,7 +102,7 @@ export default function AdminJobs() {
               onClick={() => setFilter("full-time")}
               className={`px-4 py-2 rounded-lg text-sm font-medium ${
                 filter === "full-time" 
-                  ? "bg-blue-600 text-white" 
+                  ? "bg-primary-600 text-white" 
                   : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
               }`}
             >
@@ -112,7 +112,7 @@ export default function AdminJobs() {
               onClick={() => setFilter("part-time")}
               className={`px-4 py-2 rounded-lg text-sm font-medium ${
                 filter === "part-time" 
-                  ? "bg-blue-600 text-white" 
+                  ? "bg-primary-600 text-white" 
                   : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
               }`}
             >
@@ -122,7 +122,7 @@ export default function AdminJobs() {
               onClick={() => setFilter("contract")}
               className={`px-4 py-2 rounded-lg text-sm font-medium ${
                 filter === "contract" 
-                  ? "bg-blue-600 text-white" 
+                  ? "bg-primary-600 text-white" 
                   : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
               }`}
             >
@@ -207,7 +207,7 @@ export default function AdminJobs() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
                         onClick={() => handleViewDetails(job)}
-                        className="text-blue-600 hover:text-blue-900 mr-3"
+                        className="text-primary-600 hover:text-primary-900 mr-3"
                       >
                         View Details
                       </button>
@@ -317,7 +317,7 @@ export default function AdminJobs() {
                       <label className="text-sm font-medium text-gray-500">Contact Email</label>
                       <p className="text-gray-900">
                         {selectedJob.contact_email ? (
-                          <a href={`mailto:${selectedJob.contact_email}`} className="text-blue-600 hover:underline">
+                          <a href={`mailto:${selectedJob.contact_email}`} className="text-primary-600 hover:underline">
                             {selectedJob.contact_email}
                           </a>
                         ) : 'Not provided'}
@@ -327,7 +327,7 @@ export default function AdminJobs() {
                       <label className="text-sm font-medium text-gray-500">Contact Phone</label>
                       <p className="text-gray-900">
                         {selectedJob.contact_phone ? (
-                          <a href={`tel:${selectedJob.contact_phone}`} className="text-blue-600 hover:underline">
+                          <a href={`tel:${selectedJob.contact_phone}`} className="text-primary-600 hover:underline">
                             {selectedJob.contact_phone}
                           </a>
                         ) : 'Not provided'}

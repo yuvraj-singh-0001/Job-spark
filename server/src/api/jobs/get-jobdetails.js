@@ -2,6 +2,82 @@ const express = require('express');
 const pool = require('../config/db');
 const router = express.Router();
 
+// Helper function to generate JobPosting schema
+function generateJobPostingSchema(job, baseUrl) {
+  // Data validation - don't output incomplete jobs
+  if (!job.title || !job.description || (job.workMode !== 'Remote' && (!job.city || !job.state))) {
+    return null;
+  }
+
+  const postedAt = new Date(job.posted_at);
+  const validThrough = new Date(postedAt);
+  validThrough.setDate(validThrough.getDate() + 30); // 30 days from posted_at
+
+  const schema = {
+    "@context": "https://schema.org/",
+    "@type": "JobPosting",
+    "title": job.title,
+    "description": job.description,
+    "identifier": {
+      "@type": "PropertyValue",
+      "name": job.company,
+      "value": job.id.toString()
+    },
+    "datePosted": postedAt.toISOString(),
+    "validThrough": validThrough.toISOString(),
+    "employmentType": job.type,
+    "hiringOrganization": {
+      "@type": "Organization",
+      "name": job.company,
+      "logo": job.logoPath ? `${baseUrl}/${job.logoPath}` : undefined
+    },
+    "jobLocation": {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": job.workMode === 'Remote' ? undefined : job.city,
+        "addressRegion": job.workMode === 'Remote' ? undefined : job.state,
+        "addressCountry": "IN"
+      }
+    },
+    "applicantLocationRequirements": {
+      "@type": "Country",
+      "name": "India"
+    },
+    "jobLocationType": job.workMode === 'Remote' ? "TELECOMMUTE" : undefined,
+    "directApply": true,
+    "applyAction": {
+      "@type": "ApplyAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": `${baseUrl}/jobs/${job.id}`,
+        "inLanguage": "en-US",
+        "description": "Apply for this job on Jobion"
+      }
+    }
+  };
+
+  // Remove undefined values
+  Object.keys(schema).forEach(key => {
+    if (schema[key] === undefined) {
+      delete schema[key];
+    }
+  });
+
+  // Clean up nested objects
+  if (schema.hiringOrganization.logo === undefined) {
+    delete schema.hiringOrganization.logo;
+  }
+
+  if (schema.jobLocation.address.addressLocality === undefined &&
+    schema.jobLocation.address.addressRegion === undefined) {
+    delete schema.jobLocation.address.addressLocality;
+    delete schema.jobLocation.address.addressRegion;
+  }
+
+  return schema;
+}
+
 async function getjobdetails(req, res) {
   try {
     const id = parseInt(req.params.id, 10);
@@ -17,6 +93,7 @@ async function getjobdetails(req, res) {
         j.job_type,
         j.work_mode,
         j.city,
+        j.state,
         j.locality,
         j.min_experience,
         j.max_experience,
@@ -27,13 +104,14 @@ async function getjobdetails(req, res) {
         j.logo_path,
         j.status,
         j.created_at,
+        j.posted_at,
         j.contact_email,
         j.contact_phone,
         j.interview_address,
         j.recruiter_id
       FROM jobs j
       LEFT JOIN job_roles jr ON j.role_id = jr.id
-      WHERE j.id = ?
+      WHERE j.id = ? AND j.status = 'approved'
       LIMIT 1
     `;
     const [rows] = await pool.query(sql, [id]);
@@ -91,6 +169,7 @@ async function getjobdetails(req, res) {
       type: r.job_type || 'Full-time',
       workMode: r.work_mode || 'Office',
       city: r.city || null,
+      state: r.state || null,
       locality: r.locality || null,
       location,
       tags: tags.length ? tags : (r.skills || '').split(',').map(s => s.trim()).filter(Boolean),
@@ -102,6 +181,7 @@ async function getjobdetails(req, res) {
       logoPath: r.logo_path || null,
       status: r.status || 'pending',
       createdAt: r.created_at,
+      posted_at: r.posted_at,
       experiance,
       min_experience: r.min_experience,
       max_experience: r.max_experience,
@@ -111,7 +191,15 @@ async function getjobdetails(req, res) {
       recruiterId: r.recruiter_id || null,
     };
 
-    res.json({ ok: true, job });
+    // Generate JobPosting schema for Google Jobs
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+    const jobPostingSchema = generateJobPostingSchema(job, baseUrl);
+
+    res.json({
+      ok: true,
+      job,
+      jobPostingSchema // Include schema in response for frontend
+    });
   } catch (err) {
     console.error('GET /api/jobs/:id error:', err);
     res.status(500).json({ ok: false, message: 'Internal Server Error' });

@@ -12,7 +12,7 @@ export default function PrivacyPolicy() {
               <Sparkles size={18} />
             </div>
             <span className="text-lg font-extrabold tracking-tight text-slate-900">
-              Hire<span className="text-blue-600">Spark</span>
+Jobion
             </span>
           </div>
           <h1 className="text-4xl font-bold text-slate-900 mb-2">🔒 Privacy Policy</h1>
@@ -26,7 +26,7 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-2xl font-bold text-slate-900 mb-4">Introduction</h2>
             <p className="text-slate-700 leading-relaxed">
-              At HireSpark, we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.
+              At Jobion, we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.
             </p>
           </section>
 
@@ -126,7 +126,7 @@ export default function PrivacyPolicy() {
               If you have questions about this Privacy Policy, please contact us:
             </p>
             <ul className="list-none space-y-2 text-slate-700">
-              <li>📧 <a href="mailto:support@hirespark.com" className="text-blue-600 hover:underline">support@hirespark.com</a></li>
+              <li>📧 <a href="mailto:support@jobion.com" className="text-primary-600 hover:underline">support@jobion.com</a></li>
               <li>📍 B-30, Block-B, Sector-72, Noida</li>
             </ul>
           </section>
@@ -134,10 +134,10 @@ export default function PrivacyPolicy() {
 
         {/* Footer Links */}
         <div className="mt-8 text-center">
-          <Link to="/terms" className="text-blue-600 hover:underline mr-4">
+          <Link to="/terms" className="text-primary-600 hover:underline mr-4">
             Terms & Conditions
           </Link>
-          <Link to="/home" className="text-blue-600 hover:underline">
+          <Link to="/home" className="text-primary-600 hover:underline">
             Back to Home
           </Link>
         </div>

@@ -1,8 +1,18 @@
 const pool = require('../../config/db');
+const { ALLOWED_TABLES } = require('../../../utils/sqlSecurity');
 
 const getAdminJobs = async (req, res) => {
   try {
     const { status } = req.query;
+
+    // Validate status parameter
+    const validStatuses = ['all', 'pending', 'approved', 'rejected', 'closed'];
+    if (status && !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
+      });
+    }
 
     let sql = `
       SELECT 

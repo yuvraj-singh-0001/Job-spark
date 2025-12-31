@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import {
   Building2,
   MapPin,
@@ -616,8 +617,27 @@ export default function Jobs() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <>
+    <>
+      <Helmet>
+        <title>Find Jobs - Browse Latest Job Opportunities | Jobion</title>
+        <meta name="description" content="Browse thousands of job opportunities from top companies. Find remote, full-time, part-time, and freelance jobs that match your skills and career goals." />
+        <meta name="keywords" content="jobs, job search, employment, career opportunities, remote jobs, full-time jobs, part-time jobs, freelance work, job listings" />
+
+        {/* Open Graph */}
+        <meta property="og:title" content="Find Jobs - Browse Latest Job Opportunities | Jobion" />
+        <meta property="og:description" content="Browse thousands of job opportunities from top companies. Find remote, full-time, part-time, and freelance jobs that match your skills and career goals." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://jobion.com/jobs" />
+
+        {/* Twitter */}
+        <meta property="twitter:title" content="Find Jobs - Browse Latest Job Opportunities | Jobion" />
+        <meta property="twitter:description" content="Browse thousands of job opportunities from top companies. Find remote, full-time, part-time, and freelance jobs that match your skills and career goals." />
+
+        {/* Canonical URL */}
+        <link rel="canonical" href="https://jobion.com/jobs" />
+      </Helmet>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -640,7 +660,7 @@ export default function Jobs() {
                 />
                 <button
                   onClick={applyFilters}
-                  className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors flex-shrink-0"
+                  className="px-4 py-2 text-sm font-semibold text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors flex-shrink-0"
                 >
                   Search
                 </button>
@@ -657,7 +677,7 @@ export default function Jobs() {
                 {hasSidebarFilters && (
                   <button
                     onClick={clearFilters}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                    className="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors"
                   >
                     Clear All
                   </button>
@@ -679,7 +699,7 @@ export default function Jobs() {
                             key={city}
                             onClick={() => toggleValue(city, setSelectedCities)}
                             className={`px-3 py-1.5 text-xs font-medium transition-colors rounded-lg border text-sm ${active
-                              ? "bg-blue-50 border-blue-200 text-blue-700"
+                              ? "bg-primary-50 border-primary-200 text-primary-700"
                               : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                               }`}
                           >
@@ -708,7 +728,7 @@ export default function Jobs() {
                             key={role.id || label}
                             onClick={() => toggleValue(label, setSelectedRoles)}
                             className={`px-3 py-1.5 text-xs font-medium transition-colors rounded-lg border text-sm ${active
-                              ? "bg-blue-50 border-blue-200 text-blue-700"
+                              ? "bg-primary-50 border-primary-200 text-primary-700"
                               : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                               }`}
                           >
@@ -733,7 +753,7 @@ export default function Jobs() {
                           key={option.value}
                           onClick={() => toggleValue(option.value, setSelectedJobTypes)}
                           className={`px-3 py-1.5 text-xs font-medium transition-colors rounded-lg border text-sm ${active
-                            ? "bg-blue-50 border-blue-200 text-blue-700"
+                            ? "bg-primary-50 border-primary-200 text-primary-700"
                             : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                             }`}
                         >
@@ -775,7 +795,7 @@ export default function Jobs() {
                     {EXPERIENCE_OPTIONS.map((opt) => (
                       <label
                         key={opt.value}
-                        className="flex items-center gap-2.5 text-sm text-gray-700 cursor-pointer hover:text-blue-600 transition-colors"
+                        className="flex items-center gap-2.5 text-sm text-gray-700 cursor-pointer hover:text-primary-600 transition-colors"
                       >
                         <input
                           type="radio"
@@ -783,7 +803,7 @@ export default function Jobs() {
                           value={opt.value}
                           checked={selectedExperience === opt.value}
                           onChange={(e) => setSelectedExperience(e.target.value)}
-                          className="w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                          className="w-4 h-4 text-primary-600 focus:ring-primary-500 cursor-pointer"
                         />
                         <span>{opt.label}</span>
                       </label>
@@ -798,7 +818,7 @@ export default function Jobs() {
                     {SALARY_OPTIONS.map((opt) => (
                       <label
                         key={opt.value}
-                        className="flex items-center gap-2.5 text-sm text-gray-700 cursor-pointer hover:text-blue-600 transition-colors"
+                        className="flex items-center gap-2.5 text-sm text-gray-700 cursor-pointer hover:text-primary-600 transition-colors"
                       >
                         <input
                           type="radio"
@@ -806,7 +826,7 @@ export default function Jobs() {
                           value={opt.value}
                           checked={String(salaryFilter) === String(opt.value)}
                           onChange={(e) => setSalaryFilter(e.target.value)}
-                          className="w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                          className="w-4 h-4 text-primary-600 focus:ring-primary-500 cursor-pointer"
                         />
                         <span>{opt.label}</span>
                       </label>
@@ -820,7 +840,7 @@ export default function Jobs() {
           <section className="space-y-4 sm:space-y-6">
             {error && (
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <div className="p-4 text-sm text-red-600">
+                <div className="p-4 text-sm text-primary-600">
                   {error}
                 </div>
               </div>
@@ -831,7 +851,7 @@ export default function Jobs() {
                 Showing {startIdx}–{endIdx} of {filteredWithoutSaved.length} roles
               </span>
               {hasSidebarFilters && (
-                <span className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-sm font-medium">
+                <span className="px-3 py-1.5 bg-primary-50 text-primary-700 border border-primary-200 rounded-lg text-sm font-medium">
                   Filters applied
                 </span>
               )}
@@ -863,11 +883,11 @@ export default function Jobs() {
                     <div className="p-6">
                       <button
                         onClick={() => toggleSaveJob(r.id, savedStatus[r.id])}
-                        className="absolute right-4 top-4 text-gray-400 hover:text-blue-600 transition-colors z-10"
+                        className="absolute right-4 top-4 text-gray-400 hover:text-primary-600 transition-colors z-10"
                         aria-label={savedStatus[r.id] ? "Unsave job" : "Save job"}
                       >
                         {savedStatus[r.id] ? (
-                          <BookmarkCheck size={18} className="text-blue-600" />
+                          <BookmarkCheck size={18} className="text-primary-600" />
                         ) : (
                           <Bookmark size={18} />
                         )}
@@ -883,14 +903,18 @@ export default function Jobs() {
                             <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
                               {r.company && (
                                 <span className="inline-flex items-center gap-1.5">
-                                  <Building2 size={16} className="text-blue-500" /> {r.company}
+                                  <Building2 size={16} className="text-primary-500" /> {r.company}
                                 </span>
                               )}
-                              {r.location && (
-                                <span className="inline-flex items-center gap-1.5">
-                                  <MapPin size={16} className="text-blue-500" /> {r.location}
-                                </span>
-                              )}
+                          {r.workMode === 'Remote' ? (
+                            <span className="inline-flex items-center gap-1.5">
+                              <Globe size={16} className="text-primary-500" /> Remote
+                            </span>
+                          ) : r.location ? (
+                            <span className="inline-flex items-center gap-1.5">
+                              <MapPin size={16} className="text-primary-500" /> {r.location}
+                            </span>
+                          ) : null}
                             </div>
                           </div>
 
@@ -908,7 +932,7 @@ export default function Jobs() {
 
                         <div className="flex flex-wrap gap-2">
                           {r.type && (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-sm border border-blue-200">
+                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary-50 text-primary-700 rounded-lg text-sm border border-primary-200">
                               <Briefcase size={14} />
                               {r.type}
                             </span>
@@ -932,7 +956,7 @@ export default function Jobs() {
 
                         <div className="flex flex-col gap-3 pt-4 border-t border-gray-200 sm:flex-row sm:items-center sm:justify-between">
                           <div className="flex flex-wrap gap-2">
-                            <span className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-sm font-medium">
+                            <span className="px-3 py-1.5 bg-primary-50 text-primary-700 border border-primary-200 rounded-lg text-sm font-medium">
                               Skills
                             </span>
 
@@ -951,7 +975,7 @@ export default function Jobs() {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => navigate(`/jobs/${r.id}`)}
-                              className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors"
                             >
                               View details
                               <ArrowUpRight size={16} />
@@ -982,7 +1006,7 @@ export default function Jobs() {
                     key={pageNum}
                     onClick={() => setPage(pageNum)}
                     className={`px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${active
-                      ? "bg-blue-600 text-white border-blue-600"
+                      ? "bg-primary-600 text-white border-primary-600"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                       }`}
                   >
@@ -1002,8 +1026,8 @@ export default function Jobs() {
 
           </section>
         </div>
-      </>
-    </div>
+      </div>
+    </>
   );
 }
 

@@ -12,7 +12,7 @@ export default function RefundCancellation() {
               <Sparkles size={18} />
             </div>
             <span className="text-lg font-extrabold tracking-tight text-slate-900">
-              Hire<span className="text-blue-600">Spark</span>
+Jobion
             </span>
           </div>
           <h1 className="text-4xl font-bold text-slate-900 mb-2">💰 Refund & Cancellation Policy</h1>
@@ -26,7 +26,7 @@ export default function RefundCancellation() {
           <section>
             <h2 className="text-2xl font-bold text-slate-900 mb-4">General Policy</h2>
             <p className="text-slate-700 leading-relaxed mb-4">
-              HireSpark is currently a <strong>free platform</strong> for both candidates and recruiters. We do not charge any fees for:
+              Jobion is currently a <strong>free platform</strong> for both candidates and recruiters. We do not charge any fees for:
             </p>
             <ul className="list-disc list-inside space-y-2 text-slate-700">
               <li>Creating an account</li>
@@ -40,7 +40,7 @@ export default function RefundCancellation() {
           <section>
             <h2 className="text-2xl font-bold text-slate-900 mb-4">Future Paid Services</h2>
             <p className="text-slate-700 leading-relaxed mb-4">
-              If HireSpark introduces paid services in the future (such as premium job postings, featured listings, or premium candidate access), the following refund policy will apply:
+              If Jobion introduces paid services in the future (such as premium job postings, featured listings, or premium candidate access), the following refund policy will apply:
             </p>
             <ul className="list-disc list-inside space-y-2 text-slate-700">
               <li><strong>Refund Requests:</strong> Must be submitted within 7 days of purchase</li>
@@ -89,7 +89,7 @@ export default function RefundCancellation() {
               For refund or cancellation requests, please contact us:
             </p>
             <ul className="list-none space-y-2 text-slate-700">
-              <li>📧 <a href="mailto:support@hirespark.com" className="text-blue-600 hover:underline">support@hirespark.com</a></li>
+              <li>📧 <a href="mailto:support@jobion.com" className="text-primary-600 hover:underline">support@jobion.com</a></li>
               <li>📍 B-30, Block-B, Sector-72, Noida</li>
             </ul>
           </section>
@@ -97,13 +97,13 @@ export default function RefundCancellation() {
 
         {/* Footer Links */}
         <div className="mt-8 text-center">
-          <Link to="/terms" className="text-blue-600 hover:underline mr-4">
+          <Link to="/terms" className="text-primary-600 hover:underline mr-4">
             Terms & Conditions
           </Link>
-          <Link to="/privacy" className="text-blue-600 hover:underline mr-4">
+          <Link to="/privacy" className="text-primary-600 hover:underline mr-4">
             Privacy Policy
           </Link>
-          <Link to="/home" className="text-blue-600 hover:underline">
+          <Link to="/home" className="text-primary-600 hover:underline">
             Back to Home
           </Link>
         </div>

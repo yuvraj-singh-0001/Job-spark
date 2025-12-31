@@ -96,7 +96,7 @@ export default function PendingRecruiters() {
                     Company
                   </th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                    Contact
+                    Contact & HR
                   </th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
                     Type
@@ -133,7 +133,12 @@ export default function PendingRecruiters() {
                     </td>
                     <td className="px-3 py-4 hidden md:table-cell">
                       <div className="text-sm text-gray-900 truncate max-w-[120px]">{recruiter.email}</div>
-                      <div className="text-xs text-gray-500 truncate max-w-[120px]">@{recruiter.username}</div>
+                      <div className="text-xs text-gray-500 truncate max-w-[120px]">
+                        {recruiter.hr_name && `HR: ${recruiter.hr_name}`}
+                      </div>
+                      <div className="text-xs text-gray-500 truncate max-w-[120px]">
+                        {recruiter.hr_mobile && `📞 ${recruiter.hr_mobile}`}
+                      </div>
                     </td>
                     <td className="px-3 py-4 text-sm text-gray-900 capitalize hidden lg:table-cell">
                       {recruiter.company_type}
@@ -237,10 +242,18 @@ export default function PendingRecruiters() {
                       <label className="text-xs md:text-sm font-medium text-gray-500">Email</label>
                       <p className="text-gray-900 text-sm md:text-base break-all">{selectedRecruiter.email}</p>
                     </div>
-                    <div>
-                      <label className="text-xs md:text-sm font-medium text-gray-500">Username</label>
-                      <p className="text-gray-900 text-sm md:text-base">@{selectedRecruiter.username}</p>
-                    </div>
+                    {selectedRecruiter.hr_name && (
+                      <div>
+                        <label className="text-xs md:text-sm font-medium text-gray-500">HR Name</label>
+                        <p className="text-gray-900 text-sm md:text-base">{selectedRecruiter.hr_name}</p>
+                      </div>
+                    )}
+                    {selectedRecruiter.hr_mobile && (
+                      <div>
+                        <label className="text-xs md:text-sm font-medium text-gray-500">HR Mobile</label>
+                        <p className="text-gray-900 text-sm md:text-base">{selectedRecruiter.hr_mobile}</p>
+                      </div>
+                    )}
                     <div>
                       <label className="text-xs md:text-sm font-medium text-gray-500">Member Since</label>
                       <p className="text-gray-900 text-sm md:text-base">

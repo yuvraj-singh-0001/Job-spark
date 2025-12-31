@@ -111,34 +111,32 @@ export default function RecruiterHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white text-slate-900 shadow-sm">
+    <header className="sticky top-0 z-50 border-b border-primary-200/50 bg-white/90 backdrop-blur-xl text-text-dark shadow-energy">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4 flex items-center justify-between">
         {/* Logo */}
-        <div>
-          <Link
-            to="/recruiter-dashboard"
-            className="flex items-center gap-3 hover:opacity-90 transition-opacity"
-          >
-            <div className="h-10 w-10 rounded-xl bg-blue-600 text-white grid place-items-center shadow-md">
-              <Sparkles size={20} />
-            </div>
-            <b className="text-xl font-bold tracking-tight">
-              Hire<span className="text-blue-600">Spark</span>
-            </b>
-          </Link>
-        </div>
+        <Link
+          to="/recruiter-dashboard"
+          className="flex items-center gap-2.5 sm:gap-3 hover:opacity-90 transition-opacity flex-shrink-0"
+        >
+          <b className="text-xl sm:text-2xl font-black tracking-widest bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 bg-clip-text text-transparent drop-shadow-sm hover:from-primary-700 hover:via-primary-800 hover:to-primary-900 transition-all duration-300">
+            Job<span className="relative">
+              <span className="text-primary-400">ı</span>
+              <span className="absolute -top-1 left-0 text-red-500 text-sm">•</span>
+            </span>on
+          </b>
+        </Link>
 
         {/* Center Navigation - Desktop */}
-        <nav className="hidden md:flex items-center gap-2 lg:gap-4">
+        <nav className="hidden md:flex items-center gap-2 lg:gap-3">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`px-3 lg:px-4 py-2 rounded-lg text-sm font-semibold transition-colors inline-flex items-center gap-1.5 ${isActive(item.path)
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-slate-700 hover:text-blue-600 hover:bg-slate-50"
+                className={`px-3 lg:px-4 py-2 rounded-full text-sm font-bold transition-colors inline-flex items-center gap-1.5 ${isActive(item.path)
+                    ? "bg-gradient-red text-white shadow-energy"
+                    : "text-text-muted hover:bg-gradient-red hover:text-white hover:shadow-kinetic"
                   }`}
               >
                 {Icon && <Icon size={16} />}
@@ -155,7 +153,7 @@ export default function RecruiterHeader() {
               onClick={() => setOpen(!open)}
               className="flex items-center gap-2 p-1 rounded-full hover:bg-slate-100 transition-colors"
             >
-              <div className="h-10 w-10 rounded-full bg-blue-100 grid place-items-center text-sm font-semibold text-blue-700">
+              <div className="h-10 w-10 rounded-full bg-primary-100 grid place-items-center text-sm font-semibold text-primary-700">
                 {user?.name || user?.username
                   ? (user.name || user.username).charAt(0).toUpperCase()
                   : <User size={18} />}
@@ -194,13 +192,13 @@ export default function RecruiterHeader() {
                   <Link
                     to="/recruiter-profile"
                     onClick={() => setOpen(false)}
-                    className="block w-full text-left px-4 py-3 rounded-lg border border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors font-medium text-sm"
+                    className="block w-full text-left px-4 py-3 rounded-lg border border-blue-600 text-primary-600 hover:bg-primary-50 transition-colors font-medium text-sm"
                   >
                     View Profile
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left px-4 py-3 rounded-lg bg-red-600 hover:bg-red-700 transition-colors font-medium text-sm text-white"
+                    className="w-full text-left px-4 py-3 rounded-lg bg-primary-600 hover:bg-primary-700 transition-colors font-medium text-sm text-white"
                   >
                     Logout
                   </button>
@@ -232,8 +230,8 @@ export default function RecruiterHeader() {
                   to={item.path}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-2 py-3 px-4 rounded-lg text-base font-medium transition-colors ${isActive(item.path)
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-slate-700 hover:text-blue-600 hover:bg-slate-50"
+                      ? "bg-primary-50 text-primary-700"
+                      : "text-slate-700 hover:text-primary-600 hover:bg-slate-50"
                     }`}
                 >
                   {Icon && <Icon size={18} />}

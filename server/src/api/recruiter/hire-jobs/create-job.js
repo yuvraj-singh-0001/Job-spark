@@ -36,9 +36,6 @@ async function createJobHandler(req, res) {
       // Get recruiter_id from authenticated user - use req.user.id from your auth middleware
       const recruiterId = req.user?.id;
 
-      console.log("User object:", req.user); // Debug log
-      console.log("Recruiter ID:", recruiterId); // Debug log
-
       if (!recruiterId) {
         return res.status(401).json({ ok: false, message: "Unauthorized - Please log in to post jobs" });
       }
@@ -50,6 +47,8 @@ async function createJobHandler(req, res) {
         jobType = "Full-time",
         workMode = "Office",
         city = "",
+        state = "",
+        country = "",
         locality = "",
         minExperience = null,
         maxExperience = null,
@@ -67,7 +66,8 @@ async function createJobHandler(req, res) {
       const errors = [];
       if (!roleId) errors.push("roleId is required");
       if (!company.trim()) errors.push("company is required");
-      if (!city.trim()) errors.push("city is required");
+      // City is optional for remote jobs
+      if (workMode !== 'Remote' && !city.trim()) errors.push("city is required (optional for remote jobs)");
       if (!description.trim()) errors.push("description is required");
       if (!contactEmail.trim() && !contactPhone.trim()) errors.push("provide email or phone");
 
@@ -106,8 +106,8 @@ async function createJobHandler(req, res) {
       // Note: title is derived from role_id via JOIN with job_roles table
       const sql = `
         INSERT INTO jobs
-          (role_id, company, job_type, work_mode, city, locality, min_experience, max_experience, min_salary, max_salary, vacancies, description, interview_address, contact_email, contact_phone, logo_path, recruiter_id, status, posted_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())
+          (role_id, company, job_type, work_mode, city, state, country, locality, min_experience, max_experience, min_salary, max_salary, vacancies, description, interview_address, contact_email, contact_phone, logo_path, recruiter_id, status, posted_at, expires_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), DATE_ADD(NOW(), INTERVAL 30 DAY))
       `;
 
       const params = [
@@ -116,6 +116,8 @@ async function createJobHandler(req, res) {
         jobType,
         workModeValue,
         city,
+        state || null,
+        country || null,
         locality || null,
         minExpNum,
         maxExpNum,
@@ -154,7 +156,15 @@ async function createJobHandler(req, res) {
               `INSERT INTO job_tags (name) VALUES (?) ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id)`,
               [titleCaseSkill]
             );
-            const tagId = tagRows.insertId || (await pool.query(`SELECT id FROM job_tags WHERE LOWER(name) = LOWER(?)`, [titleCaseSkill]))[0][0].id;
+            let tagId = tagRows.insertId;
+
+            // If no insertId, the tag already exists - get its ID
+            if (!tagId) {
+              const [existingTagRows] = await pool.query(`SELECT id FROM job_tags WHERE LOWER(name) = LOWER(?) LIMIT 1`, [titleCaseSkill]);
+              if (existingTagRows.length > 0) {
+                tagId = existingTagRows[0].id;
+              }
+            }
             // Link job to tag
             await pool.query(`INSERT IGNORE INTO job_tag_map (job_id, tag_id) VALUES (?, ?)`, [jobId, tagId]);
           }

@@ -67,6 +67,7 @@ export default function JobPosted() {
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState(null); // jobId being acted upon
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [expiringJobs, setExpiringJobs] = useState([]);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -91,6 +92,8 @@ export default function JobPosted() {
 
       if (data.ok) {
         setJobs(data.jobs);
+        // Fetch expiring jobs after regular jobs are loaded
+        await fetchExpiringJobs();
       } else {
         setError("Failed to fetch jobs");
       }
@@ -99,6 +102,19 @@ export default function JobPosted() {
       console.error("Error fetching jobs:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchExpiringJobs = async () => {
+    try {
+      const { data } = await api.get("/jobs/recruiter/expiring?days=7");
+
+      if (data.ok) {
+        setExpiringJobs(data.expiringJobs);
+      }
+    } catch (err) {
+      console.error("Error fetching expiring jobs:", err);
+      // Don't show error for expiring jobs - it's not critical
     }
   };
 
@@ -199,6 +215,38 @@ export default function JobPosted() {
         <div className="rounded-lg bg-red-50 border border-red-200 p-4 flex items-center gap-3">
           <AlertCircle size={20} className="text-red-600 flex-shrink-0" />
           <p className="text-red-700">{error}</p>
+        </div>
+      )}
+
+      {/* Expiration warnings */}
+      {expiringJobs.length > 0 && (
+        <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle size={20} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-yellow-800 mb-1">
+                Jobs Expiring Soon
+              </h3>
+              <p className="text-sm text-yellow-700 mb-2">
+                The following jobs will expire within 7 days:
+              </p>
+              <ul className="text-sm text-yellow-700 space-y-1">
+                {expiringJobs.map((job) => (
+                  <li key={job.id} className="flex items-center justify-between">
+                    <span className="font-medium">{job.title}</span>
+                    <span className="text-xs bg-yellow-100 px-2 py-1 rounded">
+                      {job.days_remaining === 0 ? 'Today' :
+                       job.days_remaining === 1 ? 'Tomorrow' :
+                       `${job.days_remaining} days`}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs text-yellow-600 mt-2">
+                Consider extending these jobs to keep them active.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 

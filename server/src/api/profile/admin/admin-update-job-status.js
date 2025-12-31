@@ -29,7 +29,6 @@ const updateJobStatus = async (req, res) => {
       } catch (error) {
         // If error is due to unknown column, fall through to update without rejection_reason
         if (error.code === 'ER_BAD_FIELD_ERROR' && error.message.includes('rejection_reason')) {
-          console.log('rejection_reason column not found, updating without it');
           // Fall through to update without rejection_reason
         } else {
           throw error; // Re-throw if it's a different error

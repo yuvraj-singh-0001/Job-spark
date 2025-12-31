@@ -81,7 +81,7 @@ const AdminSidebar = () => {
                 className={`flex items-center gap-4 px-4 py-3 rounded-lg cursor-pointer
                 transition-all duration-200
                 ${isActive
-                    ? "bg-blue-600 text-white"
+                    ? "bg-primary-600 text-white"
                     : "text-gray-700 hover:bg-gray-100"
                   }
               `}
@@ -104,7 +104,7 @@ const AdminSidebar = () => {
         <button
           onClick={handleLogout}
           className={`flex items-center gap-4 w-full px-4 py-3 rounded-lg cursor-pointer
-            transition-all duration-200 text-red-600 hover:bg-red-50
+            transition-all duration-200 text-primary-600 hover:bg-primary-50
             ${!isOpen ? "justify-center" : ""}
           `}
         >

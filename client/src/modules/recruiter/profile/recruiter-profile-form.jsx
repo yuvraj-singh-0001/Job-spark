@@ -2,21 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useToast } from "../../../components/toast";
 import api from "../../../components/apiconfig/apiconfig";
+import { citiesByState, stateOptions } from "../../../constants/locationData";
 
-// State → City mapping for recruiter address
-// TODO: Extend/replace with your full list or load dynamically from API if needed
-const STATE_CITY_MAP = {
-  Maharashtra: ["Mumbai", "Pune", "Nagpur", "Nashik"],
-  Karnataka: ["Bengaluru", "Mysuru", "Mangaluru"],
-  Delhi: ["New Delhi"],
-  "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai"]
-};
-
-/**
- * RecruiterProfileForm - Create/Edit recruiter profile
- * Handles both creation and update via PUT endpoint
- * Redirects to recruiter-profile after successful save
- */
 export default function RecruiterProfileForm({ initialData = null, onSaved = null, onCancel = null }) {
   const { showSuccess, showError } = useToast();
   const [saving, setSaving] = useState(false);
@@ -27,6 +14,8 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
     company_name: "",
     company_website: "",
     company_type: "company",
+    hr_name: "",
+    hr_mobile: "",
     address_line1: "",
     address_line2: "",
     city: "",
@@ -36,7 +25,7 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
   });
 
   // Derived list of cities for currently selected state
-  const citiesForSelectedState = form.state ? STATE_CITY_MAP[form.state] || [] : [];
+  const citiesForSelectedState = form.state ? citiesByState[form.state] || [] : [];
 
   // Prefill only from initialData
   useEffect(() => {
@@ -46,6 +35,8 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
         company_name: initialData.company_name ?? "",
         company_website: initialData.company_website ?? "",
         company_type: initialData.company_type ?? "company",
+        hr_name: initialData.hr_name ?? "",
+        hr_mobile: initialData.hr_mobile ?? "",
         address_line1: initialData.address_line1 ?? "",
         address_line2: initialData.address_line2 ?? "",
         city: initialData.city ?? "",
@@ -146,7 +137,7 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
             <div
               className={`mb-4 px-4 py-2 rounded ${message.type === "success"
                 ? "bg-green-50 border border-green-200 text-green-700"
-                : "bg-red-50 border border-red-200 text-red-700"
+                : "bg-primary-50 border border-primary-200 text-primary-700"
                 }`}
             >
               {message.text}
@@ -188,6 +179,31 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
             </select>
           </div>
 
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm mb-2">HR Name</label>
+              <input
+                name="hr_name"
+                value={form.hr_name}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded border"
+                placeholder="Enter HR name"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm mb-2">HR Mobile</label>
+              <input
+                name="hr_mobile"
+                value={form.hr_mobile}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded border"
+                placeholder="Enter HR mobile number"
+                type="tel"
+              />
+            </div>
+          </div>
+
           <div className="mb-4">
             <label className="block text-sm mb-2">Address Line 1 *</label>
             <input
@@ -218,7 +234,7 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
                 className="w-full px-4 py-3 rounded border"
               >
                 <option value="">Select State</option>
-                {Object.keys(STATE_CITY_MAP).map(stateName => (
+                {stateOptions.filter(state => state !== "Select State").map(stateName => (
                   <option key={stateName} value={stateName}>
                     {stateName}
                   </option>
@@ -277,12 +293,12 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
                 id="terms-checkbox-recruiter"
                 checked={termsAccepted}
                 onChange={(e) => setTermsAccepted(e.target.checked)}
-                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 required
               />
               <label htmlFor="terms-checkbox-recruiter" className="text-sm text-gray-700 cursor-pointer">
-                I confirm that all company details are accurate and I agree to HireSpark's{" "}
-                <Link to="/terms" target="_blank" className="text-blue-600 hover:underline">
+                I confirm that all company details are accurate and I agree to Jobion's{" "}
+                <Link to="/terms" target="_blank" className="text-primary-600 hover:underline">
                   Terms & Conditions
                 </Link>.
               </label>
@@ -301,7 +317,7 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
             <button
               type="submit"
               disabled={saving || !termsAccepted}
-              className={`px-6 py-2 rounded-full text-white ${saving || !termsAccepted ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:brightness-95"
+              className={`px-6 py-2 rounded-full text-white ${saving || !termsAccepted ? "bg-gray-400 cursor-not-allowed" : "bg-primary-600 hover:brightness-95"
                 }`}
             >
               {saving ? "Saving..." : "Save Profile"}

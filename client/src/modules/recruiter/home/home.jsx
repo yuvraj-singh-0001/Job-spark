@@ -80,12 +80,9 @@ export default function RecruiterDashboard() {
   // Get status badge for applications
   const getStatusBadge = (status) => {
     const configs = {
-      pending: { label: "New", class: "bg-blue-100 text-blue-700" },
-      applied: { label: "New", class: "bg-blue-100 text-blue-700" },
+      applied: { label: "Applied", class: "bg-primary-100 text-primary-700" },
       shortlisted: { label: "Shortlisted", class: "bg-green-100 text-green-700" },
-      interviewed: { label: "Interviewed", class: "bg-purple-100 text-purple-700" },
-      hired: { label: "Hired", class: "bg-emerald-100 text-emerald-700" },
-      rejected: { label: "Rejected", class: "bg-red-100 text-red-700" },
+      rejected: { label: "Rejected", class: "bg-primary-100 text-primary-700" },
     };
     const config = configs[status] || { label: status, class: "bg-gray-100 text-gray-700" };
     return (
@@ -132,7 +129,7 @@ export default function RecruiterDashboard() {
           </div>
           <Link
             to="/create-job"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
           >
             <PlusCircle size={16} />
             Post New Job
@@ -143,8 +140,8 @@ export default function RecruiterDashboard() {
       {/* Empty State - No Jobs */}
       {hasNoJobs ? (
         <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-          <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Briefcase size={32} className="text-blue-600" />
+          <div className="w-16 h-16 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Briefcase size={32} className="text-primary-600" />
           </div>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
             Start hiring today
@@ -154,7 +151,7 @@ export default function RecruiterDashboard() {
           </p>
           <Link
             to="/create-job"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors"
           >
             <PlusCircle size={18} />
             Post Your First Job
@@ -166,7 +163,7 @@ export default function RecruiterDashboard() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <Link
               to="/job-posted"
-              className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md hover:border-blue-200 transition-all"
+              className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md hover:border-primary-200 transition-all"
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
@@ -181,11 +178,11 @@ export default function RecruiterDashboard() {
 
             <Link
               to="/job-posted"
-              className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md hover:border-blue-200 transition-all"
+              className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md hover:border-primary-200 transition-all"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                  <Users size={20} className="text-blue-600" />
+                <div className="w-10 h-10 bg-primary-50 rounded-lg flex items-center justify-center">
+                  <Users size={20} className="text-primary-600" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-gray-900">{stats?.totalApplications || 0}</p>
@@ -231,7 +228,7 @@ export default function RecruiterDashboard() {
                       <Briefcase size={18} className="text-gray-500" />
                       <h3 className="font-semibold text-gray-800 text-sm">Your Live Jobs</h3>
                     </div>
-                    <Link to="/job-posted" className="text-xs text-blue-600 hover:underline font-medium">
+                    <Link to="/job-posted" className="text-xs text-primary-600 hover:underline font-medium">
                       View all
                     </Link>
                   </div>
@@ -259,7 +256,7 @@ export default function RecruiterDashboard() {
                           </div>
                           <Link
                             to={`/recruiter/jobs/${job.id}/applicants`}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-primary-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
                           >
                             <Users size={14} />
                             {job.totalApplications} Applicant{job.totalApplications !== 1 ? 's' : ''}
@@ -285,7 +282,7 @@ export default function RecruiterDashboard() {
                       <FileText size={18} className="text-gray-500" />
                       <h3 className="font-semibold text-gray-800 text-sm">Recent Applicants</h3>
                     </div>
-                    <Link to="/job-posted" className="text-xs text-blue-600 hover:underline font-medium">
+                    <Link to="/job-posted" className="text-xs text-primary-600 hover:underline font-medium">
                       View all
                     </Link>
                   </div>
@@ -354,7 +351,7 @@ export default function RecruiterDashboard() {
                   <div className="p-4 space-y-4">
                     {stats.recentActivity.map((activity, index) => (
                       <div key={index} className="flex items-start gap-3">
-                        <div className={`w-2 h-2 mt-1.5 rounded-full flex-shrink-0 ${activity.type === 'new_application' ? 'bg-blue-500' : 'bg-green-500'
+                        <div className={`w-2 h-2 mt-1.5 rounded-full flex-shrink-0 ${activity.type === 'new_application' ? 'bg-primary-500' : 'bg-green-500'
                           }`}></div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-gray-700 leading-tight">{activity.message}</p>
@@ -379,7 +376,7 @@ export default function RecruiterDashboard() {
                   </div>
                   <div className="w-full bg-gray-100 rounded-full h-2">
                     <div
-                      className="bg-blue-500 h-2 rounded-full"
+                      className="bg-primary-500 h-2 rounded-full"
                       style={{ width: `${Math.min((stats?.pendingReview || 0) / Math.max(stats?.totalApplications || 1, 1) * 100, 100)}%` }}
                     ></div>
                   </div>
@@ -396,24 +393,13 @@ export default function RecruiterDashboard() {
                   </div>
 
                   <div className="flex items-center justify-between pt-2">
-                    <span className="text-sm text-gray-600">Interviewed</span>
-                    <span className="text-sm font-semibold text-gray-900">{stats?.interviewed || 0}</span>
+                    <span className="text-sm text-gray-600">Rejected</span>
+                    <span className="text-sm font-semibold text-primary-600">{stats?.rejected || 0}</span>
                   </div>
                   <div className="w-full bg-gray-100 rounded-full h-2">
                     <div
-                      className="bg-purple-500 h-2 rounded-full"
-                      style={{ width: `${Math.min((stats?.interviewed || 0) / Math.max(stats?.totalApplications || 1, 1) * 100, 100)}%` }}
-                    ></div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-sm text-gray-600">Hired</span>
-                    <span className="text-sm font-semibold text-emerald-600">{stats?.hired || 0}</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2">
-                    <div
-                      className="bg-emerald-500 h-2 rounded-full"
-                      style={{ width: `${Math.min((stats?.hired || 0) / Math.max(stats?.totalApplications || 1, 1) * 100, 100)}%` }}
+                      className="bg-primary-500 h-2 rounded-full"
+                      style={{ width: `${Math.min((stats?.rejected || 0) / Math.max(stats?.totalApplications || 1, 1) * 100, 100)}%` }}
                     ></div>
                   </div>
                 </div>

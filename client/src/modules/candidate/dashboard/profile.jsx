@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { User, Mail, Phone, MapPin, Briefcase, GraduationCap, FileText, Edit2, Save, X } from 'lucide-react';
 import { useToast } from "../../../components/toast";
 import api from "../../../components/apiconfig/apiconfig.jsx";
+import { citiesByState, stateOptions, countryOptions } from "../../../constants/locationData";
+import { handleApiError, createErrorHandler } from "../../../utils/apiHelpers";
 
 export default function ProfilePage() {
   const { showSuccess, showError } = useToast();
@@ -9,7 +11,10 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const handleError = createErrorHandler(setError, setLoading);
   const [isEditing, setIsEditing] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [fieldTouched, setFieldTouched] = useState({});
 
   const [form, setForm] = useState({
     user_id: "",
@@ -37,229 +42,8 @@ export default function ProfilePage() {
   const genderOptions = ["Select", "Male", "Female", "Other"];
   const qualificationOptions = ["Select", "10th Pass", "12th Pass", "ITI", "Diploma", "Graduate", "Student"];
 
-  // Indian states
-  const stateOptions = [
-    "Select State", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
-    "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala",
-    "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha",
-    "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh",
-    "Uttarakhand", "West Bengal", "Delhi", "Jammu and Kashmir", "Ladakh", "Puducherry",
-    "Chandigarh", "Andaman and Nicobar Islands", "Dadra and Nagar Haveli and Daman and Diu",
-    "Lakshadweep"
-  ];
+  // Indian states - REMOVED: Now imported from centralized locationData.js
 
-  // Cities grouped by state (comprehensive list)
-  const citiesByState = {
-    "Maharashtra": [
-      "Mumbai", "Pune", "Nagpur", "Thane", "Nashik", "Aurangabad", "Solapur", "Kolhapur", "Amravati", "Nanded",
-      "Sangli", "Jalgaon", "Akola", "Latur", "Dhule", "Ahmednagar", "Chandrapur", "Parbhani", "Jalna", "Bhusawal",
-      "Navi Mumbai", "Kalyan", "Vasai-Virar", "Bhiwandi", "Ulhasnagar", "Panvel", "Satara", "Beed", "Yavatmal", "Osmanabad",
-      "Nandurbar", "Wardha", "Gondia", "Hingoli", "Washim", "Buldhana", "Raigad", "Ratnagiri", "Sindhudurg", "Palghar"
-    ],
-    "Delhi": [
-      "Delhi", "New Delhi", "North Delhi", "South Delhi", "East Delhi", "West Delhi", "Central Delhi", "North East Delhi",
-      "North West Delhi", "South East Delhi", "South West Delhi", "Karol Bagh", "Connaught Place", "Lajpat Nagar", "Dwarka",
-      "Rohini", "Pitampura", "Shahdara", "Seelampur", "Yamuna Vihar", "Karawal Nagar", "Nangloi Jat", "Rajouri Garden",
-      "Tilak Nagar", "Janakpuri", "Uttam Nagar", "Vikas Puri", "Punjabi Bagh", "Paschim Vihar", "Moti Nagar"
-    ],
-    "Karnataka": [
-      "Bangalore", "Mysore", "Hubli", "Mangalore", "Belgaum", "Gulbarga", "Davangere", "Bellary", "Bijapur", "Shimoga",
-      "Tumkur", "Raichur", "Bidar", "Hospet", "Hassan", "Gadag", "Robertsonpet", "Udupi", "Chitradurga", "Kolar",
-      "Mandya", "Chikmagalur", "Gangavati", "Bagalkot", "Ranebennuru", "Haveri", "Byadgi", "Sirsi", "Sindhnur", "Karwar",
-      "Yelahanka", "Channapatna", "Ramanagaram", "Kanakapura", "Dod Ballapur", "Nelamangala", "Anekal", "Hosur", "Krishnagiri"
-    ],
-    "Tamil Nadu": [
-      "Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Tirunelveli", "Tiruppur", "Ranipet", "Nagercoil",
-      "Thanjavur", "Vellore", "Kancheepuram", "Erode", "Tiruvannamalai", "Pollachi", "Rajapalayam", "Sivakasi", "Pudukkottai",
-      "Neyveli", "Nagapattinam", "Viluppuram", "Tiruchengode", "Vaniyambadi", "Theni", "Udhagamandalam", "Arakkonam",
-      "Paramakudi", "Ariyalur", "Tenkasi", "Sankarankoil", "Tirupathur", "Mayiladuthurai", "Sivaganga", "Virudhunagar"
-    ],
-    "Uttar Pradesh": [
-      "Lucknow", "Kanpur", "Ghaziabad", "Agra", "Meerut", "Varanasi", "Allahabad", "Bareilly", "Aligarh", "Moradabad",
-      "Saharanpur", "Gorakhpur", "Noida", "Firozabad", "Jhansi", "Muzaffarnagar", "Mathura", "Shahjahanpur", "Rampur",
-      "Mau", "Hapur", "Etawah", "Pilibhit", "Bahraich", "Unnao", "Rae Bareli", "Lakhimpur", "Sitapur", "Lakhnau",
-      "Hardoi", "Azamgarh", "Jaunpur", "Basti", "Deoria", "Ballia", "Sultanpur", "Pratapgarh", "Fatehpur", "Faizabad"
-    ],
-    "Gujarat": [
-      "Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar", "Junagadh", "Gandhinagar", "Nadiad", "Morvi",
-      "Surendranagar", "Gondal", "Veraval", "Porbandar", "Godhra", "Dahod", "Palanpur", "Valsad", "Vapi", "Navsari",
-      "Bardoli", "Vyara", "Songadh", "Udhna", "Jalalpore", "Katargam", "Utran", "Olpad", "Kosamba", "Mangrol", "Amreli",
-      "Babarpur", "Botad", "Dhandhuka", "Dholka", "Gadhada", "Halvad", "Jasdan", "Jetpur", "Limbdi"
-    ],
-    "West Bengal": [
-      "Kolkata", "Howrah", "Durgapur", "Asansol", "Siliguri", "Maheshtala", "Rajpur Sonarpur", "South Dum Dum", "Rajarhat Gopalpur",
-      "Bhatpara", "Panihati", "Kamarhati", "Bardhaman", "Kulti", "Barasat", "Krishnanagar", "Sonarpur", "Titagarh", "Habra",
-      "Uluberia", "Bally", "Jalpaiguri", "Naihati", "Bangaon", "Kharagpur", "Haldia", "Raiganj", "Balurghat", "Basirhat",
-      "Bankura", "Purulia", "Midnapore", "Contai", "Tamluk", "Diamond Harbour", "Jaynagar Mazilpur", "Mathabhanga"
-    ],
-    "Rajasthan": [
-      "Jaipur", "Jodhpur", "Kota", "Bikaner", "Ajmer", "Udaipur", "Bhilwara", "Alwar", "Bharatpur", "Sri Ganganagar",
-      "Pali", "Sikar", "Chittorgarh", "Tonk", "Kishangarh", "Beawar", "Gangapur", "Dausa", "Hindaun", "Bundi", "Churu",
-      "Jhunjhunun", "Sawai Madhopur", "Nagaur", "Makrana", "Sujangarh", "Sardarshahar", "Ladnun", "Didwana", "Ratangarh",
-      "Nokha", "Nimbahera", "Mandalgarh", "Chhoti Sadri", "Bhim", "Merta", "Phalodi", "Pokaran"
-    ],
-    "Andhra Pradesh": [
-      "Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool", "Rajahmundry", "Tirupati", "Kadapa", "Anantapur",
-      "Vizianagaram", "Eluru", "Proddatur", "Nandyal", "Adoni", "Madanapalle", "Machilipatnam", "Tenali", "Chirala",
-      "Bhimavaram", "Tadepalligudem", "Gudivada", "Srikakulam", "Dharmavaram", "Guntakal", "Hindupur", "Tadipatri",
-      "Anakapalle", "Tuni", "Samalkot", "Jaggayyapeta", "Piduguralla", "Ponnur", "Markapur", "Kandukur", "Vinukonda"
-    ],
-    "Telangana": [
-      "Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Ramagundam", "Khammam", "Mahabubnagar", "Nalgonda", "Adilabad",
-      "Suryapet", "Miryalaguda", "Jagtial", "Mancherial", "Bellampalli", "Kothagudem", "Bodhan", "Sircilla", "Tandur",
-      "Vikarabad", "Medak", "Wanaparthy", "Gadwal", "Kamareddy", "Palwancha", "Mandamarri", "Asifabad", "Bellampur",
-      "Chennur", "Choutuppal", "Devarkonda", "Ghanpur", "Huzurabad", "Jangaon", "Kalwakurthy", "Kodad", "Koratla"
-    ],
-    "Kerala": [
-      "Thiruvananthapuram", "Kochi", "Kozhikode", "Thrissur", "Kollam", "Palakkad", "Alappuzha", "Kottayam", "Kannur",
-      "Malappuram", "Ernakulam", "Idukki", "Kasaragod", "Pathanamthitta", "Wayanad", "Thirssur", "Kozhikode", "Kollam",
-      "Alappuzha", "Kottayam", "Idukki", "Ernakulam", "Thrissur", "Palakkad", "Malappuram", "Kozhikode", "Wayanad",
-      "Kannur", "Kasaragod", "Pathanamthitta", "Thiruvananthapuram", "Kochi", "Kollam", "Kottayam", "Alappuzha"
-    ],
-    "Punjab": [
-      "Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Bathinda", "Mohali", "Hoshiarpur", "Batala", "Pathankot", "Moga",
-      "Abohar", "Malerkotla", "Khanna", "Phagwara", "Barnala", "Rajpura", "Sangrur", "Fazilka", "Ferozepur", "Muktsar",
-      "Faridkot", "Kapurthala", "Zirakpur", "Ropar", "Nabha", "Talwandi Bhai", "Nakodar", "Phillaur", "Patti", "Rahon",
-      "Jagraon", "Raikot", "Dhanaula", "Rampura Phul", "Bhawanigarh", "Maur", "Longowal", "Morinda", "Nangal"
-    ],
-    "Haryana": [
-      "Faridabad", "Gurgaon", "Panipat", "Ambala", "Yamunanagar", "Rohtak", "Hisar", "Karnal", "Sonipat", "Panchkula",
-      "Bhiwani", "Sirsa", "Bahadurgarh", "Jind", "Thanesar", "Kaithal", "Palwal", "Rewari", "Hansi", "Narnaul",
-      "Fatehabad", "Gohana", "Tohana", "Narwana", "Mewat", "Gurgaon Rural", "Pataudi", "Hathin", "Loharu", "Charkhi Dadri",
-      "Badhra", "Dabwali", "Ellenabad", "Nohar", "Sadulpur", "Rajgarh", "Ratia", "Fatehabad", "Adampur"
-    ],
-    "Madhya Pradesh": [
-      "Indore", "Bhopal", "Jabalpur", "Gwalior", "Ujjain", "Sagar", "Ratlam", "Satna", "Murwara", "Morena", "Singrauli",
-      "Rewa", "Vidisha", "Ganj Basoda", "Shivpuri", "Mandsaur", "Neemuch", "Nagda", "Itarsi", "Sehore", "Mhow", "Seoni",
-      "Balaghat", "Ashoknagar", "Tikamgarh", "Shahdol", "Panna", "Chhatarpur", "Damoh", "Mandasor", "Dewas", "Betul",
-      "Harda", "Hoshangabad", "Raisen", "Rajgarh", "Shajapur", "Khandwa", "Khargone", "Burhanpur"
-    ],
-    "Bihar": [
-      "Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Darbhanga", "Arrah", "Begusarai", "Chhapra", "Katihar", "Munger",
-      "Purnia", "Saharsa", "Sasaram", "Hajipur", "Dehri", "Bettiah", "Motihari", "Bagaha", "Siwan", "Gopalganj",
-      "Sitamarhi", "Jamui", "Jehanabad", "Aurangabad", "Lakhisarai", "Nawada", "Jamalpur", "Hilsa", "Warisaliganj",
-      "Rajgir", "Samastipur", "Dalsinghsarai", "Rosera", "Forbesganj", "Raxaul", "Jogbani", "Sonepur", "Islampur"
-    ],
-    "Odisha": [
-      "Bhubaneswar", "Cuttack", "Rourkela", "Berhampur", "Sambalpur", "Puri", "Baleshwar", "Bhadrak", "Baripada",
-      "Jharsuguda", "Brajarajnagar", "Rayagada", "Koraput", "Kendujhar", "Talcher", "Sundargarh", "Subarnapur",
-      "Malkangiri", "Phulbani", "Titlagarh", "Nabarangpur", "Umerkote", "Jatni", "Khurda", "Balugaon", "Jagatsinghpur",
-      "Cuttack Sadar", "Nimapada", "Pipili", "Nischintakoili", "Paradip", "Athagarh", "Banki", "Asika", "Ganjam"
-    ],
-    "Chhattisgarh": [
-      "Raipur", "Bhilai", "Bilaspur", "Korba", "Durg", "Raigarh", "Jagdalpur", "Ambikapur", "Rajnandgaon", "Chirmiri",
-      "Dhamtari", "Mahasamund", "Kawardha", "Bijapur", "Narayanpur", "Dantewada", "Kanker", "Bastar", "Jagdalpur",
-      "Kondagaon", "Uttar Bastar Kanker", "Bemetra", "Naila Janjgir", "Mungeli", "Lormi", "Pandariya", "Takhatpur",
-      "Gharghoda", "Shivrinarayan", "Sakti", "Saraipali", "Basna", "Pithora", "Katghora", "Baloda", "Arang"
-    ],
-    "Jharkhand": [
-      "Ranchi", "Jamshedpur", "Dhanbad", "Bokaro", "Deoghar", "Phusro", "Hazaribagh", "Giridih", "Ramgarh", "Medininagar",
-      "Chirkunda", "Dumka", "Gumia", "Lohardaga", "Pakur", "Simdega", "Chatra", "Godda", "Sahibganj", "Latehar",
-      "Palamu", "Garhwa", "Khunti", "Gumla", "West Singhbhum", "East Singhbhum", "Saraikela Kharsawan", "Jamtara",
-      "Kodarma", "Bermo", "Bundu", "Manoharpur", "Kharsawan", "Chakradharpur", "Noamundi", "Chaibasa", "Jagannathpur"
-    ],
-    "Uttarakhand": [
-      "Dehradun", "Haridwar", "Roorkee", "Haldwani", "Rudrapur", "Kashipur", "Rishikesh", "Pithoragarh", "Almora",
-      "Nainital", "Pantnagar", "Kichha", "Sitarganj", "Bazpur", "Khatima", "Maholi", "Laksar", "Manglaur", "Jaspur",
-      "Kotdwara", "Najibabad", "Nagina", "Dhampur", "Nihtaur", "Sherkot", "Afzalgarh", "Jwalapur", "Bijnor", "Chandpur",
-      "Haldaur", "Kiratpur", "Mandawar", "Najibabad", "Seohara", "Sultanpur", "Tanda", "Thakurdwara"
-    ],
-    "Himachal Pradesh": [
-      "Shimla", "Mandi", "Dharamshala", "Solan", "Nahan", "Una", "Palampur", "Hamirpur", "Bilaspur", "Kangra",
-      "Chamba", "Lahaul and Spiti", "Kinnaur", "Sirmaur", "Amb", "Banjar", "Bharmour", "Dalhousie", "Jogindernagar",
-      "Karsog", "Rampur", "Sundernagar", "Theog", "Arki", "Baddi", "Nalagarh", "Parwanoo", "Kasauli", "Dagshai",
-      "Sabathu", "Jutogh", "Tara Devi", "Summer Hill", "Chaura Maidan", "Fagu", "Kumarsain", "Rohru", "Narkanda"
-    ],
-    "Jammu and Kashmir": [
-      "Srinagar", "Jammu", "Anantnag", "Baramulla", "Kathua", "Udhampur", "Poonch", "Rajouri", "Pulwama", "Shopian",
-      "Badgam", "Kulgam", "Doda", "Ramban", "Kishtwar", "Samba", "Reasi", "H Jammu", "Akhnoor", "Bishnah", "R S Pura",
-      "Sunderbani", "Mendhar", "Katra", "Udhampur", "Chenani", "Ramban", "Banihal", "Gool Gulab Garh", "Surankote",
-      "Mendhar", "Nowshera", "Kalakote", "Rajauri", "Thanamandi", "Sunderbani", "Hajin", "Bandipore", "Gurez"
-    ],
-    "Goa": [
-      "Panaji", "Margao", "Vasco da Gama", "Mapusa", "Ponda", "Bicholim", "Curchorem", "Sanguem", "Quepem", "Canacona",
-      "Dharbandora", "Pernem", "Bardez", "Tiswadi", "Ponda", "Sattari", "Bicholim", "Dharbandora", "Sanguem", "Canacona",
-      "Valpoi", "Anjuna", "Calangute", "Candolim", "Siolim", "Morjim", "Arambol", "Mandrem", "Tivim", "Mapusa",
-      "Aldona", "Corlim", "Chimbel", "Jua", "Usgao", "Pale", "Moira", "Saligao", "Betim", "Latambarcem"
-    ],
-    "Assam": [
-      "Guwahati", "Silchar", "Dibrugarh", "Jorhat", "Nagaon", "Tinsukia", "Tezpur", "Bongaigaon", "Karimganj", "Sibsagar",
-      "North Lakhimpur", "Goalpara", "Barpeta", "Morigaon", "Kokrajhar", "Nalbari", "Rangia", "Mangaldoi", "Diphu",
-      "Hailakandi", "Tihu", "Howli", "Barpeta Road", "Sarthebari", "Pathsala", "Sorbhog", "Bijni", "Chapar", "Hajo",
-      "Palasbari", "Sualkuchi", "North Guwahati", "Gauripur", "Dhubri", "Bilasipara", "Mankachar", "Fakiragram"
-    ],
-    "Sikkim": [
-      "Gangtok", "Namchi", "Gyalshing", "Mangan", "Ravangla", "Singtam", "Jorethang", "Rangpo", "Pakyong", "Soreng",
-      "Geyzing", "Dentam", "Yuksom", "Rinchenpong", "Martam", "Bermiok", "Chungthang", "Dikchu", "Gangtok", "Mangan",
-      "Namchi", "Gyalshing", "Soreng", "Singtam", "Rangpo", "Jorethang", "Pakyong", "Ravangla", "Dentam", "Geyzing"
-    ],
-    "Tripura": [
-      "Agartala", "Udaipur", "Dharmanagar", "Kailasahar", "Belonia", "Ambassa", "Khowai", "Teliamura", "Bishalgarh",
-      "Sonamura", "Melaghar", "Jirania", "Mohanpur", "Ranirbazar", "Sabroom", "Santirbazar", "Kumarghat", "Panisagar",
-      "Kanchanpur", "Gakulnagar", "Radhakishorepur", "Boxanagar", "Palatana", "Manu", "Fatikroy", "Chandipur", "Kamalpur",
-      "Surjyamaninagar", "Charipara", "Takaramile", "Narsingarh", "Bagafa", "Satchand", "Kamal Krishnabari"
-    ],
-    "Manipur": [
-      "Imphal", "Thoubal", "Lilong", "Mayang Imphal", "Kakching", "Ukhrul", "Chandel", "Senapati", "Tamenglong", "Jiribam",
-      "Bishnupur", "Noney", "Pherzawl", "Kangpokpi", "Tengnoupal", "Moreh", "Moirang", "Wangjing", "Yairipok", "Sugnu",
-      "Kwakta", "Lamshang", "Patsoi", "Samurou", "Wangkhei", "Lairikyengbam Leikai", "Konthoujam", "Utlou", "Khurai",
-      "Andro", "Lamlai", "Wangoi", "Sekmai", "Lamsang", "Keirao Bitra", "Lairikyengbam Leikai", "Konthoujam", "Utlou"
-    ],
-    "Meghalaya": [
-      "Shillong", "Tura", "Jowai", "Nongstoin", "Williamnagar", "Baghmara", "Resubelpara", "Nongpoh", "Mairang", "Cherrapunjee",
-      "Mawkyrwat", "Khliehriat", "Mawphlang", "Pynursla", "Sohra", "Mawlynnong", "Laitumkhrah", "Jowai", "Nongstoin",
-      "Williamnagar", "Baghmara", "Resubelpara", "Nongpoh", "Mairang", "Khliehriat", "Mawkyrwat", "Mawphlang", "Pynursla",
-      "Sohra", "Mawlynnong", "Laitumkhrah", "Baridua", "Dalu", "Mahendraganj", "Rongjeng", "Songsak", "Rongram"
-    ],
-    "Nagaland": [
-      "Kohima", "Dimapur", "Mokokchung", "Tuensang", "Wokha", "Zunheboto", "Mon", "Phek", "Kiphire", "Longleng",
-      "Peren", "Chumukedima", "Pfutsero", "Chizami", "Aizawl", "Lunglei", "Saiha", "Champhai", "Kolasib", "Serchhip",
-      "Aizawl", "Lunglei", "Saiha", "Champhai", "Kolasib", "Serchhip", "Lawngtlai", "Mamit", "Khawzawl", "Zawlnuam",
-      "Hnahthial", "Saitual", "Ngopa", "Reiek", "Vairengte", "Kawnpui", "Darlawn", "Sialsuk", "Biate", "Thingsulthliah"
-    ],
-    "Mizoram": [
-      "Aizawl", "Lunglei", "Saiha", "Champhai", "Kolasib", "Serchhip", "Lawngtlai", "Mamit", "Khawzawl", "Zawlnuam",
-      "Hnahthial", "Saitual", "Ngopa", "Reiek", "Vairengte", "Kawnpui", "Darlawn", "Sialsuk", "Biate", "Thingsulthliah",
-      "Aizawl", "Lunglei", "Saiha", "Champhai", "Kolasib", "Serchhip", "Lawngtlai", "Mamit", "Khawzawl", "Zawlnuam"
-    ],
-    "Arunachal Pradesh": [
-      "Itanagar", "Naharlagun", "Pasighat", "Along", "Tawang", "Ziro", "Bomdila", "Aalo", "Tezu", "Roing", "Namsai",
-      "Yingkiong", "Daporijo", "Koloriang", "Basar", "Anini", "Mechuka", "Hayuliang", "Chowkham", "Tuting", "Geku",
-      "Mariyang", "Kamba", "L Kra Daadi", "Palin", "Raga", "Daporijo", "Bomdila", "Dirang", "Kalaktang", "Mukto"
-    ],
-    "Puducherry": [
-      "Puducherry", "Karaikal", "Mahe", "Yanam", "Puducherry", "Karaikal", "Mahe", "Yanam", "Ariankuppam", "Manavely",
-      "Ozhukarai", "Villianur", "Mudaliarpet", "Ariyankuppam", "Thirubuvanai", "Mannadipet", "Ossudu", "Vazhudavur",
-      "Bahour", "Nettapakkam", "Pondicherry", "Karaikal", "Mahe", "Yanam", "Ariankuppam", "Manavely", "Ozhukarai"
-    ],
-    "Chandigarh": [
-      "Chandigarh", "Chandigarh", "Sector 1", "Sector 2", "Sector 3", "Sector 4", "Sector 5", "Sector 6", "Sector 7",
-      "Sector 8", "Sector 9", "Sector 10", "Sector 11", "Sector 12", "Sector 13", "Sector 14", "Sector 15", "Sector 16",
-      "Sector 17", "Sector 18", "Sector 19", "Sector 20", "Sector 21", "Sector 22", "Sector 23", "Sector 24", "Sector 25",
-      "Sector 26", "Sector 27", "Sector 28", "Sector 29", "Sector 30", "Sector 31", "Sector 32", "Sector 33", "Sector 34",
-      "Sector 35", "Sector 36", "Sector 37", "Sector 38", "Sector 39", "Sector 40", "Sector 41", "Sector 42", "Sector 43",
-      "Sector 44", "Sector 45", "Sector 46", "Sector 47", "Sector 48", "Sector 49", "Sector 50", "Sector 51", "Sector 52",
-      "Sector 53", "Sector 54", "Sector 55", "Sector 56", "Industrial Area Phase 1", "Industrial Area Phase 2"
-    ],
-    "Andaman and Nicobar Islands": [
-      "Port Blair", "Car Nicobar", "Mayabunder", "Diglipur", "Rangat", "Little Andaman", "Hut Bay", "Aerial Bay",
-      "Campbell Bay", "Nancowry", "Kamorta", "Trinket", "Long Island", "Cinque Island", "North Passage Island",
-      "Maimyo", "Smith Island", "Stewart Island", "Ross Island", "Narcondam Island", "Landfall Island", "Interview Island",
-      "Brothers Island", "Sister Island", "Bentinck Island", "Son Island", "Roper Island", "Harminder Bay", "Chidiya Tapu"
-    ],
-    "Dadra and Nagar Haveli and Daman and Diu": [
-      "Daman", "Diu", "Silvassa", "Amli", "Naroli", "Vasona", "Magarwada", "Kherdi", "Morkhal", "Rakholi", "Pariali",
-      "Samarvarni", "Masat", "Kachigam", "Saily", "Kharadpada", "Kilvani", "Sindoni", "Mandoni", "Bordi", "Kolak",
-      "Randha", "Samarvarni", "Masat", "Kachigam", "Saily", "Kharadpada", "Kilvani", "Sindoni", "Mandoni"
-    ],
-    "Ladakh": [
-      "Leh", "Kargil", "Padum", "Drass", "Leh", "Kargil", "Padum", "Drass", "Zanskar", "Nubra", "Changthang", "Sham",
-      "Hemis", "Shey", "Thiksey", "Matho", "Stakna", "Spituk", "Choglamsar", "Sankoo", "Ney", "Phyang", "Temisgam",
-      "Nimoo", "Bazgo", "Chuchot", "Khaltsi", "Skurbuchan", "Takmachik", "Tangtse", "Hunder", "Diskit", "Hundar"
-    ]
-  };
-
-  // Trade/Stream options by qualification level
   const tradesByQualification = {
     "10th Pass": [
       "Select Trade/Stream", "Helper", "Delivery", "Security Guard", "Housekeeping", "Waiter",
@@ -354,7 +138,7 @@ export default function ProfilePage() {
         setForm(mapUserToForm(res.data.user));
       }
     } catch (err) {
-      // Error loading profile
+      handleError(err, 'Failed to load profile. Please try again.');
     } finally {
       try {
         const auth = await api.get('/auth/session');
@@ -405,7 +189,79 @@ export default function ProfilePage() {
   function handleChange(e) {
     const { name, value } = e.target;
     setForm((s) => ({ ...s, [name]: value }));
+
+    // Validate field if it has been touched
+    if (fieldTouched[name]) {
+      validateField(name, value);
+    }
   }
+
+  const validateField = (name, value) => {
+    const errors = { ...fieldErrors };
+
+    switch (name) {
+      case 'full_name':
+        if (!value.trim()) {
+          errors.full_name = 'Full name is required';
+        } else if (value.trim().length < 2) {
+          errors.full_name = 'Full name must be at least 2 characters';
+        } else {
+          delete errors.full_name;
+        }
+        break;
+
+      case 'phone':
+        if (!value) {
+          errors.phone = 'Mobile number is required';
+        } else if (!validatePhoneNumber(value)) {
+          errors.phone = 'Mobile number must be 10 digits starting with 6-9';
+        } else {
+          delete errors.phone;
+        }
+        break;
+
+      case 'date_of_birth':
+        if (!value) {
+          errors.date_of_birth = 'Date of birth is required';
+        } else if (!validateDateOfBirth(value)) {
+          errors.date_of_birth = 'You must be at least 18 years old';
+        } else {
+          delete errors.date_of_birth;
+        }
+        break;
+
+      case 'highest_qualification':
+        if (!value) {
+          errors.highest_qualification = 'Highest qualification is required';
+        } else {
+          delete errors.highest_qualification;
+        }
+        break;
+
+      case 'experience_years':
+        if (value === '') {
+          errors.experience_years = 'Please specify your experience';
+        } else if (value !== '0' && !validateExperienceYears(value)) {
+          errors.experience_years = 'Experience must be 0-40 years';
+        } else {
+          delete errors.experience_years;
+        }
+        break;
+
+      default:
+        if (errors[name]) {
+          delete errors[name];
+        }
+    }
+
+    setFieldErrors(errors);
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setFieldTouched((prev) => ({ ...prev, [name]: true }));
+    validateField(name, value);
+  };
 
   // Get cities for selected state
   function getCitiesForState(state) {
@@ -667,7 +523,7 @@ export default function ProfilePage() {
         showError(errorMsg);
       }
     } catch (err) {
-      const errorMsg = err?.response?.data?.message || err?.response?.data?.error || err.message || "Failed to save profile";
+      const errorMsg = handleApiError(err, "Failed to save profile");
       showError(errorMsg);
     } finally {
       setSaving(false);
@@ -735,10 +591,16 @@ export default function ProfilePage() {
                         name="full_name"
                         value={form.full_name}
                         onChange={handleChange}
+                        onBlur={handleBlur}
                         required
                         placeholder="Enter your full name"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors ${
+                          fieldErrors.full_name ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
+                        }`}
                       />
+                      {fieldErrors.full_name && fieldTouched.full_name && (
+                        <p className="text-red-600 text-xs mt-1">{fieldErrors.full_name}</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">Mobile Number *</label>
@@ -751,12 +613,19 @@ export default function ProfilePage() {
                             handleChange({ target: { name: 'phone', value } });
                           }
                         }}
+                        onBlur={handleBlur}
                         required
                         placeholder="10-digit mobile number"
                         maxLength="10"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors ${
+                          fieldErrors.phone ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
+                        }`}
                       />
-                      <p className="text-xs text-gray-500 mt-1">Enter 10-digit mobile number starting with 6-9</p>
+                      {fieldErrors.phone && fieldTouched.phone ? (
+                        <p className="text-red-600 text-xs mt-1">{fieldErrors.phone}</p>
+                      ) : (
+                        <p className="text-xs text-gray-500 mt-1">Enter 10-digit mobile number starting with 6-9</p>
+                      )}
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -767,11 +636,18 @@ export default function ProfilePage() {
                         type="date"
                         value={form.date_of_birth}
                         onChange={handleChange}
+                        onBlur={handleBlur}
                         required
                         max={new Date(Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors ${
+                          fieldErrors.date_of_birth ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
+                        }`}
                       />
-                      <p className="text-xs text-gray-500 mt-1">Must be 18 years or older</p>
+                      {fieldErrors.date_of_birth && fieldTouched.date_of_birth ? (
+                        <p className="text-red-600 text-xs mt-1">{fieldErrors.date_of_birth}</p>
+                      ) : (
+                        <p className="text-xs text-gray-500 mt-1">Must be 18 years or older</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">Gender *</label>
@@ -780,7 +656,7 @@ export default function ProfilePage() {
                         value={form.gender}
                         onChange={handleChange}
                         required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                       >
                         {genderOptions.map(opt => (
                           <option key={opt} value={opt === "Select" ? "" : opt}>{opt}</option>
@@ -809,7 +685,7 @@ export default function ProfilePage() {
                       value={form.state}
                       onChange={handleChange}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                     >
                       {stateOptions.map(state => (
                         <option key={state} value={state === "Select State" ? "" : state}>{state}</option>
@@ -823,7 +699,7 @@ export default function ProfilePage() {
                       value={form.city}
                       onChange={handleChange}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                     >
                       <option value="">Select City</option>
                       {getCitiesForState(form.state).map(city => (
@@ -839,7 +715,9 @@ export default function ProfilePage() {
                       disabled
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
                     >
-                      <option value="India">India</option>
+                      {countryOptions.map(country => (
+                        <option key={country} value={country}>{country}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -864,7 +742,7 @@ export default function ProfilePage() {
                       value={form.highest_qualification}
                       onChange={handleChange}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                     >
                       {qualificationOptions.map(opt => (
                         <option key={opt} value={opt === "Select" ? "" : opt}>{opt}</option>
@@ -880,7 +758,7 @@ export default function ProfilePage() {
                         name="trade_stream"
                         value={form.trade_stream}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                       >
                         <option value="">Select Trade/Stream</option>
                         {getTradesForQualification(form.highest_qualification)
@@ -912,7 +790,7 @@ export default function ProfilePage() {
                       type="button"
                       onClick={() => setForm(prev => ({ ...prev, experience_years: "0" }))}
                       className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${form.experience_years === "0"
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-primary-600 text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                     >
@@ -922,7 +800,7 @@ export default function ProfilePage() {
                       type="button"
                       onClick={() => setForm(prev => ({ ...prev, experience_years: "" }))}
                       className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${form.experience_years !== "0"
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-primary-600 text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                     >
@@ -950,7 +828,7 @@ export default function ProfilePage() {
                         }}
                         required
                         placeholder="e.g., 2"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                       />
                     </div>
                   </div>
@@ -977,7 +855,7 @@ export default function ProfilePage() {
                           type="button"
                           onClick={() => setForm(prev => ({ ...prev, job_type: option }))}
                           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${form.job_type === option
-                            ? 'bg-blue-600 text-white'
+                            ? 'bg-primary-600 text-white'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                         >
@@ -996,7 +874,7 @@ export default function ProfilePage() {
                           type="button"
                           onClick={() => setForm(prev => ({ ...prev, availability: option }))}
                           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${form.availability === option
-                            ? 'bg-blue-600 text-white'
+                            ? 'bg-primary-600 text-white'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                         >
@@ -1013,7 +891,7 @@ export default function ProfilePage() {
                       name="expected_salary"
                       value={form.expected_salary}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                     >
                       {salaryOptions.map(salary => (
                         <option key={salary} value={salary === "Select Salary Range" ? "" : salary}>{salary}</option>
@@ -1037,10 +915,10 @@ export default function ProfilePage() {
 
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Resume Upload (Optional)</label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-400 transition-colors">
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-primary-400 transition-colors">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <FileText size={24} className="text-blue-600" />
+                          <FileText size={24} className="text-primary-600" />
                           <div>
                             <p className="text-sm font-medium text-gray-900">
                               {selectedResumeFile ? selectedResumeFile.name : (form.resume_path ? 'Resume uploaded' : 'No resume selected')}
@@ -1059,7 +937,7 @@ export default function ProfilePage() {
                         </label>
                       </div>
                       {selectedResumeFile && !selectedResumeFile.name.toLowerCase().endsWith('.pdf') && (
-                        <p className="text-xs text-red-600 mt-2">Please select a PDF file only</p>
+                        <p className="text-xs text-primary-600 mt-2">Please select a PDF file only</p>
                       )}
                     </div>
                   </div>
@@ -1073,7 +951,7 @@ export default function ProfilePage() {
                         value={form.id_proof_available}
                         onChange={handleChange}
                         required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                       >
                         {idProofOptions.map(opt => (
                           <option key={opt} value={opt === "Select" ? "" : opt}>{opt}</option>
@@ -1103,7 +981,7 @@ export default function ProfilePage() {
                           onChange={handleChange}
                           placeholder="https://linkedin.com/in/yourprofile"
                           type="url"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                         />
                       </div>
                     )}
@@ -1116,7 +994,7 @@ export default function ProfilePage() {
                           onChange={handleChange}
                           placeholder="https://github.com/yourusername"
                           type="url"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                         />
                       </div>
                     )}
@@ -1130,7 +1008,7 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="btn btn-primary px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors inline-flex items-center justify-center gap-2"
+                className="btn btn-primary px-6 py-2.5 text-sm font-semibold text-white bg-primary-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors inline-flex items-center justify-center gap-2"
               >
                 <Save size={18} />
                 {saving ? "Saving..." : "Save Profile"}
@@ -1157,7 +1035,7 @@ function ProfileView({ user, onEdit }) {
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="p-12 text-center">
           <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4">
-            <User size={32} className="text-blue-600" />
+            <User size={32} className="text-primary-600" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">No Profile Found</h3>
           <p className="text-gray-600 mb-6">Create your professional profile to get started</p>
@@ -1175,7 +1053,7 @@ function ProfileView({ user, onEdit }) {
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="p-6">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-lg">
+            <div className="w-16 h-16 rounded-full bg-primary-600 flex items-center justify-center text-white font-semibold text-lg">
               {user.full_name ? user.full_name.charAt(0).toUpperCase() : "U"}
             </div>
             <div>
@@ -1239,7 +1117,6 @@ function ProfileView({ user, onEdit }) {
               {["Diploma", "Graduate", "Student"].includes(user.highest_qualification) && (
                 <InfoItem label="Trade/Stream" value={user.trade_stream} />
               )}
-              <InfoItem label="Skill Level" value={user.skill_level} />
             </div>
           </div>
         </div>
@@ -1253,7 +1130,6 @@ function ProfileView({ user, onEdit }) {
           </div>
           <div className="p-4">
             <div className="space-y-2">
-              <InfoItem label="Experience Type" value={user.experience_type} />
               <InfoItem label="Experience Years" value={user.experience_years !== undefined && user.experience_years !== null ? `${user.experience_years} years` : "—"} />
               <InfoItem label="Job Type" value={user.job_type} />
               <InfoItem label="Expected Salary" value={user.expected_salary} />
@@ -1302,7 +1178,7 @@ function ProfileView({ user, onEdit }) {
                 href={resumeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
+                className="inline-flex items-center gap-2 text-primary-600 hover:text-blue-700 font-medium"
               >
                 <FileText size={18} />
                 View Resume
@@ -1334,7 +1210,7 @@ function LinkItem({ label, url }) {
         href={url}
         target="_blank"
         rel="noreferrer"
-        className="text-sm text-blue-600 hover:text-blue-700 font-medium truncate max-w-xs"
+        className="text-sm text-primary-600 hover:text-blue-700 font-medium truncate max-w-xs"
       >
         {url}
       </a>

@@ -116,7 +116,7 @@ export default function GuestNavbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-border bg-white text-text-dark shadow-sm backdrop-blur-sm bg-white/95">
+      <header className="sticky top-0 z-50 border-b border-primary-200/50 bg-white/90 backdrop-blur-xl text-text-dark shadow-energy">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4">
           <div className="flex items-center justify-between gap-4">
             {/* Logo */}
@@ -124,11 +124,11 @@ export default function GuestNavbar() {
               to="/"
               className="flex items-center gap-2.5 sm:gap-3 hover:opacity-90 transition-opacity flex-shrink-0"
             >
-              <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-primary-500 text-white grid place-items-center shadow-soft flex-shrink-0">
-                <Sparkles size={18} className="sm:w-5 sm:h-5" />
-              </div>
-              <b className="text-lg sm:text-xl font-bold tracking-tight">
-                Hire<span className="text-primary-500">Spark</span>
+              <b className="text-xl sm:text-2xl font-black tracking-widest bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 bg-clip-text text-transparent drop-shadow-sm hover:from-primary-700 hover:via-primary-800 hover:to-primary-900 transition-all duration-300">
+                Job<span className="relative">
+                  <span className="text-primary-400">ı</span>
+                  <span className="absolute -top-1 left-0 text-red-500 text-sm">•</span>
+                </span>on
               </b>
             </Link>
 
@@ -142,9 +142,9 @@ export default function GuestNavbar() {
                     <Link
                       key={item.path}
                       to={item.path}
-                      className={`px-3 lg:px-4 py-2 rounded-button text-sm font-semibold transition-colors inline-flex items-center gap-1.5 ${isActive(item.path)
-                          ? "bg-primary-50 text-primary-700"
-                          : "text-text-muted hover:bg-primary-50 hover:text-primary-600"
+                      className={`px-3 lg:px-4 py-2 rounded-full text-sm font-bold transition-colors inline-flex items-center gap-1.5 ${isActive(item.path)
+                        ? "bg-gradient-red text-white shadow-energy"
+                        : "text-text-muted hover:bg-gradient-red hover:text-white hover:shadow-kinetic"
                         }`}
                     >
                       {Icon && <Icon size={16} />}
@@ -157,25 +157,25 @@ export default function GuestNavbar() {
                 <>
                   <Link
                     to="/"
-                    className={`px-3 lg:px-4 py-2 rounded-button text-sm font-semibold transition-colors ${isActive("/") || isActive("/home")
-                      ? "bg-primary-50 text-primary-700"
-                      : "text-text-muted hover:bg-primary-50 hover:text-primary-600"
+                    className={`px-3 lg:px-4 py-2 rounded-full text-sm font-bold transition-colors ${isActive("/") || isActive("/home")
+                      ? "bg-gradient-red text-white shadow-energy"
+                      : "text-text-muted hover:bg-gradient-red hover:text-white hover:shadow-kinetic"
                       }`}
                   >
                     Home
                   </Link>
                   <Link
                     to="/jobs"
-                    className={`px-3 lg:px-4 py-2 rounded-button text-sm font-semibold transition-colors ${isActive("/jobs") || location.pathname.startsWith("/jobs/")
-                      ? "bg-primary-50 text-primary-700"
-                      : "text-text-muted hover:bg-primary-50 hover:text-primary-600"
+                    className={`px-3 lg:px-4 py-2 rounded-full text-sm font-bold transition-colors ${isActive("/jobs") || location.pathname.startsWith("/jobs/")
+                      ? "bg-gradient-red text-white shadow-energy"
+                      : "text-text-muted hover:bg-gradient-red hover:text-white hover:shadow-kinetic"
                       }`}
                   >
                     Browse Jobs
                   </Link>
                   <Link
                     to="/sign-in?role=recruiter&redirect=post-job"
-                    className="px-3 lg:px-4 py-2 rounded-button text-sm font-semibold text-text-muted hover:bg-primary-50 hover:text-primary-600 transition-colors"
+                    className="px-3 lg:px-4 py-2 rounded-full text-sm font-bold text-text-muted hover:bg-gradient-red hover:text-white hover:shadow-kinetic transition-colors"
                   >
                     Post a Job
                   </Link>
@@ -265,7 +265,7 @@ export default function GuestNavbar() {
                   {/* Candidate Login - Navigate to sign-in page */}
                   <Link
                     to="/sign-in?role=candidate"
-                    className="hidden sm:inline-flex btn btn-ghost btn-sm"
+                    className="hidden sm:inline-flex px-3 lg:px-4 py-2 rounded-full text-sm font-bold text-text-muted hover:bg-gradient-red hover:text-white hover:shadow-kinetic transition-colors"
                   >
                     Candidate Login
                   </Link>
@@ -273,7 +273,7 @@ export default function GuestNavbar() {
                   {/* Recruiter Login - Navigate to sign-in page */}
                   <Link
                     to="/sign-in?role=recruiter"
-                    className="btn btn-primary btn-sm"
+                    className="px-3 lg:px-4 py-2 rounded-full text-sm font-bold text-text-muted hover:bg-gradient-red hover:text-white hover:shadow-kinetic transition-colors"
                   >
                     <span className="hidden sm:inline">Recruiter Login</span>
                     <span className="sm:hidden">Login</span>
@@ -295,7 +295,7 @@ export default function GuestNavbar() {
 
         {/* Mobile Navigation Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-t border-border animate-in slide-in-from-top">
+          <div className="md:hidden bg-white border-t border-border">
             <nav className="px-4 sm:px-6 py-4 space-y-3">
               {isRecruiter ? (
                 // Recruiter mobile navigation
@@ -307,8 +307,8 @@ export default function GuestNavbar() {
                       to={item.path}
                       onClick={() => setMobileMenuOpen(false)}
                       className={`flex items-center gap-2 py-3 px-4 rounded-lg text-base font-medium transition-colors ${isActive(item.path)
-                          ? "bg-primary-50 text-primary-700"
-                          : "text-text-dark hover:text-primary-600 hover:bg-gray-50"
+                        ? "bg-primary-50 text-primary-700"
+                        : "text-text-dark hover:text-primary-600 hover:bg-gray-50"
                         }`}
                     >
                       {Icon && <Icon size={18} />}
@@ -367,7 +367,7 @@ export default function GuestNavbar() {
                   <Link
                     to="/sign-in?role=recruiter"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block w-full text-center px-4 py-2.5 rounded-button btn-primary btn-sm"
+                    className="block w-full text-center px-4 py-2.5 rounded-button text-sm font-semibold text-primary-600 border-2 border-primary-500 hover:bg-primary-50 transition-colors"
                   >
                     Recruiter Login
                   </Link>

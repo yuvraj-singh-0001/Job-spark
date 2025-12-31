@@ -12,12 +12,12 @@ function GuestFooter() {
           {/* Brand / description */}
           <div className="space-y-3 sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-2.5">
-              <div className="h-10 w-10 rounded-xl bg-primary-500 text-white grid place-items-center shadow-soft">
-                <Sparkles size={18} />
-              </div>
-              <span className="text-lg font-bold tracking-tight text-text-dark">
-                Hire<span className="text-primary-500">Spark</span>
-              </span>
+              <b className="text-lg font-black tracking-widest bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 bg-clip-text text-transparent drop-shadow-sm hover:from-primary-700 hover:via-primary-800 hover:to-primary-900 transition-all duration-300">
+                Job<span className="relative">
+                  <span className="text-primary-400">ı</span>
+                  <span className="absolute -top-1 left-0 text-red-500 text-sm">•</span>
+                </span>on
+              </b>
             </div>
             <p className="text-xs sm:text-sm text-text-muted max-w-xs leading-relaxed">
               A modern hiring platform that helps companies and candidates connect
@@ -95,30 +95,39 @@ function GuestFooter() {
               onSubmit={(e) => e.preventDefault()}
               className="space-y-2"
             >
-              <div className="flex rounded-input bg-gray-50 border border-border overflow-hidden focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-500/20 transition-all">
+              <div className="relative w-full">
                 <input
                   type="email"
                   required
                   placeholder="Your email"
-                  className="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-transparent outline-none text-text-dark placeholder:text-text-muted"
+                  className="w-full rounded-input bg-gray-50 border border-border 
+      pl-3 pr-[120px] py-2.5 text-sm outline-none text-text-dark 
+      placeholder:text-text-muted focus:border-primary-500 
+      focus:ring-2 focus:ring-primary-500/20 transition-all"
                 />
+
                 <button
                   type="submit"
-                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold bg-primary-500 hover:bg-primary-600 text-white transition-colors"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 
+      px-4 py-2 text-sm font-semibold bg-primary-500 
+      hover:bg-primary-600 active:bg-primary-700 text-white 
+      transition-colors rounded-button"
                 >
                   Subscribe
                 </button>
               </div>
+
               <p className="text-[10px] text-text-light">
                 No spam. Unsubscribe anytime.
               </p>
             </form>
+
           </div>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-border pt-6">
           <p className="text-xs text-text-muted">
-            © {new Date().getFullYear()} HireSpark. All rights reserved.
+            © {new Date().getFullYear()} Jobion. All rights reserved.
           </p>
         </div>
       </div>

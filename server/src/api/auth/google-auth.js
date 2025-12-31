@@ -1,6 +1,7 @@
 const { OAuth2Client } = require('google-auth-library');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
+const logger = require('../../utils/logger');
 
 /**
  * signToken(payload)
@@ -71,7 +72,6 @@ async function googleAuth(req, res) {
       let user;
 
       if (existing.length) {
-        console.log('User exists - updating last_login and google_id/auth_provider if needed');
         // User exists - update last_login and google_id/auth_provider if needed
         const existingUser = existing[0];
         const updates = [];
@@ -127,7 +127,6 @@ async function googleAuth(req, res) {
         // Ensure role fallback if still null in DB
         user = { ...updated[0], role: updated[0].role || userRole };
       } else {
-        console.log('New user - creating account with role:', userRole);
         // New user - create account with role from frontend (userRole)
         const randomPassword = require('crypto').randomBytes(32).toString('hex');
         const passwordHash = await require('bcryptjs').hash(randomPassword, 10);

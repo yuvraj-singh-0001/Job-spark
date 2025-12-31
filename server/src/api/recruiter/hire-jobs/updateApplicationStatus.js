@@ -1,4 +1,5 @@
 const pool = require("../../config/db");
+const { sendEmail } = require("../../../services/emailService");
 
 async function updateApplicationStatus(req, res) {
   const connection = await pool.getConnection();
@@ -17,7 +18,7 @@ async function updateApplicationStatus(req, res) {
     }
 
     // Validate status
-    const validStatuses = ['applied', 'shortlisted', 'interview_called', 'closed'];
+    const validStatuses = ['applied', 'shortlisted', 'rejected'];
     if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({
         ok: false,
@@ -27,9 +28,14 @@ async function updateApplicationStatus(req, res) {
 
     // Verify the application belongs to a job owned by this recruiter
     const [applicationRows] = await connection.query(
-      `SELECT ja.id, ja.job_id, j.recruiter_id 
+      `SELECT ja.id, ja.job_id, ja.user_id, j.recruiter_id, jr.name as job_title,
+              u.email as candidate_email, u.name as candidate_name,
+              r.company_name
        FROM job_applications ja
        INNER JOIN jobs j ON ja.job_id = j.id
+       LEFT JOIN job_roles jr ON j.role_id = jr.id
+       LEFT JOIN users u ON ja.user_id = u.id
+       LEFT JOIN recruiter_profiles r ON j.recruiter_id = r.user_id
        WHERE ja.id = ? AND j.recruiter_id = ?`,
       [applicationId, recruiterId]
     );
@@ -41,15 +47,7 @@ async function updateApplicationStatus(req, res) {
       });
     }
 
-    // If status is interview_called, validate interview details
-    if (status === 'interview_called') {
-      if (!interviewDate || !interviewTime) {
-        return res.status(400).json({
-          ok: false,
-          message: "Interview date and time are required when marking as interview called"
-        });
-      }
-    }
+    const application = applicationRows[0];
 
     // Update application status
     await connection.beginTransaction();
@@ -59,9 +57,80 @@ async function updateApplicationStatus(req, res) {
       [status, applicationId]
     );
 
-    // Store interview details if provided (you might want to create a separate table for this)
-    // For now, we'll just update the status. Interview details can be stored in cover_letter field
-    // or a separate interview_details table in the future.
+    // Send email notification and create in-app notification based on status
+    if (application.candidate_email) {
+      try {
+        let emailSubject, emailHtml, notificationType, notificationTitle, notificationMessage;
+
+        if (status === 'shortlisted') {
+          emailSubject = `Congratulations! You've been shortlisted for ${application.job_title}`;
+          emailHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #2563eb;">Congratulations ${application.candidate_name}!</h2>
+              <p>You have been shortlisted for the position: <strong>${application.job_title}</strong></p>
+              <p>The recruiter from <strong>${application.company_name || 'the company'}</strong> will be in touch with you soon regarding the next steps.</p>
+
+              <div style="background-color: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px; margin: 20px 0;">
+                <h3 style="color: #92400e; margin-top: 0;">⚠️ Important Security Notice</h3>
+                <p style="margin-bottom: 0; color: #92400e;">
+                  Please be aware of potential spammers. Always verify the legitimacy of any communication you receive.
+                  Only share personal information with verified recruiters and be cautious of any requests for payment or sensitive data.
+                </p>
+              </div>
+
+              <p>Best regards,<br>The Job-spark Team</p>
+            </div>
+          `;
+          notificationType = 'application_shortlisted';
+          notificationTitle = 'Application Shortlisted!';
+          notificationMessage = `Congratulations! Your application for "${application.job_title}" has been shortlisted. The recruiter will contact you soon.`;
+        } else if (status === 'rejected') {
+          emailSubject = `Update on your application for ${application.job_title}`;
+          emailHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #374151;">Application Update</h2>
+              <p>Dear ${application.candidate_name},</p>
+              <p>Thank you for your interest in the position: <strong>${application.job_title}</strong> at <strong>${application.company_name || 'our company'}</strong>.</p>
+              <p>After careful consideration, we have decided to move forward with other candidates whose qualifications more closely match our current requirements.</p>
+              <p>We appreciate the time and effort you invested in your application and encourage you to apply for future opportunities that match your skills and experience.</p>
+
+              <div style="background-color: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px; margin: 20px 0;">
+                <h3 style="color: #92400e; margin-top: 0;">💡 Keep Applying!</h3>
+                <p style="margin-bottom: 0; color: #92400e;">
+                  Don't be discouraged! Many successful careers are built on persistence. Keep refining your applications and exploring new opportunities.
+                </p>
+              </div>
+
+              <p>Best regards,<br>The Job-spark Team</p>
+            </div>
+          `;
+          notificationType = 'application_rejected';
+          notificationTitle = 'Application Update';
+          notificationMessage = `Thank you for applying to "${application.job_title}". After careful consideration, we've decided to move forward with other candidates.`;
+        }
+
+        if (emailSubject && emailHtml) {
+          await sendEmail(application.candidate_email, emailSubject, emailHtml);
+        }
+
+        if (notificationType && notificationTitle && notificationMessage) {
+          // Create in-app notification
+          await connection.query(
+            'INSERT INTO notifications (user_id, type, title, message) VALUES (?, ?, ?, ?)',
+            [
+              application.user_id, // candidate's user ID
+              notificationType,
+              notificationTitle,
+              notificationMessage
+            ]
+          );
+        }
+
+      } catch (notificationError) {
+        console.error('Error sending notification:', notificationError);
+        // Don't fail the main operation if notification fails
+      }
+    }
 
     await connection.commit();
 

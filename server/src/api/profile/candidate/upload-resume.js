@@ -5,7 +5,7 @@ const pool = require("../../config/db");
 const { requireAuth } = require("../../../middlewares/auth");
 
 // Ensure upload directory exists
-const UPLOAD_DIR = path.join(__dirname, "..", "uploads", "resumes");
+const UPLOAD_DIR = path.join(__dirname, "..", "..", "uploads", "resumes");
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 // Multer storage config - similar to job applications
@@ -65,8 +65,9 @@ const uploadResume = async (req, res) => {
       });
     }
 
-    // Construct the resume path (relative to server root)
-    const resumePath = `/uploads/resumes/${file.filename}`;
+    // Construct the full resume URL
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+    const resumePath = `${baseUrl}/uploads/resumes/${file.filename}`;
 
     // Update the user's profile with the resume path
     const updateSql = `
@@ -78,17 +79,28 @@ const uploadResume = async (req, res) => {
     const [result] = await conn.query(updateSql, [resumePath, userId]);
 
     if (result.affectedRows === 0) {
-      // Profile doesn't exist, create it with just the resume
+      // Profile doesn't exist, fetch user name and create it with resume
+      const [userRows] = await conn.query(
+        'SELECT name FROM users WHERE id = ? LIMIT 1',
+        [userId]
+      );
+
+      if (userRows.length === 0) {
+        throw new Error('User not found');
+      }
+
+      const userName = userRows[0].name || 'Unknown';
+
       const insertSql = `
         INSERT INTO candidate_profiles
-          (user_id, resume_path, created_at, updated_at)
-        VALUES (?, ?, NOW(), NOW())
+          (user_id, full_name, resume_path, created_at, updated_at)
+        VALUES (?, ?, ?, NOW(), NOW())
         ON DUPLICATE KEY UPDATE
           resume_path = VALUES(resume_path),
           updated_at = NOW()
       `;
 
-      await conn.query(insertSql, [userId, resumePath]);
+      await conn.query(insertSql, [userId, userName, resumePath]);
     }
 
     res.json({

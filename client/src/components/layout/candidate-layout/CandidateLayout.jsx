@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import CandidateHeader from './CandidateHeader.jsx';
+import ErrorBoundary from '../../ErrorBoundary';
 import { ToastContainer } from '../../toast';
 
 /**
@@ -12,7 +13,9 @@ const CandidateLayout = () => {
     <div className="min-h-screen bg-white">
       <CandidateHeader />
       <main className="flex-1">
-        <Outlet />
+        <ErrorBoundary>
+          <Outlet />
+        </ErrorBoundary>
       </main>
       <ToastContainer />
     </div>

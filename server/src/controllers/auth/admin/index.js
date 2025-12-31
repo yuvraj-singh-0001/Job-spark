@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { validateInput } = require('../../../middlewares/inputValidation');
 const adminRegister = require('../../../api/profile/admin/admin-register');
 const adminLogin = require('../../../api/profile/admin/admin-login');
 const adminLogout = require('../../../api/profile/admin/admin-logout');
@@ -11,10 +12,10 @@ const verifyRecruiter = require('../../../api/profile/admin/admin-verify-recruit
 const updateJobStatus = require('../../../api/profile/admin/admin-update-job-status');
 
 // Admin Register
-router.post('/register', adminRegister);
+router.post('/register', validateInput, adminRegister);
 
 // Admin Sign In
-router.post('/login', adminLogin);
+router.post('/login', validateInput, adminLogin);
 
 // Admin Logout
 router.post('/logout', adminLogout);

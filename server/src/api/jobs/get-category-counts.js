@@ -1,28 +1,41 @@
 const pool = require('../config/db');
 const CATEGORY_FILTER_MAPPING = require('../config/category-filters');
 
+// Allowed values for each filter type to prevent injection
+const ALLOWED_JOB_TYPES = ['Full Time', 'Part Time', 'Contract', 'Internship', 'Freelance'];
+const ALLOWED_WORK_MODES = ['Office', 'Remote', 'Hybrid'];
+const ALLOWED_EXPERIENCE = ['0']; // Only '0' for fresher filter
+
 // Helper function to build WHERE conditions from filters (reused from get-jobs.js)
 function buildFilterConditions(filters) {
   const conditions = [];
   const params = [];
   let needsTagJoin = false;
 
-  // jobTypes filter
+  // jobTypes filter - validate against allowed list
   if (filters.jobTypes && Array.isArray(filters.jobTypes) && filters.jobTypes.length > 0) {
-    const placeholders = filters.jobTypes.map(() => '?').join(',');
-    conditions.push(`j.job_type IN (${placeholders})`);
-    params.push(...filters.jobTypes);
+    // Validate that all job types are allowed
+    const validJobTypes = filters.jobTypes.filter(type => ALLOWED_JOB_TYPES.includes(type));
+    if (validJobTypes.length > 0) {
+      const placeholders = validJobTypes.map(() => '?').join(',');
+      conditions.push(`j.job_type IN (${placeholders})`);
+      params.push(...validJobTypes);
+    }
   }
 
-  // workModes filter
+  // workModes filter - validate against allowed list
   if (filters.workModes && Array.isArray(filters.workModes) && filters.workModes.length > 0) {
-    const placeholders = filters.workModes.map(() => '?').join(',');
-    conditions.push(`j.work_mode IN (${placeholders})`);
-    params.push(...filters.workModes);
+    // Validate that all work modes are allowed
+    const validWorkModes = filters.workModes.filter(mode => ALLOWED_WORK_MODES.includes(mode));
+    if (validWorkModes.length > 0) {
+      const placeholders = validWorkModes.map(() => '?').join(',');
+      conditions.push(`j.work_mode IN (${placeholders})`);
+      params.push(...validWorkModes);
+    }
   }
 
-  // experience filter (fresher = 0 years)
-  if (filters.experience === "0") {
+  // experience filter (fresher = 0 years) - validate against allowed values
+  if (filters.experience && ALLOWED_EXPERIENCE.includes(filters.experience)) {
     conditions.push(`(j.min_experience = 0 OR j.min_experience IS NULL) AND (j.max_experience = 0 OR j.max_experience IS NULL)`);
   }
 
@@ -121,7 +134,6 @@ async function getCategoryCounts(req, res) {
           count = Number(rows[0].job_count) || 0;
         }
         counts[categoryId] = count;
-        console.log(`Category ${categoryId}: ${count} jobs`);
       } catch (err) {
         console.error(`Error counting jobs for category ${categoryId}:`, err);
         console.error('SQL:', sql);

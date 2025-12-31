@@ -63,7 +63,8 @@ const postApplication = async (req, res) => {
     let resumePath = null;
     if (req.file) {
       // New file uploaded
-      resumePath = path.join("uploads", "resumes", req.file.filename);
+      const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+      resumePath = `${baseUrl}/uploads/resumes/${req.file.filename}`;
     } else if (req.body.resume_path) {
       // Resume path provided in body (from profile)
       resumePath = req.body.resume_path;

@@ -2,11 +2,11 @@
 const pool = require('../../config/db');
 
 /**
- * Get table columns to verify structure
+ * Get candidate_profiles table columns to verify structure
  */
-async function getTableColumns(connection, tableName) {
+async function getCandidateProfileColumns(connection) {
   try {
-    const [columns] = await connection.execute(`SHOW COLUMNS FROM ${tableName}`);
+    const [columns] = await connection.execute('SHOW COLUMNS FROM candidate_profiles');
     return columns.map(col => col.Field);
   } catch (error) {
     return [];
@@ -23,7 +23,7 @@ const candidateProfile = async (req, res) => {
 
   try {
     // Verify table structure
-    const tableColumns = await getTableColumns(connection, 'candidate_profiles');
+    const tableColumns = await getCandidateProfileColumns(connection);
     // If you expect requireAuth to run before this handler, req.user should exist.
     // If not present, respond with 401 so caller knows to apply auth middleware.
     const authUserId = req.user?.id;

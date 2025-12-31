@@ -15,7 +15,7 @@ export default function Toast({ id, type, message, onClose, duration = 2500 }) {
       case 'success':
         return <CheckCircle className="w-5 h-5 text-green-600" />;
       case 'error':
-        return <XCircle className="w-5 h-5 text-red-600" />;
+        return <XCircle className="w-5 h-5 text-primary-600" />;
       default:
         return null;
     }
@@ -26,7 +26,7 @@ export default function Toast({ id, type, message, onClose, duration = 2500 }) {
       case 'success':
         return 'bg-green-50 border-green-200 text-green-800';
       case 'error':
-        return 'bg-red-50 border-red-200 text-red-800';
+        return 'bg-primary-50 border-primary-200 text-primary-800';
       default:
         return 'bg-gray-50 border-gray-200 text-gray-800';
     }

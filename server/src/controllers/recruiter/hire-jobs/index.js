@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../../../middlewares/auth');
+const { validateInput } = require('../../../middlewares/inputValidation');
 const getRecruiterJobs = require('../../../api/recruiter/hire-jobs/getRecruiterJobs');
 const getRecruiterJobStats = require("../../../api/recruiter/hire-jobs/getRecruiterJobStats");
 const getJobApplicants = require("../../../api/recruiter/hire-jobs/getJobApplicants");
@@ -12,7 +13,7 @@ const createJob = require('../../../api/recruiter/hire-jobs/create-job');
 router.use(requireAuth);
 
 // POST /api/recruiter/jobs/create
-router.post('/create', createJob);
+router.post('/create', validateInput, createJob);
 
 // GET /api/recruiter/jobs
 router.get('/', getRecruiterJobs);

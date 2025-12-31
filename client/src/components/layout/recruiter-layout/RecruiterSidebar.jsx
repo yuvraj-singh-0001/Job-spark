@@ -76,7 +76,7 @@ export default function RecruiterSidebar() {
             <span className="text-white font-bold text-sm">HS</span>
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight">HireSpark</h1>
+            <h1 className="text-lg font-semibold tracking-tight">Jobion</h1>
             <p className="text-xs text-slate-500">Recruiter</p>
           </div>
         </div>
@@ -119,7 +119,7 @@ export default function RecruiterSidebar() {
       <div className="px-2 py-4 border-t border-slate-200">
         <button
           onClick={handleLogout}
-          className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-all duration-200
+          className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm text-primary-600 hover:bg-primary-50 transition-all duration-200
             ${!isOpen ? "justify-center" : ""}
           `}
           title={!isOpen ? "Logout" : ""}

@@ -50,19 +50,16 @@ export default function SignInModal({ role = "candidate", onClose, redirectTo = 
       // Map role prop: "user" -> "candidate" for backend, "recruiter" -> "recruiter"
       const roleToSend = role === "recruiter" ? "recruiter" : "candidate";
 
-      console.log("Google sign-in (modal): Sending credential to backend...");
       const { data } = await api.post("/auth/google", {
         credential: response.credential,
         role: roleToSend
       });
 
-      console.log("Google sign-in (modal): Backend response received", data);
       const userRole = data?.user?.role || role;
 
       let redirectPath = null;
       try {
         redirectPath = await resolveRedirect(userRole);
-        console.log("Google sign-in (modal): Redirect path determined:", redirectPath);
       } catch (redirectErr) {
         console.error("Google sign-in (modal): Error determining redirect", redirectErr);
         // Use fallback
@@ -72,8 +69,6 @@ export default function SignInModal({ role = "candidate", onClose, redirectTo = 
       if (!redirectPath) {
         redirectPath = userRole === "recruiter" ? "/create-job" : "/dashboard";
       }
-
-      console.log("Google sign-in (modal): Redirecting to", redirectPath);
       window.location.replace(redirectPath);
     } catch (err) {
       console.error("Google sign-in (modal): Error", err);
@@ -171,19 +166,19 @@ export default function SignInModal({ role = "candidate", onClose, redirectTo = 
                   id="terms-checkbox-modal"
                   checked={termsAccepted}
                   onChange={(e) => setTermsAccepted(e.target.checked)}
-                  className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                   required
                 />
                 <label htmlFor="terms-checkbox-modal" className="text-xs text-gray-700 cursor-pointer">
                   I agree to the{" "}
-                  <Link to="/terms" target="_blank" className="text-blue-600 hover:underline">
+                  <Link to="/terms" target="_blank" className="text-primary-600 hover:underline">
                     Terms & Conditions
                   </Link>{" "}
                   and{" "}
-                  <Link to="/privacy" target="_blank" className="text-blue-600 hover:underline">
+                  <Link to="/privacy" target="_blank" className="text-primary-600 hover:underline">
                     Privacy Policy
                   </Link>{" "}
-                  of HireSpark.
+                  of Jobion.
                 </label>
               </div>
 

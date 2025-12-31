@@ -4,19 +4,15 @@ import { Building2, MapPin, Briefcase, Clock, ExternalLink } from 'lucide-react'
 import api from '../../../components/apiconfig/apiconfig';
 
 const statusColors = {
-  applied: "bg-blue-50 text-blue-700 border-blue-200",
-  reviewed: "bg-purple-50 text-purple-700 border-purple-200",
+  applied: "bg-primary-50 text-primary-700 border-primary-200",
   shortlisted: "bg-amber-50 text-amber-700 border-amber-200",
-  rejected: "bg-red-50 text-red-700 border-red-200",
-  hired: "bg-emerald-50 text-emerald-700 border-emerald-200"
+  rejected: "bg-primary-50 text-primary-700 border-primary-200"
 };
 
 const statusLabels = {
   applied: "Applied",
-  reviewed: "Under Review",
-  shortlisted: "Under Review",
-  rejected: "Rejected",
-  hired: "Hired"
+  shortlisted: "Your application has been shortlisted. The recruiter may contact you.",
+  rejected: "Your application was not selected for this role."
 };
 
 export default function Applied() {
@@ -95,11 +91,11 @@ export default function Applied() {
           <div className="p-12 text-center">
             <div className="text-4xl mb-4">⚠️</div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Unable to Load Applications</h3>
-            <p className="text-red-600 mb-6 text-sm">{error}</p>
+            <p className="text-primary-600 mb-6 text-sm">{error}</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={fetchAppliedJobs}
-                className="btn btn-primary px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                className="btn btn-primary px-6 py-2.5 text-sm font-semibold text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
               >
                 Try Again
               </button>
@@ -125,7 +121,7 @@ export default function Applied() {
             <h1 className="text-2xl font-semibold text-gray-900">Applied Jobs</h1>
             <p className="text-sm text-gray-600 mt-1">Track your job applications</p>
           </div>
-          <div className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-sm font-medium">
+          <div className="px-3 py-1.5 bg-primary-50 text-primary-700 border border-primary-200 rounded-lg text-sm font-medium">
             {applications.length} Applied
           </div>
         </div>
@@ -141,7 +137,7 @@ export default function Applied() {
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
                   onClick={() => window.location.href = '/jobs'}
-                  className="btn btn-primary px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="btn btn-primary px-6 py-2.5 text-sm font-semibold text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
                 >
                   Browse Jobs
                 </button>
@@ -184,7 +180,7 @@ export default function Applied() {
 
                       {/* Job Details */}
                       <div className="flex flex-wrap gap-2 mb-3">
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-sm border border-blue-200">
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary-50 text-primary-700 rounded-lg text-sm border border-primary-200">
                           <Briefcase size={14} />
                           {application.job_type}
                         </span>

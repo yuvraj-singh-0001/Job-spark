@@ -1,25 +1,52 @@
+/* Typography - Energy & Motion Focused */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap');
+
 /* Tailwind */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Design System CSS Variables */
+/* Design System CSS Variables - Coral & Navy Theme */
 :root {
-  --primary: #1769E0;
-  --primary-light: #2E8CFF;
-  --chip-bg: #E8F1FF;
-  --bg: #F5F7FA;
-  --white: #FFFFFF;
-  --text-dark: #111111;
-  --text-muted: #555555;
+  /* Primary: BBC Red (Classic Authority) */
+  --primary: #BB1919;
+  --primary-light: #D42A2A;
+  --primary-dark: #9F1414;
+
+  /* Secondary: Deep Navy Blue (Sophistication) */
+  --secondary: #1E2235;
+  --secondary-light: #2A2F45;
+  --secondary-dark: #15192B;
+
+  /* Accent: Dark Navy (Depth) */
+  --accent: #15192B;
+  --accent-light: #1E2235;
+  --accent-dark: #0F1219;
+
+  /* Background: Clean white and light gray */
+  --bg: #FFFFFF;
+  --bg-secondary: #F7F8FC;
+
+  /* Text: Navy primary and gray muted */
+  --text-dark: #1E2235;
+  --text-muted: #6B7280;
+  --text-light: #9CA3AF;
+
+  /* Borders: Light gray */
   --border: #E5E7EB;
-  --highlight: #F7C948;
+  --border-light: #F3F4F6;
+
+  /* Status Colors */
+  --success: #00CC66;
+  --error: #FF4444;
+  --warning: #FFAA00;
+
+  /* Motion & Energy */
+  --shadow-energy: 0 4px 20px rgba(187, 25, 25, 0.15);
+  --shadow-kinetic: 0 4px 20px rgba(30, 34, 53, 0.15);
 }
 
-/* Typography */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
-
-/* Base Styles */
+/* Base Styles - Optimized for Speed */
 html,
 body,
 #root {
@@ -30,9 +57,10 @@ body {
   margin: 0;
   font-family: 'Inter', 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, sans-serif;
   font-weight: 400;
-  line-height: 1.6;
+  line-height: 1.5; /* Slightly tighter for faster reading */
+  letter-spacing: 0.01em; /* Subtle energy spacing */
   color: var(--text-dark);
-  background-color: var(--bg);
+  background: linear-gradient(135deg, var(--bg) 0%, var(--bg-secondary) 100%);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -44,32 +72,47 @@ textarea::placeholder {
   opacity: 1;
 }
 
-/* Component Utilities */
+/* Component Utilities - Energy Focused */
 @layer components {
 
-  /* Button Styles */
+  /* Button Styles - Dynamic & Energetic */
   .btn {
-    @apply inline-flex items-center justify-center font-semibold rounded-button transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center font-semibold rounded-button transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    letter-spacing: 0.02em; /* Energy spacing */
   }
 
   .btn-primary {
-    @apply bg-primary-500 text-white hover:bg-primary-600 focus:ring-primary-500 shadow-soft hover:shadow-medium;
+    @apply text-white hover:scale-105 focus:ring-primary-500;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    box-shadow: var(--shadow-energy);
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 8px 30px rgba(0, 212, 255, 0.25);
   }
 
   .btn-secondary {
-    @apply bg-white text-primary-600 border-2 border-primary-500 hover:bg-primary-50 focus:ring-primary-500;
+    @apply text-white hover:scale-105 focus:ring-secondary-500;
+    background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+    box-shadow: var(--shadow-kinetic);
+  }
+
+  .btn-secondary:hover {
+    box-shadow: 0 8px 30px rgba(0, 255, 136, 0.25);
   }
 
   .btn-outline {
-    @apply bg-transparent text-primary-600 border-2 border-primary-500 hover:bg-primary-50 focus:ring-primary-500;
+    @apply bg-transparent text-primary-600 border-2 border-primary-500 hover:bg-primary-50 focus:ring-primary-500 hover:scale-105;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1); /* Energy easing */
   }
 
   .btn-ghost {
-    @apply bg-transparent text-text-muted hover:bg-gray-100 focus:ring-gray-300;
+    @apply bg-transparent text-text-muted hover:bg-gray-100 focus:ring-gray-300 hover:scale-105;
   }
 
   .btn-sm {
     @apply px-3 py-1.5 text-sm;
+    letter-spacing: 0.03em; /* More energy in small buttons */
   }
 
   .btn-md {
@@ -80,9 +123,10 @@ textarea::placeholder {
     @apply px-6 py-3 text-lg;
   }
 
-  /* Form Input Styles */
+  /* Form Input Styles - Clean & Fast */
   .input {
-    @apply w-full rounded-input border border-border bg-white px-4 py-2.5 text-base text-text-dark placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors;
+    @apply w-full rounded-input border border-border bg-white px-4 py-2.5 text-base text-text-dark placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-150;
+    letter-spacing: 0.01em;
   }
 
   .input-error {
@@ -91,6 +135,7 @@ textarea::placeholder {
 
   .label {
     @apply block text-sm font-semibold text-text-dark mb-1.5;
+    letter-spacing: 0.02em; /* Energy in labels */
   }
 
   .textarea {
@@ -101,26 +146,34 @@ textarea::placeholder {
     @apply input cursor-pointer;
   }
 
-  /* Card Styles */
+  /* Card Styles - Dynamic with Motion */
   .card {
     @apply bg-white rounded-card border border-border shadow-soft;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .card-hover {
-    @apply card hover:shadow-medium transition-shadow duration-200;
+    @apply card hover:scale-[1.02] hover:-translate-y-1;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-hover:hover {
+    box-shadow: var(--shadow-energy);
   }
 
   .card-padding {
     @apply p-4 sm:p-5 md:p-6;
   }
 
-  /* Badge/Chip Styles */
+  /* Badge/Chip Styles - Energetic */
   .badge {
     @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium;
+    letter-spacing: 0.03em; /* Energy spacing */
   }
 
   .badge-primary {
-    @apply badge bg-primary-50 text-primary-700 border border-primary-200;
+    @apply badge text-primary-700 border border-primary-200;
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
   }
 
   .badge-success {
@@ -135,12 +188,64 @@ textarea::placeholder {
     @apply badge bg-gray-100 text-gray-700 border border-gray-200;
   }
 
-  /* Container Styles */
+  /* Container Styles - Optimized Flow */
   .container-custom {
     @apply max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10;
   }
 
   .section-padding {
-    @apply py-8 sm:py-12 md:py-16 lg:py-20;
+    @apply py-6 sm:py-10 md:py-14 lg:py-18; /* Slightly tighter for energy */
   }
+}
+
+/* Energy Animations */
+@keyframes energy-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: var(--shadow-energy);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 8px 30px rgba(187, 25, 25, 0.25);
+  }
+}
+
+@keyframes kinetic-glow {
+  0%, 100% {
+    box-shadow: var(--shadow-kinetic);
+  }
+  50% {
+    box-shadow: 0 8px 30px rgba(187, 25, 25, 0.25);
+  }
+}
+
+.energy-pulse {
+  animation: energy-pulse 2s ease-in-out infinite;
+}
+
+.kinetic-glow {
+  animation: kinetic-glow 2s ease-in-out infinite;
+}
+
+/* Loading Spinner - Energy Theme */
+@keyframes energy-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.energy-spinner {
+  animation: energy-spin 1s linear infinite;
+  border: 2px solid var(--border-light);
+  border-top: 2px solid var(--primary);
+  border-radius: 50%;
+}
+
+
+.shadow-energy {
+  box-shadow: 0 4px 20px rgba(187, 25, 25, 0.3);
+}
+
+.shadow-kinetic {
+  box-shadow: 0 4px 20px rgba(30, 34, 53, 0.2);
 }

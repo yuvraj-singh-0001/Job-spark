@@ -151,13 +151,11 @@ export default function SignIn() {
     setMessage("");
 
     try {
-      console.log("Google sign-in: Sending credential to backend...");
       const { data } = await api.post("/auth/google", {
         credential: response.credential,
         role: role,
       });
 
-      console.log("Google sign-in: Backend response received", data);
       const userRole = data?.user?.role || role;
 
       // Determine redirect path
@@ -165,7 +163,6 @@ export default function SignIn() {
 
       try {
         redirectPath = await consumePostLoginTasks(userRole);
-        console.log("Google sign-in: Post-login tasks completed, redirect path:", redirectPath);
       } catch (redirectErr) {
         console.error("Google sign-in: Error in post-login tasks", redirectErr);
         // Continue with fallback even if post-login tasks fail
@@ -174,11 +171,9 @@ export default function SignIn() {
       // Ensure we always have a redirect path
       if (!redirectPath) {
         redirectPath = userRole === "recruiter" ? "/create-job" : "/dashboard";
-        console.log("Google sign-in: Using fallback redirect path", redirectPath);
       }
 
       // Perform redirect - use replace to avoid adding to history
-      console.log("Google sign-in: Redirecting to", redirectPath);
       // Use replace instead of href to avoid back button issues
       window.location.replace(redirectPath);
     } catch (err) {
@@ -234,7 +229,6 @@ export default function SignIn() {
           window.google.accounts.id.renderButton(buttonContainer, {
             theme: "outline",
             size: "large",
-            width: "100%",
             disabled: !termsAccepted,
           });
         }
@@ -253,7 +247,7 @@ export default function SignIn() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           <div className="px-4 lg:px-8 text-center lg:text-left">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-text-dark">
-              Talk to HR directly & get a job with better salary!
+              Move your career forward with faster hiring and better pay
             </h1>
             <p className="mt-4 sm:mt-6 text-base sm:text-lg text-text-muted">
               Get local jobs in your city!
@@ -263,7 +257,7 @@ export default function SignIn() {
           <div className="flex justify-center">
             <div className="w-full max-w-md card shadow-medium">
               <div className="px-6 sm:px-8 pt-6 sm:pt-8 border-b border-border pb-4 sm:pb-6">
-                <h2 className="text-xl sm:text-2xl font-semibold text-text-dark">Sign in to HireSpark</h2>
+                <h2 className="text-xl sm:text-2xl font-semibold text-text-dark">Sign in to Jobion</h2>
                 <p className="mt-1.5 text-sm text-text-muted">Welcome back! Sign in with Google</p>
               </div>
 
@@ -325,7 +319,7 @@ export default function SignIn() {
                     <Link to="/privacy" target="_blank" className="text-primary-600 hover:text-primary-700 hover:underline font-medium">
                       Privacy Policy
                     </Link>{" "}
-                    of HireSpark.
+                    of Jobion.
                   </label>
                 </div>
 

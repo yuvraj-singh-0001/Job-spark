@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useToast } from "../../../components/toast";
 import api from "../../../components/apiconfig/apiconfig";
+import { stateOptions, citiesByState } from "../../../constants/locationData";
 
 // Role-based auto-fill data
 // Maps standardized role names to default field values
@@ -1290,6 +1291,11 @@ Work Details:
   }
 };
 
+// Location dropdown data for India
+// INDIAN_STATES is now imported from constants/locationData.js as stateOptions
+
+// Location data is now imported from constants/locationData.js
+
 // Component for creating a new job posting
 export default function AdminPostJob() {
   const { showSuccess, showError } = useToast();
@@ -1299,6 +1305,8 @@ export default function AdminPostJob() {
     jobType: "Full-time",
     workMode: "Office",
     city: "",
+    state: "",
+    country: "India",
     locality: "",
     skills: "",
     minExperience: "",
@@ -1387,6 +1395,8 @@ export default function AdminPostJob() {
   const [recruiterDefaults, setRecruiterDefaults] = useState({
     company: "",
     city: "",
+    state: "",
+    country: "India",
     interviewAddress: "",
     contactEmail: "",
     contactPhone: ""
@@ -1546,9 +1556,11 @@ export default function AdminPostJob() {
         const defaults = {
           company: recruiterProfile?.company_name || "",
           city: recruiterProfile?.city || "",
+          state: recruiterProfile?.state || "",
+          country: recruiterProfile?.country || "India",
           interviewAddress: "",
           contactEmail: userSession?.email || "",
-          contactPhone: recruiterProfile?.phone || ""
+          contactPhone: recruiterProfile?.hr_mobile || ""
         };
 
         // Build interview address from profile
@@ -1578,6 +1590,12 @@ export default function AdminPostJob() {
           }
           if (!currentForm.city && defaults.city) {
             updates.city = defaults.city;
+          }
+          if (!currentForm.state && defaults.state) {
+            updates.state = defaults.state;
+          }
+          if (!currentForm.country) {
+            updates.country = defaults.country || "India";
           }
           if (!currentForm.interviewAddress && defaults.interviewAddress) {
             updates.interviewAddress = defaults.interviewAddress;
@@ -1639,7 +1657,8 @@ export default function AdminPostJob() {
     const err = {};
     if (!form.roleId) err.roleId = "Job role is required";
     if (!form.company.trim()) err.company = "Company name is required";
-    if (!form.city.trim()) err.city = "City required";
+    // City is optional for remote jobs
+    if (form.workMode !== 'Remote' && !form.city.trim()) err.city = "City required (optional for remote jobs)";
     if (!form.description.trim()) err.description = "Job description required";
     if (!form.contactEmail.trim() && !form.contactPhone.trim()) err.contact = "Provide email or phone";
     if (form.vacancies <= 0) err.vacancies = "Vacancies must be >= 1";
@@ -1663,6 +1682,8 @@ export default function AdminPostJob() {
       // Keep recruiter profile fields unchanged
       company: form.company,
       city: form.city,
+      state: form.state,
+      country: form.country,
       locality: form.locality,
       interviewAddress: form.interviewAddress,
       contactEmail: form.contactEmail,
@@ -1711,6 +1732,8 @@ export default function AdminPostJob() {
       payload.append("jobType", form.jobType);
       payload.append("workMode", form.workMode);
       payload.append("city", form.city);
+      payload.append("state", form.state);
+      payload.append("country", form.country);
       payload.append("locality", form.locality);
       payload.append("skills", form.skills);
       payload.append("minExperience", form.minExperience);
@@ -1739,6 +1762,8 @@ export default function AdminPostJob() {
         jobType: "Full-time",
         workMode: "Office",
         city: recruiterDefaults.city,
+        state: recruiterDefaults.state,
+        country: recruiterDefaults.country,
         locality: "",
         skills: "",
         minExperience: "",
@@ -1766,10 +1791,10 @@ export default function AdminPostJob() {
 
 
   // Input class for corporate styling
-  const inputClass = "w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm font-medium placeholder:text-gray-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors";
-  const inputErrorClass = "w-full px-4 py-3 bg-white border border-red-400 rounded-lg text-gray-900 text-sm font-medium placeholder:text-gray-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors";
-  const inputAutoClass = "w-full px-4 py-3 bg-blue-50 border border-blue-300 rounded-lg text-gray-900 text-sm font-medium placeholder:text-gray-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors";
-  const selectClass = "w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors cursor-pointer";
+  const inputClass = "w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm font-medium placeholder:text-gray-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors";
+  const inputErrorClass = "w-full px-4 py-3 bg-white border border-primary-400 rounded-lg text-gray-900 text-sm font-medium placeholder:text-gray-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors";
+  const inputAutoClass = "w-full px-4 py-3 bg-primary-50 border border-primary-300 rounded-lg text-gray-900 text-sm font-medium placeholder:text-gray-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors";
+  const selectClass = "w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors cursor-pointer";
   const labelClass = "block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2";
 
   return (
@@ -1791,12 +1816,12 @@ export default function AdminPostJob() {
             </div>
           )}
           {errors.submit && (
-            <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-red-800 text-sm">
+            <div className="rounded-lg bg-primary-50 border border-primary-200 p-4 text-primary-800 text-sm">
               {errors.submit}
             </div>
           )}
           {autoFilledFields.size > 0 && (
-            <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 text-blue-800 text-sm flex items-start gap-3">
+            <div className="rounded-lg bg-primary-50 border border-primary-200 p-4 text-primary-800 text-sm flex items-start gap-3">
               <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
@@ -1815,7 +1840,7 @@ export default function AdminPostJob() {
             <div className="p-6 space-y-5">
               {/* Job Role */}
               <div>
-                <label className={labelClass}>Job Role <span className="text-red-500">*</span></label>
+                <label className={labelClass}>Job Role <span className="text-primary-500">*</span></label>
                 <div className="relative" ref={dropdownRef}>
                   <input
                     ref={inputRef}
@@ -1826,7 +1851,7 @@ export default function AdminPostJob() {
                     onBlur={handleInputBlur}
                     onKeyDown={handleKeyDown}
                     placeholder={rolesLoading ? "Loading roles..." : "-- Select or type to search job role --"}
-                    className={`${selectClass} ${errors.roleId ? '!border-red-400' : ''}`}
+                    className={`${selectClass} ${errors.roleId ? '!border-primary-400' : ''}`}
                     disabled={rolesLoading || !!rolesError}
                     required={!!form.roleId}
                     autoComplete="off"
@@ -1860,15 +1885,15 @@ export default function AdminPostJob() {
                     </div>
                   )}
                 </div>
-                {rolesError && <p className="text-xs text-red-600 mt-1.5">{rolesError}</p>}
-                {errors.roleId && <p className="text-xs text-red-600 mt-1.5">{errors.roleId}</p>}
+                {rolesError && <p className="text-xs text-primary-600 mt-1.5">{rolesError}</p>}
+                {errors.roleId && <p className="text-xs text-primary-600 mt-1.5">{errors.roleId}</p>}
                 <p className="text-xs text-gray-400 mt-1.5">Selecting a role will auto-fill related fields</p>
               </div>
 
               {/* Company, Job Type, Work Mode */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div>
-                  <label className={labelClass}>Company <span className="text-red-500">*</span></label>
+                  <label className={labelClass}>Company <span className="text-primary-500">*</span></label>
                   <input
                     value={form.company}
                     readOnly
@@ -1876,17 +1901,17 @@ export default function AdminPostJob() {
                     placeholder="Enter company name"
                     className={errors.company ? inputErrorClass : inputClass}
                   />
-                  {errors.company && <p className="text-xs text-red-600 mt-1.5">{errors.company}</p>}
+                  {errors.company && <p className="text-xs text-primary-600 mt-1.5">{errors.company}</p>}
                 </div>
                 <div>
                   <label className={labelClass}>
                     Job Type
-                    {autoFilledFields.has("jobType") && <span className="text-blue-500 ml-1 normal-case">(auto)</span>}
+                    {autoFilledFields.has("jobType") && <span className="text-primary-500 ml-1 normal-case">(auto)</span>}
                   </label>
                   <select
                     value={form.jobType}
                     onChange={(e) => updateField("jobType", e.target.value)}
-                    className={autoFilledFields.has("jobType") ? `${selectClass} !border-blue-300 !bg-blue-50` : selectClass}
+                    className={autoFilledFields.has("jobType") ? `${selectClass} !border-primary-300 !bg-primary-50` : selectClass}
                   >
                     <option>Full-time</option>
                     <option>Part-time</option>
@@ -1898,12 +1923,12 @@ export default function AdminPostJob() {
                 <div>
                   <label className={labelClass}>
                     Work Mode
-                    {autoFilledFields.has("workMode") && <span className="text-blue-500 ml-1 normal-case">(auto)</span>}
+                    {autoFilledFields.has("workMode") && <span className="text-primary-500 ml-1 normal-case">(auto)</span>}
                   </label>
                   <select
                     value={form.workMode}
                     onChange={(e) => updateField("workMode", e.target.value)}
-                    className={autoFilledFields.has("workMode") ? `${selectClass} !border-blue-300 !bg-blue-50` : selectClass}
+                    className={autoFilledFields.has("workMode") ? `${selectClass} !border-primary-300 !bg-primary-50` : selectClass}
                   >
                     <option>Office</option>
                     <option>Remote</option>
@@ -1919,17 +1944,59 @@ export default function AdminPostJob() {
             <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
               <h2 className="text-sm font-semibold text-gray-800">Location & Openings</h2>
             </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="p-6 space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
                 <div>
-                  <label className={labelClass}>City <span className="text-red-500">*</span></label>
+                  <label className={labelClass}>Country</label>
                   <input
+                    value={form.country || "India"}
+                    readOnly
+                    className={`${inputClass} bg-gray-100 cursor-not-allowed`}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>State</label>
+                  <select
+                    value={form.state}
+                    onChange={(e) => {
+                      updateField("state", e.target.value);
+                      // Clear city when state changes
+                      updateField("city", "");
+                    }}
+                    className={selectClass}
+                  >
+                    <option value="">Select State</option>
+                    {stateOptions.slice(1).map((state) => (
+                      <option key={state} value={state}>
+                        {state}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>
+                    City {form.workMode !== 'Remote' && <span className="text-primary-500">*</span>}
+                    {form.workMode === 'Remote' && <span className="text-xs text-gray-500 ml-1">(optional for remote jobs)</span>}
+                  </label>
+                  <select
                     value={form.city}
                     onChange={(e) => updateField("city", e.target.value)}
-                    placeholder="Enter city name"
-                    className={errors.city ? inputErrorClass : inputClass}
-                  />
-                  {errors.city && <p className="text-xs text-red-600 mt-1.5">{errors.city}</p>}
+                    className={errors.city ? `${selectClass} border-primary-400` : selectClass}
+                    disabled={!form.state && form.workMode !== 'Remote'}
+                  >
+                    <option value="">
+                      {form.state ? "Select City" : (form.workMode === 'Remote' ? "Optional for remote jobs" : "Select State first")}
+                    </option>
+                    {form.state && citiesByState[form.state]?.map((city) => (
+                      <option key={city} value={city}>
+                        {city}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.city && <p className="text-xs text-primary-600 mt-1.5">{errors.city}</p>}
+                  {form.workMode === 'Remote' && (
+                    <p className="text-xs text-gray-500 mt-1.5">City not required for remote positions</p>
+                  )}
                 </div>
                 <div>
                   <label className={labelClass}>Locality / Area</label>
@@ -1940,19 +2007,19 @@ export default function AdminPostJob() {
                     className={inputClass}
                   />
                 </div>
-                <div>
-                  <label className={labelClass}>
-                    Number of Openings
-                    {autoFilledFields.has("vacancies") && <span className="text-blue-500 ml-1 normal-case">(auto)</span>}
-                  </label>
-                  <input
-                    type="number"
-                    value={form.vacancies}
-                    onChange={(e) => updateField("vacancies", Math.max(1, Number(e.target.value || 1)))}
-                    className={autoFilledFields.has("vacancies") ? inputAutoClass : inputClass}
-                  />
-                  {errors.vacancies && <p className="text-xs text-red-600 mt-1.5">{errors.vacancies}</p>}
-                </div>
+              </div>
+              <div>
+                <label className={labelClass}>
+                  Number of Openings
+                  {autoFilledFields.has("vacancies") && <span className="text-primary-500 ml-1 normal-case">(auto)</span>}
+                </label>
+                <input
+                  type="number"
+                  value={form.vacancies}
+                  onChange={(e) => updateField("vacancies", Math.max(1, Number(e.target.value || 1)))}
+                  className={autoFilledFields.has("vacancies") ? inputAutoClass : inputClass}
+                />
+                {errors.vacancies && <p className="text-xs text-primary-600 mt-1.5">{errors.vacancies}</p>}
               </div>
             </div>
           </div>
@@ -1967,7 +2034,7 @@ export default function AdminPostJob() {
                 <div>
                   <label className={labelClass}>
                     Min Experience (Yrs)
-                    {autoFilledFields.has("minExperience") && <span className="text-blue-500 ml-1 normal-case">(auto)</span>}
+                    {autoFilledFields.has("minExperience") && <span className="text-primary-500 ml-1 normal-case">(auto)</span>}
                   </label>
                   <input
                     value={form.minExperience}
@@ -1979,7 +2046,7 @@ export default function AdminPostJob() {
                 <div>
                   <label className={labelClass}>
                     Max Experience (Yrs)
-                    {autoFilledFields.has("maxExperience") && <span className="text-blue-500 ml-1 normal-case">(auto)</span>}
+                    {autoFilledFields.has("maxExperience") && <span className="text-primary-500 ml-1 normal-case">(auto)</span>}
                   </label>
                   <input
                     value={form.maxExperience}
@@ -1991,7 +2058,7 @@ export default function AdminPostJob() {
                 <div>
                   <label className={labelClass}>
                     Min Salary / Month
-                    {autoFilledFields.has("minSalary") && <span className="text-blue-500 ml-1 normal-case">(auto)</span>}
+                    {autoFilledFields.has("minSalary") && <span className="text-primary-500 ml-1 normal-case">(auto)</span>}
                   </label>
                   <input
                     type="number"
@@ -2004,7 +2071,7 @@ export default function AdminPostJob() {
                 <div>
                   <label className={labelClass}>
                     Max Salary / Month
-                    {autoFilledFields.has("maxSalary") && <span className="text-blue-500 ml-1 normal-case">(auto)</span>}
+                    {autoFilledFields.has("maxSalary") && <span className="text-primary-500 ml-1 normal-case">(auto)</span>}
                   </label>
                   <input
                     type="number"
@@ -2026,8 +2093,8 @@ export default function AdminPostJob() {
             <div className="p-6 space-y-5">
               <div>
                 <label className={labelClass}>
-                  Job Description <span className="text-red-500">*</span>
-                  {autoFilledFields.has("description") && <span className="text-blue-500 ml-1 normal-case">(auto-filled)</span>}
+                  Job Description <span className="text-primary-500">*</span>
+                  {autoFilledFields.has("description") && <span className="text-primary-500 ml-1 normal-case">(auto-filled)</span>}
                 </label>
                 <textarea
                   value={form.description}
@@ -2041,13 +2108,13 @@ export default function AdminPostJob() {
                       : inputClass
                     } resize-y`}
                 />
-                {errors.description && <p className="text-xs text-red-600 mt-1.5">{errors.description}</p>}
+                {errors.description && <p className="text-xs text-primary-600 mt-1.5">{errors.description}</p>}
               </div>
 
               <div>
                 <label className={labelClass}>
                   Skills & Technologies
-                  {autoFilledFields.has("skills") && <span className="text-blue-500 ml-1 normal-case">(auto-filled)</span>}
+                  {autoFilledFields.has("skills") && <span className="text-primary-500 ml-1 normal-case">(auto-filled)</span>}
                 </label>
                 <input
                   value={form.skills}
@@ -2095,7 +2162,7 @@ export default function AdminPostJob() {
                   />
                 </div>
               </div>
-              {errors.contact && <p className="text-xs text-red-600">{errors.contact}</p>}
+              {errors.contact && <p className="text-xs text-primary-600">{errors.contact}</p>}
             </div>
           </div>
 
@@ -2113,7 +2180,7 @@ export default function AdminPostJob() {
                   required
                 />
                 <label htmlFor="terms-checkbox-job" className="text-sm text-gray-700 cursor-pointer leading-relaxed">
-                  I confirm this is a genuine job opening and I agree to HireSpark's{" "}
+                  I confirm this is a genuine job opening and I agree to Jobion's{" "}
                   <Link to="/terms" target="_blank" className="text-blue-600 hover:text-blue-700 hover:underline font-medium">
                     job posting policies
                   </Link>.
@@ -2131,6 +2198,8 @@ export default function AdminPostJob() {
                       jobType: "Full-time",
                       workMode: "Office",
                       city: recruiterDefaults.city,
+                      state: recruiterDefaults.state,
+                      country: recruiterDefaults.country,
                       locality: "",
                       skills: "",
                       minExperience: "",
@@ -2170,3 +2239,4 @@ export default function AdminPostJob() {
     </div>
   );
 }
+
