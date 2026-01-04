@@ -4,8 +4,8 @@
 
 // List of allowed characters for different input types
 const ALLOWED_PATTERNS = {
-  // Alphanumeric with spaces, hyphens, and underscores
-  general: /^[a-zA-Z0-9\s\-_]+$/,
+  // Alphanumeric with spaces, hyphens, and underscores (allow empty for optional fields)
+  general: /^[a-zA-Z0-9\s\-_]*$/,
   // Email validation
   email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
   // Phone number (Indian format)
@@ -20,10 +20,12 @@ const ALLOWED_PATTERNS = {
   fileExtension: /^[a-zA-Z0-9]+$/,
   // Trade streams (allow forward slashes like "Computer / IT")
   trade_stream: /^[a-zA-Z0-9\s\-_\/]+$/,
-  // Salary ranges (allow rupee symbols, commas, en-dashes like "â‚¹8,000â€“12,000")
-  salary: /^[a-zA-Z0-9\s\-_,â‚¹â€“+]+$/,
-  // File paths (allow forward slashes, dots for file extensions like "/uploads/resumes/file.pdf")
-  file_path: /^[a-zA-Z0-9\s\-_\/\.]+$/,
+  // Salary ranges (allow rupee symbols, commas, en-dashes like "₹8,000–12,000")
+  salary: /^[a-zA-Z0-9\s\-_,₹–+]+$/,
+  // File paths and URLs (allow forward slashes, dots, colons for URLs like "http://localhost:5000/uploads/resumes/file.pdf")
+  file_path: /^[a-zA-Z0-9\s\-_\/\.:\?\&\=]+$/,
+  // URLs (allow protocol, domain, path for URLs like "https://www.linkedin.com/in/username")
+  url: /^$|^https?:\/\/[a-zA-Z0-9\-_\.]+(\.[a-zA-Z]{2,})+(\/[a-zA-Z0-9\-_\.\/\?\&\=\#\%\+]*)?$/,
 };
 
 /**
@@ -137,29 +139,65 @@ function validateInput(req, res, next) {
               case 'phone':
               case 'mobile':
               case 'contact_phone':
+              case 'hr_mobile':
+              case 'hr_phone':
                 req.body[key] = sanitizeString(value, 'phone');
                 break;
               case 'name':
               case 'full_name':
               case 'company':
+              case 'company_name':
+              case 'hr_name':
                 req.body[key] = sanitizeString(value, 'name');
                 break;
               case 'id':
               case 'userid':
               case 'user_id':
-                req.body[key] = sanitizeNumber(value, { integer: true, min: 1 });
+                req.body[key] = sanitizeNumber(value, { integer: true, min: 0 });
+                break;
+              case 'pincode':
+                // Pincode is VARCHAR(20) in database, so keep it as string
+                if (value && value.trim() !== '') {
+                  // Validate it's numeric but keep as string
+                  if (!/^\d+$/.test(value.trim())) {
+                    return res.status(400).json({
+                      success: false,
+                      error: 'Invalid pincode: must contain only digits'
+                    });
+                  }
+                  req.body[key] = value.trim(); // Keep as string
+                } else {
+                  req.body[key] = null; // Allow empty pincode
+                }
+                break;
+              case 'address_line1':
+              case 'address_line2':
+              case 'city':
+              case 'state':
+              case 'country':
+                req.body[key] = sanitizeString(value, 'general');
                 break;
               case 'trade_stream':
                 // Allow forward slashes for trade streams like "Computer / IT"
                 req.body[key] = sanitizeString(value, 'trade_stream');
                 break;
               case 'expected_salary':
-                // Allow rupee symbols and en-dashes for salary ranges like "â‚¹8,000â€“12,000"
+                // Allow rupee symbols and en-dashes for salary ranges like "â‚¹8,000â€"12,000"
                 req.body[key] = sanitizeString(value, 'salary');
                 break;
               case 'resume_path':
                 // Allow file paths with forward slashes like "/uploads/resumes/filename.pdf"
                 req.body[key] = sanitizeString(value, 'file_path');
+                break;
+              case 'linkedin_url':
+              case 'github_url':
+              case 'company_website':
+                // Allow URLs for social media profiles and company websites
+                if (value.trim() === '') {
+                  req.body[key] = null; // Allow empty URLs
+                } else {
+                  req.body[key] = sanitizeString(value, 'url');
+                }
                 break;
               default:
                 req.body[key] = sanitizeString(value);

@@ -120,8 +120,7 @@ export default function RecruiterHeader() {
         >
           <b className="text-xl sm:text-2xl font-black tracking-widest bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 bg-clip-text text-transparent drop-shadow-sm hover:from-primary-700 hover:via-primary-800 hover:to-primary-900 transition-all duration-300">
             Job<span className="relative">
-              <span className="text-primary-400">ı</span>
-              <span className="absolute -top-1 left-0 text-red-500 text-sm">•</span>
+              <span className="text-red-800 font-serif text-xl sm:text-2xl">i</span>
             </span>on
           </b>
         </Link>

@@ -1648,20 +1648,199 @@ export default function AdminPostJob() {
   }, [form.roleId, roles]);
 
 
-  // Update form field
+  const [fieldTouched, setFieldTouched] = useState({});
+
+  // Validation functions
+  const validateEmail = (email) => {
+    if (!email.trim()) return ""; // Email is optional if phone is provided
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) return "Please enter a valid email address";
+    return "";
+  };
+
+  const validatePhone = (phone) => {
+    if (!phone.trim()) return ""; // Phone is optional if email is provided
+    const phoneRegex = /^[6-9]\d{9}$/;
+    if (!phoneRegex.test(phone)) return "Please enter a valid 10-digit Indian mobile number (starting with 6-9)";
+    return "";
+  };
+
+  const validateNumericRange = (min, max, fieldName) => {
+    if (min && max) {
+      const minNum = Number(min);
+      const maxNum = Number(max);
+      if (!isNaN(minNum) && !isNaN(maxNum)) {
+        if (minNum > maxNum) return `${fieldName}: Minimum cannot exceed maximum`;
+      }
+    }
+    return "";
+  };
+
+  const validateField = (name, value) => {
+    let error = "";
+    const formData = form;
+
+    switch (name) {
+      case "roleId":
+        if (!value) error = "Job role is required";
+        break;
+      case "company":
+        if (!value.trim()) error = "Company name is required";
+        break;
+      case "city":
+        if (formData.workMode !== 'Remote' && !value.trim()) {
+          error = "City is required (optional for remote jobs)";
+        }
+        break;
+      case "description":
+        if (!value.trim()) error = "Job description is required";
+        else if (value.trim().length < 50) error = "Job description must be at least 50 characters";
+        break;
+      case "contactEmail":
+        error = validateEmail(value);
+        // If both email and phone are empty, show error on contact field
+        if (!value.trim() && !formData.contactPhone.trim()) {
+          error = "Please provide either email or phone";
+        }
+        break;
+      case "contactPhone":
+        error = validatePhone(value);
+        // If both email and phone are empty, show error on contact field
+        if (!value.trim() && !formData.contactEmail.trim()) {
+          error = "Please provide either email or phone";
+        }
+        break;
+      case "minExperience":
+        if (value && (isNaN(value) || Number(value) < 0)) {
+          error = "Minimum experience must be a number >= 0";
+        } else if (formData.maxExperience && value && Number(value) > Number(formData.maxExperience)) {
+          error = "Minimum experience cannot exceed maximum experience";
+        }
+        break;
+      case "maxExperience":
+        if (value && (isNaN(value) || Number(value) < 0)) {
+          error = "Maximum experience must be a number >= 0";
+        } else if (formData.minExperience && value && Number(value) < Number(formData.minExperience)) {
+          error = "Maximum experience cannot be less than minimum experience";
+        }
+        break;
+      case "minSalary":
+        if (value && (isNaN(value) || Number(value) < 0)) {
+          error = "Minimum salary must be a positive number";
+        } else if (formData.maxSalary && value && Number(value) > Number(formData.maxSalary)) {
+          error = "Minimum salary cannot exceed maximum salary";
+        }
+        break;
+      case "maxSalary":
+        if (value && (isNaN(value) || Number(value) < 0)) {
+          error = "Maximum salary must be a positive number";
+        } else if (formData.minSalary && value && Number(value) < Number(formData.minSalary)) {
+          error = "Maximum salary cannot be less than minimum salary";
+        }
+        break;
+      case "vacancies":
+        const vacanciesNum = Number(value);
+        if (isNaN(vacanciesNum) || vacanciesNum < 1 || !Number.isInteger(vacanciesNum)) {
+          error = "Vacancies must be an integer >= 1";
+        }
+        break;
+      default:
+        break;
+    }
+    setErrors((prev) => ({ ...prev, [name]: error }));
+  };
+
+  // Update form field with real-time validation
   function updateField(name, value) {
     setForm((s) => ({ ...s, [name]: value }));
+    // Validate this field if it's been touched
+    if (fieldTouched[name]) {
+      validateField(name, value);
+      // Also validate related fields for numeric ranges
+      if (name === "minExperience" || name === "maxExperience") {
+        if (fieldTouched.minExperience || fieldTouched.maxExperience) {
+          validateField("minExperience", name === "minExperience" ? value : form.minExperience);
+          validateField("maxExperience", name === "maxExperience" ? value : form.maxExperience);
+        }
+      }
+      if (name === "minSalary" || name === "maxSalary") {
+        if (fieldTouched.minSalary || fieldTouched.maxSalary) {
+          validateField("minSalary", name === "minSalary" ? value : form.minSalary);
+          validateField("maxSalary", name === "maxSalary" ? value : form.maxSalary);
+        }
+      }
+      // Re-validate contact fields if one changes
+      if (name === "contactEmail" || name === "contactPhone") {
+        if (fieldTouched.contactEmail || fieldTouched.contactPhone) {
+          validateField("contactEmail", name === "contactEmail" ? value : form.contactEmail);
+          validateField("contactPhone", name === "contactPhone" ? value : form.contactPhone);
+        }
+      }
+    }
+    // Clear error when user starts typing
     setErrors((e) => ({ ...e, [name]: "" }));
   }
+
+  const handleBlur = (name, value) => {
+    setFieldTouched((prev) => ({ ...prev, [name]: true }));
+    validateField(name, value || form[name]);
+  };
+
   function validate() {
+    // Mark all required fields as touched
+    const requiredFields = ["roleId", "company", "description", "contactEmail", "contactPhone"];
+    requiredFields.forEach(field => {
+      setFieldTouched(prev => ({ ...prev, [field]: true }));
+      validateField(field, form[field]);
+    });
+
+    // Validate city if not remote
+    if (form.workMode !== 'Remote') {
+      setFieldTouched(prev => ({ ...prev, city: true }));
+      validateField("city", form.city);
+    }
+
+    // Validate numeric fields if they have values
+    if (form.minExperience || form.maxExperience) {
+      setFieldTouched(prev => ({ ...prev, minExperience: true, maxExperience: true }));
+      validateField("minExperience", form.minExperience);
+      validateField("maxExperience", form.maxExperience);
+    }
+
+    if (form.minSalary || form.maxSalary) {
+      setFieldTouched(prev => ({ ...prev, minSalary: true, maxSalary: true }));
+      validateField("minSalary", form.minSalary);
+      validateField("maxSalary", form.maxSalary);
+    }
+
+    if (form.vacancies) {
+      setFieldTouched(prev => ({ ...prev, vacancies: true }));
+      validateField("vacancies", form.vacancies);
+    }
+
     const err = {};
     if (!form.roleId) err.roleId = "Job role is required";
     if (!form.company.trim()) err.company = "Company name is required";
-    // City is optional for remote jobs
     if (form.workMode !== 'Remote' && !form.city.trim()) err.city = "City required (optional for remote jobs)";
     if (!form.description.trim()) err.description = "Job description required";
+    else if (form.description.trim().length < 50) err.description = "Job description must be at least 50 characters";
     if (!form.contactEmail.trim() && !form.contactPhone.trim()) err.contact = "Provide email or phone";
-    if (form.vacancies <= 0) err.vacancies = "Vacancies must be >= 1";
+    if (form.contactEmail.trim() && validateEmail(form.contactEmail)) err.contactEmail = validateEmail(form.contactEmail);
+    if (form.contactPhone.trim() && validatePhone(form.contactPhone)) err.contactPhone = validatePhone(form.contactPhone);
+    if (form.vacancies <= 0 || !Number.isInteger(form.vacancies)) err.vacancies = "Vacancies must be >= 1";
+    
+    // Numeric range validations
+    if (form.minExperience && form.maxExperience) {
+      const minExp = Number(form.minExperience);
+      const maxExp = Number(form.maxExperience);
+      if (minExp > maxExp) err.maxExperience = "Maximum experience cannot be less than minimum experience";
+    }
+    if (form.minSalary && form.maxSalary) {
+      const minSal = Number(form.minSalary);
+      const maxSal = Number(form.maxSalary);
+      if (minSal > maxSal) err.maxSalary = "Maximum salary cannot be less than minimum salary";
+    }
+
     setErrors(err);
     return Object.keys(err).length === 0;
   }
@@ -1848,10 +2027,13 @@ export default function AdminPostJob() {
                     value={searchTerm}
                     onChange={handleInputChange}
                     onFocus={handleInputFocus}
-                    onBlur={handleInputBlur}
+                    onBlur={(e) => {
+                      handleInputBlur(); // Close dropdown
+                      handleBlur("roleId", form.roleId); // Validation
+                    }}
                     onKeyDown={handleKeyDown}
                     placeholder={rolesLoading ? "Loading roles..." : "-- Select or type to search job role --"}
-                    className={`${selectClass} ${errors.roleId ? '!border-primary-400' : ''}`}
+                    className={`${selectClass} ${errors.roleId && fieldTouched.roleId ? '!border-red-500' : ''}`}
                     disabled={rolesLoading || !!rolesError}
                     required={!!form.roleId}
                     autoComplete="off"
@@ -1886,7 +2068,7 @@ export default function AdminPostJob() {
                   )}
                 </div>
                 {rolesError && <p className="text-xs text-primary-600 mt-1.5">{rolesError}</p>}
-                {errors.roleId && <p className="text-xs text-primary-600 mt-1.5">{errors.roleId}</p>}
+                {errors.roleId && fieldTouched.roleId && <p className="text-xs text-red-600 mt-1.5">{errors.roleId}</p>}
                 <p className="text-xs text-gray-400 mt-1.5">Selecting a role will auto-fill related fields</p>
               </div>
 
@@ -1898,10 +2080,11 @@ export default function AdminPostJob() {
                     value={form.company}
                     readOnly
                     onChange={(e) => updateField("company", e.target.value)}
+                    onBlur={() => handleBlur("company", form.company)}
                     placeholder="Enter company name"
-                    className={errors.company ? inputErrorClass : inputClass}
+                    className={errors.company && fieldTouched.company ? inputErrorClass.replace('border-primary-400', 'border-red-500') : inputClass}
                   />
-                  {errors.company && <p className="text-xs text-primary-600 mt-1.5">{errors.company}</p>}
+                  {errors.company && fieldTouched.company && <p className="text-xs text-red-600 mt-1.5">{errors.company}</p>}
                 </div>
                 <div>
                   <label className={labelClass}>
@@ -1981,7 +2164,8 @@ export default function AdminPostJob() {
                   <select
                     value={form.city}
                     onChange={(e) => updateField("city", e.target.value)}
-                    className={errors.city ? `${selectClass} border-primary-400` : selectClass}
+                    onBlur={() => handleBlur("city", form.city)}
+                    className={errors.city && fieldTouched.city ? `${selectClass} border-red-500` : selectClass}
                     disabled={!form.state && form.workMode !== 'Remote'}
                   >
                     <option value="">
@@ -1993,7 +2177,7 @@ export default function AdminPostJob() {
                       </option>
                     ))}
                   </select>
-                  {errors.city && <p className="text-xs text-primary-600 mt-1.5">{errors.city}</p>}
+                  {errors.city && fieldTouched.city && <p className="text-xs text-red-600 mt-1.5">{errors.city}</p>}
                   {form.workMode === 'Remote' && (
                     <p className="text-xs text-gray-500 mt-1.5">City not required for remote positions</p>
                   )}
@@ -2017,9 +2201,12 @@ export default function AdminPostJob() {
                   type="number"
                   value={form.vacancies}
                   onChange={(e) => updateField("vacancies", Math.max(1, Number(e.target.value || 1)))}
-                  className={autoFilledFields.has("vacancies") ? inputAutoClass : inputClass}
+                  onBlur={() => handleBlur("vacancies", form.vacancies)}
+                  className={errors.vacancies && fieldTouched.vacancies 
+                    ? (autoFilledFields.has("vacancies") ? inputAutoClass.replace('border-primary-300', 'border-red-500') : inputErrorClass.replace('border-primary-400', 'border-red-500'))
+                    : (autoFilledFields.has("vacancies") ? inputAutoClass : inputClass)}
                 />
-                {errors.vacancies && <p className="text-xs text-primary-600 mt-1.5">{errors.vacancies}</p>}
+                {errors.vacancies && fieldTouched.vacancies && <p className="text-xs text-red-600 mt-1.5">{errors.vacancies}</p>}
               </div>
             </div>
           </div>
@@ -2039,9 +2226,13 @@ export default function AdminPostJob() {
                   <input
                     value={form.minExperience}
                     onChange={(e) => updateField("minExperience", e.target.value)}
+                    onBlur={() => handleBlur("minExperience", form.minExperience)}
                     placeholder="0"
-                    className={autoFilledFields.has("minExperience") ? inputAutoClass : inputClass}
+                    className={errors.minExperience && fieldTouched.minExperience
+                      ? (autoFilledFields.has("minExperience") ? inputAutoClass.replace('border-primary-300', 'border-red-500') : inputErrorClass.replace('border-primary-400', 'border-red-500'))
+                      : (autoFilledFields.has("minExperience") ? inputAutoClass : inputClass)}
                   />
+                  {errors.minExperience && fieldTouched.minExperience && <p className="text-xs text-red-600 mt-1.5">{errors.minExperience}</p>}
                 </div>
                 <div>
                   <label className={labelClass}>
@@ -2051,9 +2242,13 @@ export default function AdminPostJob() {
                   <input
                     value={form.maxExperience}
                     onChange={(e) => updateField("maxExperience", e.target.value)}
+                    onBlur={() => handleBlur("maxExperience", form.maxExperience)}
                     placeholder="3"
-                    className={autoFilledFields.has("maxExperience") ? inputAutoClass : inputClass}
+                    className={errors.maxExperience && fieldTouched.maxExperience
+                      ? (autoFilledFields.has("maxExperience") ? inputAutoClass.replace('border-primary-300', 'border-red-500') : inputErrorClass.replace('border-primary-400', 'border-red-500'))
+                      : (autoFilledFields.has("maxExperience") ? inputAutoClass : inputClass)}
                   />
+                  {errors.maxExperience && fieldTouched.maxExperience && <p className="text-xs text-red-600 mt-1.5">{errors.maxExperience}</p>}
                 </div>
                 <div>
                   <label className={labelClass}>
@@ -2064,9 +2259,13 @@ export default function AdminPostJob() {
                     type="number"
                     value={form.minSalary}
                     onChange={(e) => updateField("minSalary", e.target.value)}
+                    onBlur={() => handleBlur("minSalary", form.minSalary)}
                     placeholder="20000"
-                    className={autoFilledFields.has("minSalary") ? inputAutoClass : inputClass}
+                    className={errors.minSalary && fieldTouched.minSalary
+                      ? (autoFilledFields.has("minSalary") ? inputAutoClass.replace('border-primary-300', 'border-red-500') : inputErrorClass.replace('border-primary-400', 'border-red-500'))
+                      : (autoFilledFields.has("minSalary") ? inputAutoClass : inputClass)}
                   />
+                  {errors.minSalary && fieldTouched.minSalary && <p className="text-xs text-red-600 mt-1.5">{errors.minSalary}</p>}
                 </div>
                 <div>
                   <label className={labelClass}>
@@ -2077,9 +2276,13 @@ export default function AdminPostJob() {
                     type="number"
                     value={form.maxSalary}
                     onChange={(e) => updateField("maxSalary", e.target.value)}
+                    onBlur={() => handleBlur("maxSalary", form.maxSalary)}
                     placeholder="40000"
-                    className={autoFilledFields.has("maxSalary") ? inputAutoClass : inputClass}
+                    className={errors.maxSalary && fieldTouched.maxSalary
+                      ? (autoFilledFields.has("maxSalary") ? inputAutoClass.replace('border-primary-300', 'border-red-500') : inputErrorClass.replace('border-primary-400', 'border-red-500'))
+                      : (autoFilledFields.has("maxSalary") ? inputAutoClass : inputClass)}
                   />
+                  {errors.maxSalary && fieldTouched.maxSalary && <p className="text-xs text-red-600 mt-1.5">{errors.maxSalary}</p>}
                 </div>
               </div>
             </div>
@@ -2099,16 +2302,20 @@ export default function AdminPostJob() {
                 <textarea
                   value={form.description}
                   onChange={(e) => updateField("description", e.target.value)}
+                  onBlur={() => handleBlur("description", form.description)}
                   placeholder="Enter job responsibilities, requirements, benefits, and other details..."
                   rows={10}
-                  className={`${errors.description
-                    ? inputErrorClass
+                  className={`${errors.description && fieldTouched.description
+                    ? inputErrorClass.replace('border-primary-400', 'border-red-500')
                     : autoFilledFields.has("description")
                       ? inputAutoClass
                       : inputClass
                     } resize-y`}
                 />
-                {errors.description && <p className="text-xs text-primary-600 mt-1.5">{errors.description}</p>}
+                {errors.description && fieldTouched.description && <p className="text-xs text-red-600 mt-1.5">{errors.description}</p>}
+                {!errors.description && fieldTouched.description && form.description.trim().length > 0 && form.description.trim().length < 50 && (
+                  <p className="text-xs text-gray-500 mt-1.5">Description must be at least 50 characters (currently {form.description.trim().length})</p>
+                )}
               </div>
 
               <div>
@@ -2147,9 +2354,17 @@ export default function AdminPostJob() {
                   <input
                     value={form.contactEmail}
                     onChange={(e) => updateField("contactEmail", e.target.value)}
+                    onBlur={() => handleBlur("contactEmail", form.contactEmail)}
                     placeholder="hr@company.com"
-                    className={inputClass}
+                    type="email"
+                    className={errors.contactEmail && fieldTouched.contactEmail 
+                      ? inputErrorClass.replace('border-primary-400', 'border-red-500')
+                      : inputClass}
                   />
+                  {errors.contactEmail && fieldTouched.contactEmail && <p className="text-xs text-red-600 mt-1.5">{errors.contactEmail}</p>}
+                  {errors.contact && !form.contactEmail.trim() && !form.contactPhone.trim() && (
+                    <p className="text-xs text-red-600 mt-1.5">{errors.contact}</p>
+                  )}
                 </div>
                 <div>
                   <label className={labelClass}>Contact Phone</label>
@@ -2157,12 +2372,16 @@ export default function AdminPostJob() {
                     value={form.contactPhone}
                     readOnly
                     onChange={(e) => updateField("contactPhone", e.target.value)}
-                    placeholder="+91 98765 43210"
-                    className={inputClass}
+                    onBlur={() => handleBlur("contactPhone", form.contactPhone)}
+                    placeholder="9876543210"
+                    type="tel"
+                    className={errors.contactPhone && fieldTouched.contactPhone 
+                      ? inputErrorClass.replace('border-primary-400', 'border-red-500')
+                      : inputClass}
                   />
+                  {errors.contactPhone && fieldTouched.contactPhone && <p className="text-xs text-red-600 mt-1.5">{errors.contactPhone}</p>}
                 </div>
               </div>
-              {errors.contact && <p className="text-xs text-primary-600">{errors.contact}</p>}
             </div>
           </div>
 

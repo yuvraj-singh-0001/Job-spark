@@ -196,6 +196,15 @@ export default function ProfilePage() {
     }
   }
 
+  const validateUrl = (url, fieldName) => {
+    if (!url || !url.trim()) return ""; // URLs are optional
+    const urlRegex = /^https?:\/\/[a-zA-Z0-9\-_\.]+(\.[a-zA-Z]{2,})+(\/[a-zA-Z0-9\-_\.\/\?\&\=\#\%\+]*)?$/;
+    if (!urlRegex.test(url.trim())) {
+      return `Please enter a valid ${fieldName} URL (e.g., https://linkedin.com/in/yourprofile)`;
+    }
+    return "";
+  };
+
   const validateField = (name, value) => {
     const errors = { ...fieldErrors };
 
@@ -245,6 +254,24 @@ export default function ProfilePage() {
           errors.experience_years = 'Experience must be 0-40 years';
         } else {
           delete errors.experience_years;
+        }
+        break;
+
+      case 'linkedin_url':
+        const linkedinError = validateUrl(value, 'LinkedIn');
+        if (linkedinError) {
+          errors.linkedin_url = linkedinError;
+        } else {
+          delete errors.linkedin_url;
+        }
+        break;
+
+      case 'github_url':
+        const githubError = validateUrl(value, 'GitHub');
+        if (githubError) {
+          errors.github_url = githubError;
+        } else {
+          delete errors.github_url;
         }
         break;
 
@@ -491,10 +518,14 @@ export default function ProfilePage() {
         expected_salary: toNullIfEmpty(form.expected_salary),
         id_proof_available: toNullIfEmpty(form.id_proof_available),
         experience_years: form.experience_years && form.experience_years !== '' ? parseFloat(form.experience_years) : null,
-        resume_path: toNullIfEmpty(resumePathToSend),
         linkedin_url: toNullIfEmpty(form.linkedin_url),
         github_url: toNullIfEmpty(form.github_url),
       };
+
+      // Only include resume_path if a new resume was uploaded
+      if (resumePathToSend) {
+        payload.resume_path = resumePathToSend;
+      }
 
       const res = await api.put("/profile/user", payload);
 
@@ -979,10 +1010,18 @@ export default function ProfilePage() {
                           name="linkedin_url"
                           value={form.linkedin_url}
                           onChange={handleChange}
+                          onBlur={handleBlur}
                           placeholder="https://linkedin.com/in/yourprofile"
                           type="url"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 transition-colors ${
+                            fieldErrors.linkedin_url && fieldTouched.linkedin_url
+                              ? 'border-red-500 focus:border-red-500'
+                              : 'border-gray-300 focus:border-primary-500'
+                          }`}
                         />
+                        {fieldErrors.linkedin_url && fieldTouched.linkedin_url && (
+                          <p className="text-red-600 text-xs mt-1">{fieldErrors.linkedin_url}</p>
+                        )}
                       </div>
                     )}
                     {shouldShowGitHub() && (
@@ -992,10 +1031,18 @@ export default function ProfilePage() {
                           name="github_url"
                           value={form.github_url}
                           onChange={handleChange}
+                          onBlur={handleBlur}
                           placeholder="https://github.com/yourusername"
                           type="url"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 transition-colors ${
+                            fieldErrors.github_url && fieldTouched.github_url
+                              ? 'border-red-500 focus:border-red-500'
+                              : 'border-gray-300 focus:border-primary-500'
+                          }`}
                         />
+                        {fieldErrors.github_url && fieldTouched.github_url && (
+                          <p className="text-red-600 text-xs mt-1">{fieldErrors.github_url}</p>
+                        )}
                       </div>
                     )}
                   </div>

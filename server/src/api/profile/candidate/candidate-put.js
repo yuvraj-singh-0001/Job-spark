@@ -131,48 +131,82 @@ const candidateProfile = async (req, res) => {
     }
 
     if (existingProfiles.length > 0) {
-      // Update existing profile
-      const updateValues = [
-        full_name,
-        phone !== undefined ? phone : null,
-        date_of_birth || null,
-        gender || null,
-        city || null,
-        state || null,
-        country || null,
-        highest_qualification || null,
-        trade_stream || null,
-        keySkillsJson,
-        job_type || null,
-        availability || null,
-        expected_salary || null,
-        id_proof_available || null,
-        preferred_contact_method || null,
-        willingToRelocateValue,
-        experience_years !== undefined && experience_years !== null ? parseFloat(experience_years) : null,
-        resume_path || null,
-        linkedin_url || null,
-        github_url || null,
-        now,
-        finalUserId
-      ];
+      // Update existing profile - dynamically build query based on provided fields
+      const updateFields = [];
+      const updateValues = [];
 
-      const updateColumns = [
-        'full_name', 'phone', 'date_of_birth', 'gender', 'city', 'state', 'country',
-        'highest_qualification', 'trade_stream', 'key_skills', 'job_type', 'availability',
-        'expected_salary', 'id_proof_available', 'preferred_contact_method',
-        'willing_to_relocate', 'experience_years', 'resume_path',
-        'linkedin_url', 'github_url', 'updated_at'
-      ];
+      // Always update these core fields
+      updateFields.push('full_name = ?');
+      updateValues.push(full_name);
+
+      updateFields.push('phone = ?');
+      updateValues.push(phone !== undefined ? phone : null);
+
+      updateFields.push('date_of_birth = ?');
+      updateValues.push(date_of_birth || null);
+
+      updateFields.push('gender = ?');
+      updateValues.push(gender || null);
+
+      updateFields.push('city = ?');
+      updateValues.push(city || null);
+
+      updateFields.push('state = ?');
+      updateValues.push(state || null);
+
+      updateFields.push('country = ?');
+      updateValues.push(country || null);
+
+      updateFields.push('highest_qualification = ?');
+      updateValues.push(highest_qualification || null);
+
+      updateFields.push('trade_stream = ?');
+      updateValues.push(trade_stream || null);
+
+      updateFields.push('key_skills = ?');
+      updateValues.push(keySkillsJson);
+
+      updateFields.push('job_type = ?');
+      updateValues.push(job_type || null);
+
+      updateFields.push('availability = ?');
+      updateValues.push(availability || null);
+
+      updateFields.push('expected_salary = ?');
+      updateValues.push(expected_salary || null);
+
+      updateFields.push('id_proof_available = ?');
+      updateValues.push(id_proof_available || null);
+
+      updateFields.push('preferred_contact_method = ?');
+      updateValues.push(preferred_contact_method || null);
+
+      updateFields.push('willing_to_relocate = ?');
+      updateValues.push(willingToRelocateValue);
+
+      updateFields.push('experience_years = ?');
+      updateValues.push(experience_years !== undefined && experience_years !== null ? parseFloat(experience_years) : null);
+
+      // Only update resume_path if it was provided
+      if (req.body.resume_path !== undefined) {
+        updateFields.push('resume_path = ?');
+        updateValues.push(resume_path || null);
+      }
+
+      updateFields.push('linkedin_url = ?');
+      updateValues.push(linkedin_url || null);
+
+      updateFields.push('github_url = ?');
+      updateValues.push(github_url || null);
+
+      updateFields.push('updated_at = ?');
+      updateValues.push(now);
+
+      // Add user_id for WHERE clause
+      updateValues.push(finalUserId);
 
       const updateResult = await connection.execute(
-        `UPDATE candidate_profiles
-         SET full_name = ?, phone = ?, date_of_birth = ?, gender = ?, city = ?, state = ?, country = ?,
-             highest_qualification = ?, trade_stream = ?, key_skills = ?, job_type = ?, availability = ?,
-             expected_salary = ?, id_proof_available = ?, preferred_contact_method = ?,
-             willing_to_relocate = ?, experience_years = ?, resume_path = ?,
-             linkedin_url = ?, github_url = ?, updated_at = ?
-         WHERE user_id = ?`,
+        `UPDATE candidate_profiles SET ${updateFields.join(', ')} WHERE user_id = ?`,
         updateValues
       );
 

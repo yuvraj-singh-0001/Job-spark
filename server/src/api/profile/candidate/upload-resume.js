@@ -5,7 +5,7 @@ const pool = require("../../config/db");
 const { requireAuth } = require("../../../middlewares/auth");
 
 // Ensure upload directory exists
-const UPLOAD_DIR = path.join(__dirname, "..", "..", "uploads", "resumes");
+const UPLOAD_DIR = path.join(__dirname, "..", "..", "..", "uploads", "resumes");
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 // Multer storage config - similar to job applications
@@ -65,6 +65,14 @@ const uploadResume = async (req, res) => {
       });
     }
 
+    // Get current resume path for cleanup
+    const [currentProfile] = await conn.query(
+      'SELECT resume_path FROM candidate_profiles WHERE user_id = ? LIMIT 1',
+      [userId]
+    );
+
+    const oldResumePath = currentProfile.length > 0 ? currentProfile[0].resume_path : null;
+
     // Construct the full resume URL
     const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
     const resumePath = `${baseUrl}/uploads/resumes/${file.filename}`;
@@ -101,6 +109,24 @@ const uploadResume = async (req, res) => {
       `;
 
       await conn.query(insertSql, [userId, userName, resumePath]);
+    }
+
+    // Clean up old resume file if it exists
+    if (oldResumePath && oldResumePath !== resumePath) {
+      try {
+        // Extract filename from the old resume URL
+        const oldFilename = oldResumePath.split('/').pop();
+        if (oldFilename) {
+          const oldFilePath = path.join(UPLOAD_DIR, oldFilename);
+          if (fs.existsSync(oldFilePath)) {
+            fs.unlinkSync(oldFilePath);
+            console.log(`Cleaned up old resume file: ${oldFilePath}`);
+          }
+        }
+      } catch (cleanupError) {
+        console.error('Failed to cleanup old resume file:', cleanupError);
+        // Don't fail the upload if cleanup fails
+      }
     }
 
     res.json({

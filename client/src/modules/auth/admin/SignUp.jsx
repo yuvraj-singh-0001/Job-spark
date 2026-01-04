@@ -12,12 +12,94 @@ export default function AdminSignUp() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [fieldTouched, setFieldTouched] = useState({});
+
+  // Validation functions
+  const validateEmail = (email) => {
+    if (!email.trim()) return "Email is required";
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) return "Please enter a valid email address";
+    return "";
+  };
+
+  const validatePhone = (phone) => {
+    if (!phone.trim()) return ""; // Phone is optional
+    const phoneRegex = /^[6-9]\d{9}$/;
+    if (!phoneRegex.test(phone)) return "Please enter a valid 10-digit Indian mobile number (starting with 6-9)";
+    return "";
+  };
+
+  const validatePassword = (password) => {
+    if (!password) return "Password is required";
+    if (password.length < 6) return "Password must be at least 6 characters long";
+    if (password.length > 128) return "Password must be less than 128 characters";
+    return "";
+  };
+
+  const validateFullName = (name) => {
+    if (!name.trim()) return "Full name is required";
+    if (name.trim().length < 2) return "Full name must be at least 2 characters";
+    if (name.trim().length > 100) return "Full name must be less than 100 characters";
+    const nameRegex = /^[a-zA-Z\s\-']+$/;
+    if (!nameRegex.test(name.trim())) return "Full name can only contain letters, spaces, hyphens, and apostrophes";
+    return "";
+  };
+
+  const validateConfirmPassword = (confirmPassword, password) => {
+    if (!confirmPassword) return "Please confirm your password";
+    if (confirmPassword !== password) return "Passwords do not match";
+    return "";
+  };
+
+  // Validate individual field
+  const validateField = (name, value) => {
+    let error = "";
+    switch (name) {
+      case "full_name":
+        error = validateFullName(value);
+        break;
+      case "email":
+        error = validateEmail(value);
+        break;
+      case "phone":
+        error = validatePhone(value);
+        break;
+      case "password":
+        error = validatePassword(value);
+        // Also re-validate confirmPassword if it's been touched
+        if (fieldTouched.confirmPassword) {
+          const confirmError = validateConfirmPassword(formData.confirmPassword, value);
+          setFieldErrors(prev => ({ ...prev, confirmPassword: confirmError }));
+        }
+        break;
+      case "confirmPassword":
+        error = validateConfirmPassword(value, formData.password);
+        break;
+      default:
+        break;
+    }
+    setFieldErrors(prev => ({ ...prev, [name]: error }));
+  };
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
+    // Clear general error when user types
+    if (error) setError("");
+    // Validate field if it has been touched
+    if (fieldTouched[name]) {
+      validateField(name, value);
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setFieldTouched(prev => ({ ...prev, [name]: true }));
+    validateField(name, value);
   };
 
   async function handleSubmit(e) {
@@ -26,15 +108,29 @@ export default function AdminSignUp() {
     setMessage("");
     setError("");
 
-    // Validation
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      setLoading(false);
-      return;
+    // Validate all fields before submission
+    const allFields = ["full_name", "email", "password", "confirmPassword"];
+    allFields.forEach(field => {
+      setFieldTouched(prev => ({ ...prev, [field]: true }));
+      validateField(field, formData[field]);
+    });
+
+    // Also validate phone if provided
+    if (formData.phone) {
+      setFieldTouched(prev => ({ ...prev, phone: true }));
+      validateField("phone", formData.phone);
     }
 
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long");
+    // Check if there are any errors
+    const hasErrors = Object.values(fieldErrors).some(err => err !== "") ||
+      validateFullName(formData.full_name) !== "" ||
+      validateEmail(formData.email) !== "" ||
+      validatePassword(formData.password) !== "" ||
+      validateConfirmPassword(formData.confirmPassword, formData.password) !== "" ||
+      (formData.phone && validatePhone(formData.phone) !== "");
+
+    if (hasErrors) {
+      setError("Please correct the errors below before submitting");
       setLoading(false);
       return;
     }
@@ -86,12 +182,20 @@ export default function AdminSignUp() {
                   </label>
                   <input
                     name="full_name"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors outline-none"
+                    className={`w-full rounded-lg border px-4 py-3 text-sm focus:ring-2 transition-colors outline-none ${
+                      fieldErrors.full_name && fieldTouched.full_name
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-200"
+                        : "border-gray-300 focus:border-blue-500 focus:ring-blue-200"
+                    }`}
                     placeholder="Enter your full name"
                     value={formData.full_name}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     required
                   />
+                  {fieldErrors.full_name && fieldTouched.full_name && (
+                    <p className="text-red-600 text-xs mt-1">{fieldErrors.full_name}</p>
+                  )}
                 </div>
                 
                 <div>
@@ -100,13 +204,21 @@ export default function AdminSignUp() {
                   </label>
                   <input
                     name="email"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors outline-none"
+                    className={`w-full rounded-lg border px-4 py-3 text-sm focus:ring-2 transition-colors outline-none ${
+                      fieldErrors.email && fieldTouched.email
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-200"
+                        : "border-gray-300 focus:border-blue-500 focus:ring-blue-200"
+                    }`}
                     placeholder="admin@jobion.com"
                     type="email"
                     value={formData.email}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     required
                   />
+                  {fieldErrors.email && fieldTouched.email && (
+                    <p className="text-red-600 text-xs mt-1">{fieldErrors.email}</p>
+                  )}
                 </div>
                 
                 <div>
@@ -115,12 +227,30 @@ export default function AdminSignUp() {
                   </label>
                   <input
                     name="phone"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors outline-none"
-                    placeholder="+1 (555) 123-4567"
+                    className={`w-full rounded-lg border px-4 py-3 text-sm focus:ring-2 transition-colors outline-none ${
+                      fieldErrors.phone && fieldTouched.phone
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-200"
+                        : "border-gray-300 focus:border-blue-500 focus:ring-blue-200"
+                    }`}
+                    placeholder="9876543210"
                     type="tel"
                     value={formData.phone}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      // Only allow digits
+                      const value = e.target.value.replace(/\D/g, '');
+                      if (value.length <= 10) {
+                        handleChange({ target: { name: 'phone', value } });
+                      }
+                    }}
+                    onBlur={handleBlur}
+                    maxLength="10"
                   />
+                  {fieldErrors.phone && fieldTouched.phone && (
+                    <p className="text-red-600 text-xs mt-1">{fieldErrors.phone}</p>
+                  )}
+                  {!fieldErrors.phone && fieldTouched.phone && (
+                    <p className="text-xs text-gray-500 mt-1">10-digit Indian mobile number (optional)</p>
+                  )}
                 </div>
                 
                 <div>
@@ -129,14 +259,23 @@ export default function AdminSignUp() {
                   </label>
                   <input
                     name="password"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors outline-none"
+                    className={`w-full rounded-lg border px-4 py-3 text-sm focus:ring-2 transition-colors outline-none ${
+                      fieldErrors.password && fieldTouched.password
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-200"
+                        : "border-gray-300 focus:border-blue-500 focus:ring-blue-200"
+                    }`}
                     placeholder="Create a strong password"
                     type="password"
                     value={formData.password}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     required
                   />
-                  <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+                  {fieldErrors.password && fieldTouched.password ? (
+                    <p className="text-red-600 text-xs mt-1">{fieldErrors.password}</p>
+                  ) : (
+                    <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+                  )}
                 </div>
                 
                 <div>
@@ -145,13 +284,21 @@ export default function AdminSignUp() {
                   </label>
                   <input
                     name="confirmPassword"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors outline-none"
+                    className={`w-full rounded-lg border px-4 py-3 text-sm focus:ring-2 transition-colors outline-none ${
+                      fieldErrors.confirmPassword && fieldTouched.confirmPassword
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-200"
+                        : "border-gray-300 focus:border-blue-500 focus:ring-blue-200"
+                    }`}
                     placeholder="Confirm your password"
                     type="password"
                     value={formData.confirmPassword}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     required
                   />
+                  {fieldErrors.confirmPassword && fieldTouched.confirmPassword && (
+                    <p className="text-red-600 text-xs mt-1">{fieldErrors.confirmPassword}</p>
+                  )}
                 </div>
               </div>
 

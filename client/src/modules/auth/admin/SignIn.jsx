@@ -11,12 +11,56 @@ export default function AdminSignIn() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [fieldTouched, setFieldTouched] = useState({});
+
+  // Validation functions
+  const validateEmail = (email) => {
+    if (!email.trim()) return "Email is required";
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) return "Please enter a valid email address";
+    return "";
+  };
+
+  const validatePassword = (password) => {
+    if (!password) return "Password is required";
+    return "";
+  };
+
+  // Validate individual field
+  const validateField = (name, value) => {
+    let error = "";
+    switch (name) {
+      case "email":
+        error = validateEmail(value);
+        break;
+      case "password":
+        error = validatePassword(value);
+        break;
+      default:
+        break;
+    }
+    setFieldErrors(prev => ({ ...prev, [name]: error }));
+  };
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
+    // Clear general error when user types
+    if (error) setError("");
+    // Validate field if it has been touched
+    if (fieldTouched[name]) {
+      validateField(name, value);
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setFieldTouched(prev => ({ ...prev, [name]: true }));
+    validateField(name, value);
   };
   // Handle form submission
   async function handleSubmit(e) {
@@ -24,6 +68,21 @@ export default function AdminSignIn() {
     setLoading(true);
     setMessage("");
     setError("");
+
+    // Validate all fields before submission
+    const allFields = ["email", "password"];
+    allFields.forEach(field => {
+      setFieldTouched(prev => ({ ...prev, [field]: true }));
+      validateField(field, formData[field]);
+    });
+
+    // Check if there are any errors
+    const hasErrors = validateEmail(formData.email) !== "" || validatePassword(formData.password) !== "";
+    if (hasErrors) {
+      setError("Please correct the errors below before submitting");
+      setLoading(false);
+      return;
+    }
 
     try {
       const { data } = await api.post("/admin/auth/login", {
@@ -72,32 +131,48 @@ export default function AdminSignIn() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email Address
+                    Email Address *
                   </label>
                   <input
                     name="email"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors outline-none"
+                    className={`w-full rounded-lg border px-4 py-3 text-sm focus:ring-2 transition-colors outline-none ${
+                      fieldErrors.email && fieldTouched.email
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-200"
+                        : "border-gray-300 focus:border-blue-500 focus:ring-blue-200"
+                    }`}
                     placeholder="admin@jobion.com"
                     type="email"
                     value={formData.email}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     required
                   />
+                  {fieldErrors.email && fieldTouched.email && (
+                    <p className="text-red-600 text-xs mt-1">{fieldErrors.email}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Password
+                    Password *
                   </label>
                   <input
                     name="password"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors outline-none"
+                    className={`w-full rounded-lg border px-4 py-3 text-sm focus:ring-2 transition-colors outline-none ${
+                      fieldErrors.password && fieldTouched.password
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-200"
+                        : "border-gray-300 focus:border-blue-500 focus:ring-blue-200"
+                    }`}
                     placeholder="Enter your password"
                     type="password"
                     value={formData.password}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     required
                   />
+                  {fieldErrors.password && fieldTouched.password && (
+                    <p className="text-red-600 text-xs mt-1">{fieldErrors.password}</p>
+                  )}
                 </div>
               </div>
 
