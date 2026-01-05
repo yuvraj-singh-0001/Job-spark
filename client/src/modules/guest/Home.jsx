@@ -16,14 +16,14 @@ export default function Home() {
         <meta property="og:title" content="Jobion - Connect with Top Companies & Find Your Dream Job" />
         <meta property="og:description" content="Discover your next career opportunity on Jobion. Connect with top companies, explore thousands of job listings, and get hired faster." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://jobion.com/" />
+        <meta property="og:url" content="https://www.jobion.in/" />
 
         {/* Twitter */}
         <meta property="twitter:title" content="Jobion - Connect with Top Companies & Find Your Dream Job" />
         <meta property="twitter:description" content="Discover your next career opportunity on Jobion. Connect with top companies, explore thousands of job listings, and get hired faster." />
 
         {/* Canonical URL */}
-        <link rel="canonical" href="https://jobion.com/" />
+        <link rel="canonical" href="https://www.jobion.in/" />
       </Helmet>
 
       <div className="min-h-screen flex flex-col bg-white text-slate-900">

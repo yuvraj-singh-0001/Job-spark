@@ -627,14 +627,14 @@ export default function Jobs() {
         <meta property="og:title" content="Find Jobs - Browse Latest Job Opportunities | Jobion" />
         <meta property="og:description" content="Browse thousands of job opportunities from top companies. Find remote, full-time, part-time, and freelance jobs that match your skills and career goals." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://jobion.com/jobs" />
+        <meta property="og:url" content="https://www.jobion.in/jobs" />
 
         {/* Twitter */}
         <meta property="twitter:title" content="Find Jobs - Browse Latest Job Opportunities | Jobion" />
         <meta property="twitter:description" content="Browse thousands of job opportunities from top companies. Find remote, full-time, part-time, and freelance jobs that match your skills and career goals." />
 
         {/* Canonical URL */}
-        <link rel="canonical" href="https://jobion.com/jobs" />
+        <link rel="canonical" href="https://www.jobion.in/jobs" />
       </Helmet>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
