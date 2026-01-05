@@ -12,6 +12,9 @@ const app = express();
 app.use(cors({
   origin: [
     process.env.CLIENT_ORIGIN,
+    'https://jobion.in',
+    'https://www.jobion.in',
+    'https://api.jobion.in',
     'http://localhost:3000',
     'http://localhost:5173',
     'https://accounts.google.com',
@@ -19,7 +22,7 @@ app.use(cors({
   ].filter(Boolean),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token']
 }));
 
 app.use(cookieParser());
@@ -35,14 +38,18 @@ app.use((req, res, next) => {
   // Add necessary headers for OAuth
   res.header('Cross-Origin-Resource-Policy', 'cross-origin');
 
-  // Special handling for Google OAuth requests
+  // Special handling for Google OAuth requests - only add missing headers
   if (req.path.includes('/auth/google') || req.headers.origin?.includes('google') || req.headers.origin?.includes('googleusercontent')) {
-    // Override CORS for Google OAuth
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-Token');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Max-Age', '86400'); // 24 hours
+    // Ensure CORS headers are properly set for Google OAuth (don't override existing ones)
+    if (!res.get('Access-Control-Allow-Origin')) {
+      res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    }
+    if (!res.get('Access-Control-Allow-Credentials')) {
+      res.header('Access-Control-Allow-Credentials', 'true');
+    }
+    if (!res.get('Access-Control-Max-Age')) {
+      res.header('Access-Control-Max-Age', '86400'); // 24 hours
+    }
   }
 
   next();

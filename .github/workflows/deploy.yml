@@ -1,0 +1,41 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "🚀 Starting deployment..."
+            
+            cd /var/www/jobion
+            git pull origin main
+            
+            echo "🔧 Backend deployment..."
+            cd server
+            npm install --production
+            pm2 restart jobion-backend
+            
+            echo "🎨 Frontend deployment..."
+            cd ../client
+            npm install --legacy-peer-deps
+            npm run build
+            pm2 restart jobion-frontend
+            
+            pm2 save
+            echo "✅ Deployment complete!"
