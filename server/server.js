@@ -11,7 +11,6 @@ const app = express();
 // Middlewares
 app.use(cors({
   origin: [
-    process.env.CLIENT_ORIGIN,
     'https://jobion.in',
     'https://www.jobion.in',
     'https://api.jobion.in',
