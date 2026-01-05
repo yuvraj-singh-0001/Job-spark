@@ -3,7 +3,7 @@ name: Deploy to Production
 on:
   push:
     branches:
-      - main
+      - master  # ✅ Changed from main
 
 jobs:
   deploy:
@@ -24,7 +24,7 @@ jobs:
             echo "🚀 Starting deployment..."
             
             cd /var/www/jobion
-            git pull origin main
+            git pull origin master  # ✅ Changed from main
             
             echo "🔧 Backend deployment..."
             cd server
