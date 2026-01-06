@@ -5,17 +5,40 @@ const pool = require("../../config/db");
 const { requireAuth } = require("../../../middlewares/auth");
 
 // Ensure upload directory exists
-const UPLOAD_DIR = path.join(__dirname, "..", "..", "..", "uploads", "resumes");
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+// Path: server/uploads/resumes (server root directory)
+// File location: server/src/api/profile/candidate/upload-resume.js
+// __dirname = server/src/api/profile/candidate
+// .. = server/src/api/profile
+// .. = server/src/api
+// .. = server/src
+// .. = server
+// uploads = server/uploads
+// resumes = server/uploads/resumes
+const UPLOAD_DIR = path.join(__dirname, "..", "..", "..", "..", "uploads", "resumes");
+
+// Create directory if it doesn't exist
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  console.log(`Created upload directory: ${UPLOAD_DIR}`);
+} else {
+  console.log(`Upload directory exists: ${UPLOAD_DIR}`);
+}
 
 // Multer storage config - similar to job applications
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+  destination: (req, file, cb) => {
+    // Ensure directory exists before saving
+    if (!fs.existsSync(UPLOAD_DIR)) {
+      fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+    }
+    cb(null, UPLOAD_DIR);
+  },
   filename: (req, file, cb) => {
     const userId = req.body.user_id || req.user?.id || 'unknown';
     // Use user_id + timestamp for unique filename
     const timestamp = Date.now();
     const filename = `${userId}_${timestamp}.pdf`;
+    console.log(`Multer saving file: ${filename} to ${UPLOAD_DIR}`);
     cb(null, filename);
   },
 });
@@ -57,6 +80,45 @@ const uploadResume = async (req, res) => {
       });
     }
 
+    // Verify file was actually saved - use file.path if available, otherwise construct it
+    const filePath = file.path || path.join(UPLOAD_DIR, file.filename);
+
+    // Wait a moment for file system to sync (Windows sometimes needs this)
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    if (!fs.existsSync(filePath)) {
+      console.error(`File not found after upload:`);
+      console.error(`  Expected path: ${filePath}`);
+      console.error(`  Upload directory: ${UPLOAD_DIR}`);
+      console.error(`  File object:`, {
+        filename: file.filename,
+        path: file.path,
+        destination: file.destination,
+        size: file.size,
+        mimetype: file.mimetype
+      });
+
+      // Check if directory exists
+      if (!fs.existsSync(UPLOAD_DIR)) {
+        console.error(`  ERROR: Upload directory does not exist!`);
+      } else {
+        console.error(`  Directory exists, listing files:`);
+        try {
+          const files = fs.readdirSync(UPLOAD_DIR);
+          console.error(`  Files in directory:`, files);
+        } catch (err) {
+          console.error(`  Cannot read directory:`, err.message);
+        }
+      }
+
+      return res.status(500).json({
+        success: false,
+        error: "File upload failed - file not saved to disk"
+      });
+    }
+
+    console.log(`Resume uploaded successfully: ${filePath} (${file.size} bytes)`);
+
     // Verify the user_id matches the authenticated user
     if (user_id && parseInt(user_id) !== userId) {
       return res.status(403).json({
@@ -73,9 +135,8 @@ const uploadResume = async (req, res) => {
 
     const oldResumePath = currentProfile.length > 0 ? currentProfile[0].resume_path : null;
 
-    // Construct the full resume URL
-    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
-    const resumePath = `${baseUrl}/uploads/resumes/${file.filename}`;
+    // Store only the path, not the full URL (e.g., /uploads/resumes/filename.pdf)
+    const resumePath = `/uploads/resumes/${file.filename}`;
 
     // Update the user's profile with the resume path
     const updateSql = `
@@ -114,8 +175,14 @@ const uploadResume = async (req, res) => {
     // Clean up old resume file if it exists
     if (oldResumePath && oldResumePath !== resumePath) {
       try {
-        // Extract filename from the old resume URL
-        const oldFilename = oldResumePath.split('/').pop();
+        // Extract filename from the old resume path/URL (handle both formats)
+        // Old format might be: http://localhost:5000/uploads/resumes/filename.pdf
+        // New format: /uploads/resumes/filename.pdf
+        let oldFilename = oldResumePath.split('/').pop();
+        // Remove query parameters if any
+        if (oldFilename && oldFilename.includes('?')) {
+          oldFilename = oldFilename.split('?')[0];
+        }
         if (oldFilename) {
           const oldFilePath = path.join(UPLOAD_DIR, oldFilename);
           if (fs.existsSync(oldFilePath)) {
@@ -137,11 +204,17 @@ const uploadResume = async (req, res) => {
 
   } catch (error) {
     console.error('Resume upload error:', error);
+    console.error('Error stack:', error.stack);
 
     // Clean up uploaded file if database update failed
-    if (req.file && req.file.path) {
+    if (req.file) {
       try {
-        fs.unlinkSync(req.file.path);
+        // Try both file.path and UPLOAD_DIR + filename
+        const filePath = req.file.path || path.join(UPLOAD_DIR, req.file.filename);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          console.log(`Cleaned up uploaded file: ${filePath}`);
+        }
       } catch (cleanupError) {
         console.error('Failed to cleanup uploaded file:', cleanupError);
       }

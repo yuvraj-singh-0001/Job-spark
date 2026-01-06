@@ -5,8 +5,21 @@ const pool = require("../config/db");
 const { requireAuth } = require("../../middlewares/auth");
 
 // Ensure upload directory exists
-const UPLOAD_DIR = path.join(__dirname, "..", "uploads", "resumes");
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+// Path: server/uploads/resumes (server root directory)
+// File location: server/src/api/jobs/applications.js
+// __dirname = server/src/api/jobs
+// .. = server/src/api
+// .. = server/src
+// .. = server
+// uploads = server/uploads
+// resumes = server/uploads/resumes
+const UPLOAD_DIR = path.join(__dirname, "..", "..", "..", "uploads", "resumes");
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  console.log(`Created upload directory: ${UPLOAD_DIR}`);
+} else {
+  console.log(`Upload directory exists: ${UPLOAD_DIR}`);
+}
 
 // Multer storage config
 const storage = multer.diskStorage({
@@ -62,12 +75,20 @@ const postApplication = async (req, res) => {
     // Determine resume path: prioritize uploaded file, then body resume_path, then profile resume_path
     let resumePath = null;
     if (req.file) {
-      // New file uploaded
-      const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
-      resumePath = `${baseUrl}/uploads/resumes/${req.file.filename}`;
+      // New file uploaded - store only the path, not the full URL
+      resumePath = `/uploads/resumes/${req.file.filename}`;
     } else if (req.body.resume_path) {
       // Resume path provided in body (from profile)
-      resumePath = req.body.resume_path;
+      // Normalize: if it's a full URL, convert to path; if already a path, use as-is
+      const providedPath = req.body.resume_path;
+      if (providedPath.startsWith('http://') || providedPath.startsWith('https://')) {
+        // Extract path from URL (e.g., http://localhost:5000/uploads/resumes/file.pdf -> /uploads/resumes/file.pdf)
+        const urlObj = new URL(providedPath);
+        resumePath = urlObj.pathname;
+      } else {
+        // Already a path, use as-is
+        resumePath = providedPath.startsWith('/') ? providedPath : `/${providedPath}`;
+      }
     } else {
       // Try to get resume from user's profile
       try {
@@ -76,7 +97,14 @@ const postApplication = async (req, res) => {
           [userId]
         );
         if (profileRows.length > 0 && profileRows[0].resume_path) {
-          resumePath = profileRows[0].resume_path;
+          const profileResumePath = profileRows[0].resume_path;
+          // Normalize: if it's a full URL, convert to path; if already a path, use as-is
+          if (profileResumePath.startsWith('http://') || profileResumePath.startsWith('https://')) {
+            const urlObj = new URL(profileResumePath);
+            resumePath = urlObj.pathname;
+          } else {
+            resumePath = profileResumePath.startsWith('/') ? profileResumePath : `/${profileResumePath}`;
+          }
         }
       } catch (profileErr) {
         // Profile doesn't exist or error - resume will be null

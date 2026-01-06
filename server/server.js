@@ -229,16 +229,19 @@ app.use((req, res, next) => {
 // Input validation middleware for SQL injection prevention
 const { validateInput, validateJobFilters } = require('./src/middlewares/inputValidation');
 
-// Skip input validation for Google OAuth endpoint
+// Skip input validation for Google OAuth endpoint and static file routes
 app.use((req, res, next) => {
-  if (req.path === '/api/auth/google') {
+  if (req.path === '/api/auth/google' || req.path.startsWith('/uploads/')) {
     return next();
   }
   validateInput(req, res, next);
 });
 
-// Serve static files from uploads directory
-const uploadsPath = path.join(__dirname, 'src', 'api', 'uploads');
+// Serve static files from uploads directory (server root)
+const uploadsPath = path.join(__dirname, 'uploads');
+
+// Log uploads path for debugging
+console.log('Static files serving from:', uploadsPath);
 
 // Middleware to handle PDF files with inline disposition
 app.use('/uploads', (req, res, next) => {
@@ -251,7 +254,20 @@ app.use('/uploads', (req, res, next) => {
   next();
 });
 
-app.use('/uploads', express.static(uploadsPath));
+// Serve static files - this should be after other middleware but before API routes
+app.use('/uploads', express.static(uploadsPath, {
+  dotfiles: 'ignore',
+  etag: true,
+  extensions: ['pdf'],
+  index: false,
+  maxAge: '1d',
+  setHeaders: (res, path) => {
+    // Ensure CORS headers are set for static files
+    if (path.endsWith('.pdf')) {
+      res.setHeader('Content-Type', 'application/pdf');
+    }
+  }
+}));
 
 // Health check
 app.get('/api/health', (req, res) => {

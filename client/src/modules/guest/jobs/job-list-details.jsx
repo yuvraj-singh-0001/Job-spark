@@ -37,11 +37,23 @@ const maskAddress = (address) => {
 // Helper function to view resume
 const viewResume = (resumePath, candidateName) => {
   if (resumePath) {
-    // Construct full URL similar to candidate profile
+    // Construct full URL - use API server base, not frontend origin
     let resumeUrl = resumePath;
     if (!resumeUrl.startsWith('http')) {
+      // Get API base URL and construct server base URL
+      const apiBase = import.meta.env.VITE_API_BASE || "http://localhost:5000/api";
+      // Extract server base: remove /api if present
+      let serverBase = apiBase;
+      if (apiBase.endsWith('/api')) {
+        serverBase = apiBase.slice(0, -4); // Remove '/api'
+      } else if (apiBase.includes('/api/')) {
+        serverBase = apiBase.split('/api')[0]; // Get part before '/api'
+      }
+      // Ensure serverBase doesn't end with slash
+      serverBase = serverBase.replace(/\/$/, '');
+      // Normalize resume path
       const resumePathNormalized = resumeUrl.startsWith('/') ? resumeUrl : `/${resumeUrl}`;
-      resumeUrl = `${window.location.origin}${resumePathNormalized}`;
+      resumeUrl = `${serverBase}${resumePathNormalized}`;
     }
     // Open in new tab instead of downloading
     window.open(resumeUrl, '_blank');

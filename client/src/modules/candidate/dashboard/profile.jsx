@@ -1212,8 +1212,18 @@ function ProfileView({ user, onEdit }) {
       {user.resume_path && (() => {
         let resumeUrl = user.resume_path;
         if (!resumeUrl.startsWith('http')) {
+          // Get API base URL and construct server base URL
           const apiBase = import.meta.env.VITE_API_BASE || "http://localhost:5000/api";
-          const serverBase = apiBase.replace('/api', '');
+          // Extract server base: remove /api if present, or use as-is
+          let serverBase = apiBase;
+          if (apiBase.endsWith('/api')) {
+            serverBase = apiBase.slice(0, -4); // Remove '/api'
+          } else if (apiBase.includes('/api/')) {
+            serverBase = apiBase.split('/api')[0]; // Get part before '/api'
+          }
+          // Ensure serverBase doesn't end with slash
+          serverBase = serverBase.replace(/\/$/, '');
+          // Normalize resume path
           const resumePath = resumeUrl.startsWith('/') ? resumeUrl : `/${resumeUrl}`;
           resumeUrl = `${serverBase}${resumePath}`;
         }
