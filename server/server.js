@@ -40,8 +40,7 @@ const corsOptions = {
 
     // Check if origin is in allowed list
     if (allowedOrigins.includes(origin)) {
-      // Return the origin explicitly to prevent duplicates
-      callback(null, origin);
+      callback(null, true);  // ✅ FIXED: return true instead of origin
     } else {
       callback(null, false);
     }
@@ -49,6 +48,7 @@ const corsOptions = {
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token'],
+  exposedHeaders: ['Set-Cookie'],  // ✅ ADDED: expose Set-Cookie header
   preflightContinue: false,
   optionsSuccessStatus: 204
 };
