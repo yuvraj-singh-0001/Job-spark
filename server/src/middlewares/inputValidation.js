@@ -146,9 +146,13 @@ function validateInput(req, res, next) {
               case 'name':
               case 'full_name':
               case 'company':
-              case 'company_name':
+              // Removed 'company_name' from strict name validation
               case 'hr_name':
                 req.body[key] = sanitizeString(value, 'name');
+                break;
+              case 'company_name':
+                // Allow any characters - just trim whitespace
+                req.body[key] = value.trim();
                 break;
               case 'id':
               case 'userid':
@@ -172,6 +176,9 @@ function validateInput(req, res, next) {
                 break;
               case 'address_line1':
               case 'address_line2':
+                // Allow any characters for addresses (commas, periods, etc.)
+                req.body[key] = value.trim();
+                break;
               case 'city':
               case 'state':
               case 'country':

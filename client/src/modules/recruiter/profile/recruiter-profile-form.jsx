@@ -21,7 +21,7 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
     address_line2: "",
     city: "",
     state: "",
-    country: "",
+    country: "India",
     pincode: ""
   });
 
@@ -35,7 +35,7 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
     switch (name) {
       case 'company_name':
         if (!trimmedValue) return "Company name is required";
-        if (!/^[a-zA-Z\s\-']+$/.test(trimmedValue)) return "Company name can only contain letters, spaces, hyphens, and apostrophes";
+        // Removed character restriction - allows any characters
         return "";
 
       case 'company_website':
@@ -45,13 +45,15 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
         return "";
 
       case 'hr_name':
-        if (trimmedValue && !/^[a-zA-Z\s\-']+$/.test(trimmedValue)) {
+        if (!trimmedValue) return "HR name is required";
+        if (!/^[a-zA-Z\s\-']+$/.test(trimmedValue)) {
           return "HR name can only contain letters, spaces, hyphens, and apostrophes";
         }
         return "";
 
       case 'hr_mobile':
-        if (trimmedValue && !/^[6-9]\d{9}$/.test(trimmedValue)) {
+        if (!trimmedValue) return "HR mobile number is required";
+        if (!/^[6-9]\d{9}$/.test(trimmedValue)) {
           return "Please enter a valid 10-digit Indian mobile number starting with 6-9";
         }
         return "";
@@ -100,7 +102,7 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
         address_line2: initialData.address_line2 ?? "",
         city: initialData.city ?? "",
         state: initialData.state ?? "",
-        country: initialData.country ?? "",
+        country: "India",
         pincode: initialData.pincode ?? ""
       }));
     }
@@ -295,7 +297,7 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
 
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-sm mb-2">HR Name</label>
+              <label className="block text-sm mb-2">HR Name *</label>
               <input
                 name="hr_name"
                 value={form.hr_name}
@@ -308,7 +310,7 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
             </div>
 
             <div>
-              <label className="block text-sm mb-2">HR Mobile</label>
+              <label className="block text-sm mb-2">HR Mobile *</label>
               <input
                 name="hr_mobile"
                 value={form.hr_mobile}
@@ -407,12 +409,10 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
               <input
                 name="country"
                 value={form.country}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                className={getInputClass("country")}
-                placeholder="Enter country"
+                readOnly
+                className="w-full px-4 py-3 rounded border border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed"
+                placeholder="India"
               />
-              {errors.country && <p className="text-xs text-red-600 mt-1.5">{errors.country}</p>}
             </div>
 
             <div>
