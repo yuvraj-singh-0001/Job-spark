@@ -22,6 +22,8 @@ const allowedOrigins = [
 
 // Early middleware to ensure clean headers from the start
 app.use((req, res, next) => {
+  console.log(`[REQUEST] ${req.method} ${req.path} from origin: ${req.headers.origin || 'no-origin'}`);
+
   // Remove any existing CORS headers that might have been set by a proxy
   res.removeHeader('Access-Control-Allow-Origin');
   res.removeHeader('Access-Control-Allow-Credentials');
@@ -29,6 +31,8 @@ app.use((req, res, next) => {
   res.removeHeader('Access-Control-Allow-Headers');
   res.removeHeader('Cross-Origin-Opener-Policy');
   res.removeHeader('Cross-Origin-Embedder-Policy');
+  res.removeHeader('Cross-Origin-Resource-Policy');
+
   next();
 });
 
@@ -36,19 +40,32 @@ app.use((req, res, next) => {
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log(`[CORS] Allowing request with no origin`);
+      return callback(null, true);
+    }
 
     // Check if origin is in allowed list
     if (allowedOrigins.includes(origin)) {
+      console.log(`[CORS] Allowing origin: ${origin}`);
       callback(null, true);  // ✅ FIXED: return true instead of origin
     } else {
+      console.log(`[CORS] Blocked origin: ${origin} (allowed: ${allowedOrigins.join(', ')})`);
       callback(null, false);
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token'],
-  exposedHeaders: ['Set-Cookie'],  // ✅ ADDED: expose Set-Cookie header
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'X-CSRF-Token',
+    'Accept',
+    'Accept-Language',
+    'Content-Language'
+  ],
+  exposedHeaders: ['Set-Cookie'],
   preflightContinue: false,
   optionsSuccessStatus: 204
 };
@@ -77,8 +94,21 @@ app.use((req, res, next) => {
     const lowerName = name.toLowerCase();
 
     // Block headers that interfere with Google Sign-In
-    if (lowerName === 'cross-origin-opener-policy' || lowerName === 'cross-origin-embedder-policy') {
+    if (lowerName === 'cross-origin-opener-policy' ||
+      lowerName === 'cross-origin-embedder-policy' ||
+      lowerName === 'cross-origin-resource-policy') {
+      console.log(`[CORS] Blocked problematic header: ${name}`);
       return res; // Don't set these headers
+    }
+
+    // Set specific headers for Google OAuth compatibility
+    if (req.path.includes('/auth/google') && lowerName === 'access-control-allow-origin') {
+      // Ensure proper origin for Google auth
+      if (allowedOrigins.includes(value)) {
+        console.log(`[CORS] Allowing Google auth origin: ${value} for path: ${req.path}`);
+      } else {
+        console.log(`[CORS] Rejecting Google auth origin: ${value} for path: ${req.path}`);
+      }
     }
 
     // Prevent duplicate Access-Control-Allow-Origin headers
@@ -103,6 +133,7 @@ app.use((req, res, next) => {
     try {
       res.removeHeader('Cross-Origin-Opener-Policy');
       res.removeHeader('Cross-Origin-Embedder-Policy');
+      res.removeHeader('Cross-Origin-Resource-Policy');
     } catch (e) {
       // Ignore if header doesn't exist
     }
@@ -114,6 +145,8 @@ app.use((req, res, next) => {
       delete headers['Cross-Origin-Opener-Policy'];
       delete headers['cross-origin-embedder-policy'];
       delete headers['Cross-Origin-Embedder-Policy'];
+      delete headers['cross-origin-resource-policy'];
+      delete headers['Cross-Origin-Resource-Policy'];
 
       // Handle duplicate Access-Control-Allow-Origin in headers object
       const originKey = headers['access-control-allow-origin'] ? 'access-control-allow-origin' :

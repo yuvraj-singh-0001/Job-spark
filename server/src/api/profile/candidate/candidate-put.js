@@ -1,6 +1,6 @@
 
 const pool = require('../../config/db');
-const { sendEmail } = require('../../services/emailService');
+const { sendEmail } = require('../../../services/emailService');
 
 /**
  * Get candidate_profiles table columns to verify structure
