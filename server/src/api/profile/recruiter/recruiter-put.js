@@ -1,4 +1,5 @@
 const pool = require('../../config/db');
+const { sendEmail } = require('../../../services/emailService');
 const ALLOWED_COMPANY_TYPES = ['company', 'consultancy', 'startup'];
 const ALLOWED_STATUSES = ['pending', 'approved', 'rejected'];
 
@@ -114,6 +115,23 @@ const recruiterProfile = async (req, res) => {
         recruiter: recruiterData
       });
     } else {
+      // Fetch user email and name for welcome email (only if creating new profile)
+      let userEmail = null;
+      let userName = null;
+      try {
+        const [userRows] = await connection.execute(
+          'SELECT email, name FROM users WHERE id = ?',
+          [finalUserId]
+        );
+        if (userRows.length > 0) {
+          userEmail = userRows[0].email;
+          userName = userRows[0].name || hr_name || 'Recruiter';
+        }
+      } catch (err) {
+        // Log error but don't fail profile creation
+        console.error('Error fetching user data for email:', err);
+      }
+
       // Create new recruiter profile
       const defaultStatus = statusValue || 'pending';
       
@@ -155,6 +173,49 @@ const recruiterProfile = async (req, res) => {
       const recruiterData = newRows[0];
       if (recruiterData) {
         recruiterData.verified = recruiterData.status === 'approved' ? 1 : 0;
+      }
+
+      // Send welcome email to recruiter (only for new profiles)
+      if (userEmail && userName) {
+        try {
+          const firstName = userName.split(' ')[0] || userName;
+          const dashboardLink = process.env.FRONTEND_URL || 'http://localhost:5173';
+          const emailSubject = 'Welcome to Jobion – Start Hiring Smarter';
+          const emailHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2 style="color: #2563eb;">Hi ${firstName},</h2>
+
+              <p>Welcome to <strong>Jobion</strong> 🎉</p>
+
+              <p>Your recruiter account is now active. Jobion helps you discover the right candidates faster using skill-based matching and verified profiles.</p>
+
+              <h3 style="color: #374151; margin-top: 30px;">Get started by:</h3>
+              <ul style="line-height: 1.8;">
+                <li>Completing your company profile</li>
+                <li>Posting your first job</li>
+                <li>Reviewing matched candidates</li>
+              </ul>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${dashboardLink}/recruiter/dashboard" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+                  👉 Go to Recruiter Dashboard
+                </a>
+              </div>
+
+              <p>We’re excited to support your hiring journey.</p>
+
+              <p style="margin-top: 30px;">
+                Warm regards,<br>
+                <strong>Team Jobion</strong>
+              </p>
+            </div>
+          `;
+
+          await sendEmail(userEmail, emailSubject, emailHtml);
+        } catch (emailError) {
+          // Log error but don't fail profile creation
+          console.error('Error sending welcome email:', emailError);
+        }
       }
 
       return res.status(201).json({

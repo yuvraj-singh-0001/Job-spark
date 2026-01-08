@@ -190,7 +190,7 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
   const handleSubmit = async e => {
     e.preventDefault();
 
-    // Prevent multiple submissions
+    // Prevent multiple submissions - button stays disabled until entire process completes
     if (saving) {
       return;
     }
@@ -208,7 +208,8 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
       return;
     }
 
-    // Set saving state immediately to prevent duplicate clicks
+    // Set saving state immediately to prevent duplicate clicks during entire process
+    // including profile creation and email sending
     setSaving(true);
 
     try {
@@ -224,6 +225,7 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
 
       // Always redirect to recruiter-profile after successful save
       // Use window.location.href to force full page reload and ensure fresh data
+      // Keep saving=true until redirect to prevent any accidental clicks
       setTimeout(() => {
         window.location.href = "/recruiter-profile";
       }, 1500);
@@ -239,6 +241,7 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
       }
     }
     // Note: Don't set saving to false in finally block if redirecting on success
+    // This ensures button stays disabled during entire process including email sending
   };
 
   return (
@@ -492,7 +495,7 @@ export default function RecruiterProfileForm({ initialData = null, onSaved = nul
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Saving...
+                  Creating profile...
                 </span>
               ) : (
                 "Save Profile"

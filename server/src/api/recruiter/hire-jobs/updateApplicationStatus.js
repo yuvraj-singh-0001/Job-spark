@@ -63,22 +63,25 @@ async function updateApplicationStatus(req, res) {
         let emailSubject, emailHtml, notificationType, notificationTitle, notificationMessage;
 
         if (status === 'shortlisted') {
-          emailSubject = `Congratulations! You've been shortlisted for ${application.job_title}`;
+          const jobLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/jobs/${application.job_id}`;
+          emailSubject = `You’ve Been Shortlisted – ${application.company_name || 'Company'}`;
           emailHtml = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #2563eb;">Congratulations ${application.candidate_name}!</h2>
-              <p>You have been shortlisted for the position: <strong>${application.job_title}</strong></p>
-              <p>The recruiter from <strong>${application.company_name || 'the company'}</strong> will be in touch with you soon regarding the next steps.</p>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2 style="color: #2563eb;">Hi ${application.candidate_name.split(' ')[0]}!</h2>
 
-              <div style="background-color: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px; margin: 20px 0;">
-                <h3 style="color: #92400e; margin-top: 0;">⚠️ Important Security Notice</h3>
-                <p style="margin-bottom: 0; color: #92400e;">
-                  Please be aware of potential spammers. Always verify the legitimacy of any communication you receive.
-                  Only share personal information with verified recruiters and be cautious of any requests for payment or sensitive data.
-                </p>
+              <p>Great news 🎉</p>
+
+              <p>You've been <strong>shortlisted</strong> for the role of <strong>${application.job_title}</strong> at <strong>${application.company_name || 'our company'}</strong>.</p>
+
+              <p>The recruiter may contact you shortly with interview details.</p>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${jobLink}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+                  👉 View Job Details
+                </a>
               </div>
 
-              <p>Best regards,<br>The Job-spark Team</p>
+              <p>Wishing you success,<br><strong>Team Jobion</strong></p>
             </div>
           `;
           notificationType = 'application_shortlisted';
