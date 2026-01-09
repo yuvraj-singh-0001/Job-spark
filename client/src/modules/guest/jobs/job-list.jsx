@@ -13,7 +13,10 @@ import {
   ArrowUpRight,
   Globe,
   Monitor,
-  Building
+  Building,
+  Filter,
+  ArrowLeft,
+  X
 } from "lucide-react";
 import api from "../../../components/apiconfig/apiconfig";
 import { CATEGORY_FILTER_MAPPING } from "../home/data";
@@ -99,6 +102,10 @@ export default function Jobs() {
   const [cityOptions, setCityOptions] = useState([]);
   const [roleOptions, setRoleOptions] = useState([]); // from job_roles
   const [tagOptions, setTagOptions] = useState([]);
+
+  // Mobile filters state
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [selectedMobileCategory, setSelectedMobileCategory] = useState(null);
 
   const locationHook = useLocation();
   const navigate = useNavigate();
@@ -670,7 +677,7 @@ export default function Jobs() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[280px,1fr] gap-4 sm:gap-6 lg:gap-8">
-          <aside className="bg-white rounded-xl border border-gray-200 overflow-hidden lg:sticky lg:top-4 lg:self-start">
+          <aside className="hidden lg:block bg-white rounded-xl border border-gray-200 overflow-hidden lg:sticky lg:top-4 lg:self-start">
             <div className="p-6">
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-base font-semibold text-gray-900">Filters</h2>
@@ -837,6 +844,304 @@ export default function Jobs() {
             </div>
           </aside>
 
+          {/* Mobile filter button */}
+          <div className="lg:hidden fixed bottom-6 right-6 z-40">
+            <button
+              onClick={() => {
+                setShowMobileFilters(true);
+                // Set default category if none selected
+                if (!selectedMobileCategory) {
+                  if (roleOptions.length > 0) setSelectedMobileCategory('roles');
+                  else if (cityOptions.length > 0) setSelectedMobileCategory('city');
+                  else setSelectedMobileCategory('jobType');
+                }
+              }}
+              className="bg-primary-600 hover:bg-primary-700 text-white p-4 rounded-full shadow-lg transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-primary-500/20"
+              aria-label="Open filters"
+            >
+              <Filter size={20} />
+            </button>
+          </div>
+
+          {/* Mobile filter modal */}
+          {showMobileFilters && (
+            <div className="lg:hidden fixed inset-0 z-50 bg-white">
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
+                <button
+                  onClick={() => setShowMobileFilters(false)}
+                  className="p-2 -ml-2"
+                  aria-label="Close filters"
+                >
+                  <ArrowLeft size={20} className="text-gray-700" />
+                </button>
+                <h2 className="text-lg font-semibold text-gray-900">Filter</h2>
+                <button
+                  onClick={() => {
+                    clearFilters();
+                    setSelectedMobileCategory(null);
+                  }}
+                  className="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors"
+                >
+                  Clear All
+                </button>
+              </div>
+
+              {/* Two-column filter layout */}
+              <div className="flex h-[calc(100vh-140px)]">
+                {/* Left column - Categories */}
+                <div className="w-1/3 bg-gray-100 border-r border-gray-200 overflow-y-auto">
+                  <div className="space-y-0">
+                    {/* Job Roles */}
+                    {roleOptions.length > 0 && (
+                      <button
+                        onClick={() => setSelectedMobileCategory('roles')}
+                        className={`w-full text-left px-4 py-4 border-b border-gray-200 transition-colors ${selectedMobileCategory === 'roles' ? 'bg-white font-semibold' : 'bg-gray-100'
+                          }`}
+                      >
+                        <span className="text-sm text-gray-900">
+                          Job Roles
+                          {selectedRoles.length > 0 && (
+                            <span className="ml-1 text-primary-600">({selectedRoles.length})</span>
+                          )}
+                        </span>
+                      </button>
+                    )}
+
+                    {/* Monthly Salary */}
+                    <button
+                      onClick={() => setSelectedMobileCategory('salary')}
+                      className={`w-full text-left px-4 py-4 border-b border-gray-200 transition-colors ${selectedMobileCategory === 'salary' ? 'bg-white font-semibold' : 'bg-gray-100'
+                        }`}
+                    >
+                      <span className="text-sm text-gray-900">
+                        Monthly Salary
+                        {salaryFilter && (
+                          <span className="ml-1 text-primary-600">(1)</span>
+                        )}
+                      </span>
+                    </button>
+
+                    {/* Job Type */}
+                    <button
+                      onClick={() => setSelectedMobileCategory('jobType')}
+                      className={`w-full text-left px-4 py-4 border-b border-gray-200 transition-colors ${selectedMobileCategory === 'jobType' ? 'bg-white font-semibold' : 'bg-gray-100'
+                        }`}
+                    >
+                      <span className="text-sm text-gray-900">
+                        Job Type
+                        {selectedJobTypes.length > 0 && (
+                          <span className="ml-1 text-primary-600">({selectedJobTypes.length})</span>
+                        )}
+                      </span>
+                    </button>
+
+                    {/* Experience */}
+                    <button
+                      onClick={() => setSelectedMobileCategory('experience')}
+                      className={`w-full text-left px-4 py-4 border-b border-gray-200 transition-colors ${selectedMobileCategory === 'experience' ? 'bg-white font-semibold' : 'bg-gray-100'
+                        }`}
+                    >
+                      <span className="text-sm text-gray-900">
+                        Experience
+                        {selectedExperience && (
+                          <span className="ml-1 text-primary-600">(1)</span>
+                        )}
+                      </span>
+                    </button>
+
+                    {/* City */}
+                    {cityOptions.length > 0 && (
+                      <button
+                        onClick={() => setSelectedMobileCategory('city')}
+                        className={`w-full text-left px-4 py-4 border-b border-gray-200 transition-colors ${selectedMobileCategory === 'city' ? 'bg-white font-semibold' : 'bg-gray-100'
+                          }`}
+                      >
+                        <span className="text-sm text-gray-900">
+                          City
+                          {selectedCities.length > 0 && (
+                            <span className="ml-1 text-primary-600">({selectedCities.length})</span>
+                          )}
+                        </span>
+                      </button>
+                    )}
+
+                    {/* Work Mode */}
+                    <button
+                      onClick={() => setSelectedMobileCategory('workMode')}
+                      className={`w-full text-left px-4 py-4 border-b border-gray-200 transition-colors ${selectedMobileCategory === 'workMode' ? 'bg-white font-semibold' : 'bg-gray-100'
+                        }`}
+                    >
+                      <span className="text-sm text-gray-900">
+                        Work Mode
+                        {selectedWorkModes.length > 0 && (
+                          <span className="ml-1 text-primary-600">({selectedWorkModes.length})</span>
+                        )}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right column - Filter Options */}
+                <div className="flex-1 bg-white overflow-y-auto">
+                  {selectedMobileCategory === 'roles' && roleOptions.length > 0 && (
+                    <div className="space-y-0">
+                      {roleOptions.map((role) => {
+                        const label = role.name || role;
+                        const active = selectedRoles.includes(label);
+                        const jobCount = getJobCountForRoleName(label);
+                        if (jobCount === 0) return null;
+                        return (
+                          <label
+                            key={role.id || label}
+                            className="flex items-center justify-between px-4 py-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+                          >
+                            <span className="text-sm text-gray-900">{label}</span>
+                            <input
+                              type="checkbox"
+                              checked={active}
+                              onChange={() => toggleValue(label, setSelectedRoles)}
+                              className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500 cursor-pointer"
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {selectedMobileCategory === 'salary' && (
+                    <div className="space-y-0">
+                      {SALARY_OPTIONS.map((opt) => (
+                        <label
+                          key={opt.value}
+                          className="flex items-center justify-between px-4 py-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+                        >
+                          <span className="text-sm text-gray-900">{opt.label}</span>
+                          <input
+                            type="radio"
+                            name="mobile-salary"
+                            value={opt.value}
+                            checked={String(salaryFilter) === String(opt.value)}
+                            onChange={(e) => setSalaryFilter(e.target.value)}
+                            className="w-4 h-4 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  )}
+
+                  {selectedMobileCategory === 'jobType' && (
+                    <div className="space-y-0">
+                      {JOB_TYPE_OPTIONS.map((option) => {
+                        const active = selectedJobTypes.includes(option.value);
+                        return (
+                          <label
+                            key={option.value}
+                            className="flex items-center justify-between px-4 py-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+                          >
+                            <span className="text-sm text-gray-900">{option.label}</span>
+                            <input
+                              type="checkbox"
+                              checked={active}
+                              onChange={() => toggleValue(option.value, setSelectedJobTypes)}
+                              className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500 cursor-pointer"
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {selectedMobileCategory === 'experience' && (
+                    <div className="space-y-0">
+                      {EXPERIENCE_OPTIONS.map((opt) => (
+                        <label
+                          key={opt.value}
+                          className="flex items-center justify-between px-4 py-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+                        >
+                          <span className="text-sm text-gray-900">{opt.label}</span>
+                          <input
+                            type="radio"
+                            name="mobile-experience"
+                            value={opt.value}
+                            checked={selectedExperience === opt.value}
+                            onChange={(e) => setSelectedExperience(e.target.value)}
+                            className="w-4 h-4 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  )}
+
+                  {selectedMobileCategory === 'city' && cityOptions.length > 0 && (
+                    <div className="space-y-0">
+                      {cityOptions.map((city) => {
+                        const active = selectedCities.includes(city);
+                        const jobCount = getJobCountForCity(city);
+                        if (jobCount === 0) return null;
+                        return (
+                          <label
+                            key={city}
+                            className="flex items-center justify-between px-4 py-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+                          >
+                            <span className="text-sm text-gray-900">{city}</span>
+                            <input
+                              type="checkbox"
+                              checked={active}
+                              onChange={() => toggleValue(city, setSelectedCities)}
+                              className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500 cursor-pointer"
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {selectedMobileCategory === 'workMode' && (
+                    <div className="space-y-0">
+                      {WORK_MODE_OPTIONS.map((option) => {
+                        const active = selectedWorkModes.includes(option.value);
+                        return (
+                          <label
+                            key={option.value}
+                            className="flex items-center justify-between px-4 py-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+                          >
+                            <span className="text-sm text-gray-900">{option.label}</span>
+                            <input
+                              type="checkbox"
+                              checked={active}
+                              onChange={() => toggleValue(option.value, setSelectedWorkModes)}
+                              className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500 cursor-pointer"
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {!selectedMobileCategory && (
+                    <div className="flex items-center justify-center h-full">
+                      <p className="text-sm text-gray-500">Select a filter category</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Apply Filters Button */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    setShowMobileFilters(false);
+                    // Filters are applied automatically via useEffect
+                  }}
+                  className="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors"
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </div>
+          )}
+
           <section className="space-y-4 sm:space-y-6">
             {error && (
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -906,15 +1211,15 @@ export default function Jobs() {
                                   <Building2 size={16} className="text-primary-500" /> {r.company}
                                 </span>
                               )}
-                          {r.workMode === 'Remote' ? (
-                            <span className="inline-flex items-center gap-1.5">
-                              <Globe size={16} className="text-primary-500" /> Remote
-                            </span>
-                          ) : r.location ? (
-                            <span className="inline-flex items-center gap-1.5">
-                              <MapPin size={16} className="text-primary-500" /> {r.location}
-                            </span>
-                          ) : null}
+                              {r.workMode === 'Remote' ? (
+                                <span className="inline-flex items-center gap-1.5">
+                                  <Globe size={16} className="text-primary-500" /> Remote
+                                </span>
+                              ) : r.location ? (
+                                <span className="inline-flex items-center gap-1.5">
+                                  <MapPin size={16} className="text-primary-500" /> {r.location}
+                                </span>
+                              ) : null}
                             </div>
                           </div>
 
