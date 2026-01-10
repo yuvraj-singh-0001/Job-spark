@@ -416,8 +416,30 @@ export default function JobDetail() {
     }
   };
 
-  // Get logo URL
+  // Get logo URL for display
   const logoUrl = job?.logoPath ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${job.logoPath}` : null;
+  
+  // Get OG image URL (use full URL with proper domain)
+  const getOgImageUrl = () => {
+    if (job?.logoPath) {
+      // If logoPath is already a full URL, use it
+      if (job.logoPath.startsWith('http')) {
+        return job.logoPath;
+      }
+      // Otherwise construct full URL
+      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const logoPath = job.logoPath.startsWith('/') ? job.logoPath : `/${job.logoPath}`;
+      // For production, use the actual site domain instead of API URL
+      const baseUrl = window.location.origin;
+      // Check if logoPath points to uploads (server static files)
+      if (logoPath.includes('/uploads/')) {
+        return `${apiBase}${logoPath}`;
+      }
+      return `${baseUrl}${logoPath}`;
+    }
+    // Fallback to default OG image
+    return `${window.location.origin}/og-image.jpg`;
+  };
 
   // Render
   if (loading) return <div className="p-6 text-gray-600">Loading job...</div>;
@@ -426,6 +448,9 @@ export default function JobDetail() {
 
   const salary = formatSalaryMonthly();
   const experience = formatExperience();
+  const ogImageUrl = getOgImageUrl();
+  const jobDescription = job.description?.substring(0, 160) || `Apply for ${job.title} at ${job.company}`;
+  const jobUrl = `${window.location.origin}/jobs/${job.id}`;
 
   return (
     <div className="min-h-screen bg-bg">
@@ -433,12 +458,34 @@ export default function JobDetail() {
       {job && (
         <Helmet>
           <title>{`${job.title} - ${job.company} | Jobion`}</title>
-          <meta name="description" content={job.description?.substring(0, 160) || `Apply for ${job.title} at ${job.company}`} />
+          <meta name="description" content={jobDescription} />
+          <meta name="keywords" content={`${job.title}, ${job.company}, jobs, career, employment, ${job.city || ''}, ${job.workMode || ''}`} />
+          
+          {/* Open Graph / Facebook */}
           <meta property="og:title" content={`${job.title} - ${job.company}`} />
-          <meta property="og:description" content={job.description?.substring(0, 160) || `Apply for ${job.title} at ${job.company}`} />
-          <meta property="og:url" content={`${window.location.origin}/jobs/${job.id}`} />
+          <meta property="og:description" content={jobDescription} />
+          <meta property="og:url" content={jobUrl} />
           <meta property="og:type" content="website" />
-          <link rel="canonical" href={`${window.location.origin}/jobs/${job.id}`} />
+          <meta property="og:image" content={ogImageUrl} />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta property="og:image:alt" content={`${job.company} - ${job.title}`} />
+          <meta property="og:site_name" content="Jobion" />
+          <meta property="og:locale" content="en_IN" />
+          
+          {/* Twitter Card */}
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={`${job.title} - ${job.company}`} />
+          <meta name="twitter:description" content={jobDescription} />
+          <meta name="twitter:image" content={ogImageUrl} />
+          <meta name="twitter:image:alt" content={`${job.company} - ${job.title}`} />
+          
+          {/* Additional Meta Tags */}
+          <meta name="author" content="Jobion" />
+          <meta name="theme-color" content="#BB1919" />
+          
+          <link rel="canonical" href={jobUrl} />
+          
           {/* Inject JobPosting schema only if available */}
           {jobPostingSchema && (
             <script type="application/ld+json">

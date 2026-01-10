@@ -310,6 +310,284 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Import database pool for job meta tags
+const pool = require('./src/api/config/db');
+
+// Function to detect if request is from a crawler/bot
+function isCrawler(userAgent) {
+  if (!userAgent) return false;
+  const crawlers = [
+    'facebookexternalhit',
+    'Facebot',
+    'Twitterbot',
+    'LinkedInBot',
+    'WhatsApp',
+    'TelegramBot',
+    'Slackbot',
+    'SkypeUriPreview',
+    'bingbot',
+    'googlebot',
+    'baiduspider',
+    'yandex',
+    'sogou',
+    'exabot',
+    'ia_archiver',
+    'AhrefsBot',
+    'SemrushBot',
+    'MJ12bot',
+    'DotBot',
+    'Applebot',
+    'Pingdom',
+    'StatusCake'
+  ];
+  const ua = userAgent.toLowerCase();
+  return crawlers.some(crawler => ua.includes(crawler.toLowerCase()));
+}
+
+// Middleware to handle job detail pages for crawlers (for social media sharing)
+// This must be BEFORE API routes but AFTER static file serving
+app.get('/jobs/:id', async (req, res, next) => {
+  const userAgent = req.get('user-agent') || '';
+  
+  // Only handle for crawlers - let regular users get the React app
+  if (!isCrawler(userAgent)) {
+    return next(); // Skip this middleware for regular browsers
+  }
+
+  try {
+    const jobId = parseInt(req.params.id, 10);
+    if (Number.isNaN(jobId)) {
+      return next();
+    }
+
+    console.log(`[Crawler] Serving meta tags for job ${jobId} to ${userAgent}`);
+
+    // Fetch job data from database
+    const sql = `
+      SELECT
+        j.id,
+        jr.name AS title,
+        j.company,
+        j.description,
+        j.city,
+        j.state,
+        j.min_salary,
+        j.max_salary,
+        j.logo_path,
+        j.job_type,
+        j.work_mode,
+        j.created_at,
+        j.posted_at
+      FROM jobs j
+      LEFT JOIN job_roles jr ON j.role_id = jr.id
+      WHERE j.id = ? AND j.status = 'approved'
+      LIMIT 1
+    `;
+    
+    const [rows] = await pool.query(sql, [jobId]);
+    
+    if (!rows || rows.length === 0) {
+      console.log(`[Crawler] Job ${jobId} not found`);
+      return next();
+    }
+
+    const job = rows[0];
+    const baseUrl = process.env.BASE_URL || 'https://jobion.in';
+    
+    // Helper function to escape HTML
+    const escapeHtml = (text) => {
+      if (!text) return '';
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    };
+    
+    // Helper function to escape JSON
+    const escapeJson = (text) => {
+      if (!text) return '';
+      return String(text)
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r')
+        .replace(/\t/g, '\\t');
+    };
+    
+    const rawDescription = job.description || `Apply for ${job.title || 'this position'} at ${job.company}`;
+    const description = rawDescription.substring(0, 160);
+    const descriptionHtml = escapeHtml(description);
+    const descriptionJson = escapeJson(description);
+    const titleText = job.title || 'Job Opening';
+    const titleHtml = escapeHtml(`${titleText} - ${job.company} | Jobion`);
+    const titleMeta = escapeHtml(`${titleText} - ${job.company}`);
+    const companyHtml = escapeHtml(job.company);
+    const companyJson = escapeJson(job.company);
+    const titleJson = escapeJson(titleText);
+    const jobUrl = `${baseUrl}/jobs/${jobId}`;
+    
+    // Construct image URL - use logo if available, otherwise fallback
+    let imageUrl = `${baseUrl}/og-image.jpg`; // Default OG image
+    if (job.logo_path) {
+      // Check if logo_path is already a full URL
+      if (job.logo_path.startsWith('http')) {
+        imageUrl = job.logo_path;
+      } else {
+        // Construct full URL from logo_path
+        const logoPath = job.logo_path.startsWith('/') ? job.logo_path : `/${job.logo_path}`;
+        
+        // Determine the correct base URL for the image
+        // If logo is in /uploads, it might be served by Express or Nginx
+        // Try to use API_URL if set, otherwise use BASE_URL (uploads should be accessible from main domain)
+        if (logoPath.includes('/uploads/')) {
+          // Check if API_URL is explicitly set
+          const apiUrl = process.env.API_URL;
+          if (apiUrl && apiUrl !== baseUrl) {
+            // Use API URL if it's different from base URL (e.g., api.jobion.in)
+            imageUrl = `${apiUrl}${logoPath}`;
+          } else {
+            // Same domain - uploads should be accessible from base URL if Nginx serves them
+            // Or Express serves them and Nginx proxies /uploads to Express
+            imageUrl = `${baseUrl}${logoPath}`;
+          }
+        } else {
+          // Not an upload, use base URL
+          imageUrl = `${baseUrl}${logoPath}`;
+        }
+      }
+    }
+    
+    // Build location string
+    const location = job.city ? (job.state ? `${job.city}, ${job.state}` : job.city) : 'Location not specified';
+    const locationHtml = escapeHtml(location);
+    
+    // Build salary string
+    let salaryText = '';
+    if (job.min_salary && job.max_salary) {
+      salaryText = `₹${job.min_salary.toLocaleString('en-IN')} - ₹${job.max_salary.toLocaleString('en-IN')}/month`;
+    } else if (job.min_salary) {
+      salaryText = `₹${job.min_salary.toLocaleString('en-IN')}+/month`;
+    } else if (job.max_salary) {
+      salaryText = `Up to ₹${job.max_salary.toLocaleString('en-IN')}/month`;
+    }
+    const salaryHtml = escapeHtml(salaryText);
+
+    // Generate HTML with proper meta tags for social media crawlers
+    const html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Primary Meta Tags -->
+    <title>${titleHtml}</title>
+    <meta name="title" content="${titleHtml}" />
+    <meta name="description" content="${descriptionHtml}" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="${jobUrl}" />
+    <meta property="og:title" content="${titleMeta}" />
+    <meta property="og:description" content="${descriptionHtml}" />
+    <meta property="og:image" content="${imageUrl}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="${companyHtml} - ${escapeHtml(titleText)}" />
+    <meta property="og:site_name" content="Jobion" />
+    <meta property="og:locale" content="en_IN" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="${jobUrl}" />
+    <meta name="twitter:title" content="${titleMeta}" />
+    <meta name="twitter:description" content="${descriptionHtml}" />
+    <meta name="twitter:image" content="${imageUrl}" />
+    <meta name="twitter:image:alt" content="${companyHtml} - ${escapeHtml(titleText)}" />
+    
+    <!-- Additional Meta Tags -->
+    <meta name="author" content="Jobion" />
+    <meta name="theme-color" content="#BB1919" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="${jobUrl}" />
+    
+    <!-- JobPosting Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "JobPosting",
+      "title": "${titleJson}",
+      "description": "${descriptionJson}",
+      "identifier": {
+        "@type": "PropertyValue",
+        "name": "Jobion",
+        "value": "${jobId}"
+      },
+      "datePosted": "${(job.created_at || job.posted_at) ? new Date(job.created_at || job.posted_at).toISOString() : new Date().toISOString()}",
+      "validThrough": "${new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()}",
+      "employmentType": "${job.job_type || 'FULL_TIME'}",
+      "hiringOrganization": {
+        "@type": "Organization",
+        "name": "${companyJson}",
+        "sameAs": "${baseUrl}"
+      },
+      "jobLocation": {
+        "@type": "Place",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "${escapeJson(job.city || 'Not specified')}",
+          "addressRegion": "${escapeJson(job.state || '')}",
+          "addressCountry": "IN"
+        }
+      }${salaryText ? `,
+      "baseSalary": {
+        "@type": "MonetaryAmount",
+        "currency": "INR",
+        "value": {
+          "@type": "QuantitativeValue",
+          "value": ${job.min_salary || job.max_salary || 0},
+          "unitText": "MONTH"
+        }
+      }` : ''},
+      "workHours": "${job.work_mode || 'FULL_TIME'}",
+      "url": "${jobUrl}"
+    }
+    </script>
+    
+    <!-- Redirect for non-crawlers (fallback) -->
+    <script>
+      if (typeof window !== 'undefined' && !/bot|crawler|spider|crawling/i.test(navigator.userAgent)) {
+        window.location.href = '${jobUrl}';
+      }
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <meta http-equiv="refresh" content="0; url=${jobUrl}" />
+    </noscript>
+    <div style="font-family: Arial, sans-serif; padding: 20px; text-align: center;">
+      <h1>${escapeHtml(titleText)}</h1>
+      <h2>${companyHtml}</h2>
+      <p>${descriptionHtml}</p>
+      <p><strong>Location:</strong> ${locationHtml}</p>
+      ${salaryText ? `<p><strong>Salary:</strong> ${salaryHtml}</p>` : ''}
+      <p><a href="${jobUrl}">View Full Job Details</a></p>
+    </div>
+  </body>
+</html>`;
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+    res.send(html);
+  } catch (err) {
+    console.error('[Crawler] Error generating job meta HTML:', err);
+    return next(); // Fall through to regular handling on error
+  }
+});
+
 // API Routes
 const routes = require('./src/routes/routes');
 app.use('/api', routes);
