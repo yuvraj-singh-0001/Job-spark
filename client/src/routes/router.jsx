@@ -62,7 +62,14 @@ const router = createBrowserRouter([
     path: "/",
     element: <GuestLayout />,
     children: [
-      { index: true, element: <Navigate to="/home" replace /> },
+      {
+        index: true,
+        element: (
+          <GuestOnlyRoute>
+            <Home />
+          </GuestOnlyRoute>
+        )
+      },
 
       // Public pages (accessible without login)
       {
@@ -94,7 +101,7 @@ const router = createBrowserRouter([
       // Profile - Public
       { path: "profile", element: <Profile /> },
 
-      { path: "*", element: <Navigate to="/home" replace /> },
+      { path: "*", element: <Navigate to="/" replace /> },
     ],
   },
 

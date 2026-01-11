@@ -54,7 +54,7 @@ export default function ProtectedRoute({ children, roles }) {
     } else if (role === "recruiter") {
       return <Navigate to="/create-job" replace />;
     } else {
-      return <Navigate to="/home" replace />;
+      return <Navigate to="/" replace />;
     }
   }
 

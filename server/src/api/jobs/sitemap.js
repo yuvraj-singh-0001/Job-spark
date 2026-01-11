@@ -21,7 +21,7 @@ async function generateSitemap(req, res) {
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Static pages -->
   <url>
-    <loc>${baseUrl}/home</loc>
+    <loc>${baseUrl}/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
