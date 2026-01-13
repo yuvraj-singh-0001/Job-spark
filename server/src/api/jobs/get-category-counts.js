@@ -36,7 +36,7 @@ function buildFilterConditions(filters) {
 
   // experience filter (fresher = 0 years) - validate against allowed values
   if (filters.experience && ALLOWED_EXPERIENCE.includes(filters.experience)) {
-    conditions.push(`(j.min_experience = 0 OR j.min_experience IS NULL) AND (j.max_experience = 0 OR j.max_experience IS NULL)`);
+    conditions.push(`(j.min_experience = 0 OR j.min_experience IS NULL)`);
   }
 
   // cities filter

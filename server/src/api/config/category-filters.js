@@ -4,25 +4,25 @@ const CATEGORY_FILTER_MAPPING = {
   fresher: {
     label: "Fresher Jobs",
     filters: {
-      experience: "0", // min_experience = 0 AND (max_experience = 0 OR max_experience IS NULL)
+      experience: "0", // min_experience = 0 OR min_experience IS NULL (any job that accepts freshers)
     },
   },
   "full-time": {
     label: "Full-time Jobs",
     filters: {
-      jobTypes: ["full-time"],
+      jobTypes: ["Full Time"],
     },
   },
   "part-time": {
     label: "Part-time Jobs",
     filters: {
-      jobTypes: ["part-time"],
+      jobTypes: ["Part Time"],
     },
   },
   internship: {
     label: "Internship",
     filters: {
-      jobTypes: ["internship"],
+      jobTypes: ["Internship"],
     },
   },
   remote: {
