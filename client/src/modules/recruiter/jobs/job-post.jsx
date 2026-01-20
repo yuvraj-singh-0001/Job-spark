@@ -1924,16 +1924,9 @@ export default function AdminPostJob() {
 
     // Update form: keep recruiter profile fields, reset and refill role-related fields
     const newForm = {
+      // Keep all existing fields, then apply overrides
+      ...form,
       roleId: selectedId,
-      // Keep recruiter profile fields unchanged
-      company: form.company,
-      city: form.city,
-      state: form.state,
-      country: form.country,
-      locality: form.locality,
-      interviewAddress: form.interviewAddress,
-      contactEmail: form.contactEmail,
-      contactPhone: form.contactPhone,
       // Apply auto-fill for role-related fields
       ...autoFillUpdates,
     };
@@ -1986,13 +1979,13 @@ export default function AdminPostJob() {
       payload.append("maxExperience", form.maxExperience);
       payload.append("minSalary", form.minSalary);
       payload.append("maxSalary", form.maxSalary);
-      payload.append("vacancies", form.vacancies.toString());
+      payload.append("vacancies", String(form.vacancies ?? 1));
       payload.append("description", form.description);
       payload.append("interviewAddress", form.interviewAddress);
       payload.append("contactEmail", form.contactEmail);
       payload.append("contactPhone", form.contactPhone);
-      payload.append("showInterviewAddress", form.showInterviewAddress.toString());
-      payload.append("showContactPhone", form.showContactPhone.toString());
+      payload.append("showInterviewAddress", String(!!form.showInterviewAddress));
+      payload.append("showContactPhone", String(!!form.showContactPhone));
 
       // send to backend using axios instance
       const { data } = await api.post("/recruiter/jobs/create", payload, {
@@ -2415,11 +2408,10 @@ export default function AdminPostJob() {
                   <button
                     type="button"
                     onClick={() => updateField("showInterviewAddress", !form.showInterviewAddress)}
-                    className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
-                      form.showInterviewAddress
-                        ? "bg-green-50 text-green-700 border-green-300 hover:bg-green-100"
-                        : "bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100"
-                    }`}
+                    className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${form.showInterviewAddress
+                      ? "bg-green-50 text-green-700 border-green-300 hover:bg-green-100"
+                      : "bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100"
+                      }`}
                   >
                     {form.showInterviewAddress ? (
                       <>
@@ -2470,25 +2462,24 @@ export default function AdminPostJob() {
                     <button
                       type="button"
                       onClick={() => updateField("showContactPhone", !form.showContactPhone)}
-                      className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
-                        form.showContactPhone
-                          ? "bg-green-50 text-green-700 border-green-300 hover:bg-green-100"
-                          : "bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100"
-                      }`}
+                      className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${form.showContactPhone
+                        ? "bg-green-50 text-green-700 border-green-300 hover:bg-green-100"
+                        : "bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100"
+                        }`}
                     >
                       {form.showContactPhone ? (
                         <>
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
+                          </svg>
                           Show to Candidates
                         </>
                       ) : (
                         <>
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                        </svg>
+                          </svg>
                           Hidden from Candidates
                         </>
                       )}
