@@ -3,7 +3,7 @@ const pool = require('../../config/db');
 async function getAllApplications(req, res) {
   try {
     const sql = `
-      SELECT 
+      SELECT
         ja.id as application_id,
         ja.status,
         ja.cover_letter,
@@ -11,9 +11,9 @@ async function getAllApplications(req, res) {
         ja.applied_at,
         ja.updated_at,
         j.id as job_id,
-        j.title as job_title,
+        jr.name as job_title,
         j.company,
-        j.location as job_location,
+        j.city as job_location,
         u.id as candidate_id,
         u.name as candidate_name,
         u.email as candidate_email,
@@ -22,6 +22,7 @@ async function getAllApplications(req, res) {
         r.email as recruiter_email
       FROM job_applications ja
       INNER JOIN jobs j ON ja.job_id = j.id
+      INNER JOIN job_roles jr ON j.role_id = jr.id
       INNER JOIN users u ON ja.user_id = u.id
       INNER JOIN users r ON j.recruiter_id = r.id
       ORDER BY ja.applied_at DESC
@@ -73,7 +74,7 @@ async function getApplicationsByRecruiter(req, res) {
   try {
     const { recruiterId } = req.params;
     const sql = `
-      SELECT 
+      SELECT
         ja.id as application_id,
         ja.status,
         ja.cover_letter,
@@ -81,13 +82,14 @@ async function getApplicationsByRecruiter(req, res) {
         ja.applied_at,
         ja.updated_at,
         j.id as job_id,
-        j.title as job_title,
+        jr.name as job_title,
         j.company,
         u.id as candidate_id,
         u.name as candidate_name,
         u.email as candidate_email
       FROM job_applications ja
       INNER JOIN jobs j ON ja.job_id = j.id
+      INNER JOIN job_roles jr ON j.role_id = jr.id
       INNER JOIN users u ON ja.user_id = u.id
       WHERE j.recruiter_id = ?
       ORDER BY ja.applied_at DESC
@@ -105,7 +107,7 @@ async function getApplicationsByCandidate(req, res) {
   try {
     const { candidateId } = req.params;
     const sql = `
-      SELECT 
+      SELECT
         ja.id as application_id,
         ja.status,
         ja.cover_letter,
@@ -113,14 +115,15 @@ async function getApplicationsByCandidate(req, res) {
         ja.applied_at,
         ja.updated_at,
         j.id as job_id,
-        j.title as job_title,
+        jr.name as job_title,
         j.company,
-        j.location as job_location,
+        j.city as job_location,
         r.id as recruiter_id,
         r.name as recruiter_name,
         r.email as recruiter_email
       FROM job_applications ja
       INNER JOIN jobs j ON ja.job_id = j.id
+      INNER JOIN job_roles jr ON j.role_id = jr.id
       INNER JOIN users r ON j.recruiter_id = r.id
       WHERE ja.user_id = ?
       ORDER BY ja.applied_at DESC
