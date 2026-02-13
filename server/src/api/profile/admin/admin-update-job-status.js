@@ -14,17 +14,23 @@ const updateJobStatus = async (req, res) => {
       });
     }
 
+    // When reopening a job (changing to 'approved'), extend expiration by 30 days
+    const shouldExtendExpiration = status === 'approved';
+    const expirationExtension = shouldExtendExpiration 
+      ? ', expires_at = DATE_ADD(NOW(), INTERVAL 30 DAY)' 
+      : '';
+
     // Try to update with rejection_reason if provided
     // If column doesn't exist, it will fail and we'll retry without it
     if (rejection_reason !== undefined && rejection_reason !== null && rejection_reason.trim()) {
       try {
         await pool.execute(
-          'UPDATE jobs SET status = ?, rejection_reason = ?, updated_at = NOW() WHERE id = ?',
+          `UPDATE jobs SET status = ?, rejection_reason = ?${expirationExtension}, updated_at = NOW() WHERE id = ?`,
           [status, rejection_reason.trim(), jobId]
         );
         return res.json({
           success: true,
-          message: `Job status updated to ${status} successfully`
+          message: `Job status updated to ${status} successfully${shouldExtendExpiration ? ' with 30-day expiration extension' : ''}`
         });
       } catch (error) {
         // If error is due to unknown column, fall through to update without rejection_reason
@@ -38,13 +44,13 @@ const updateJobStatus = async (req, res) => {
 
     // Update without rejection_reason (either not provided or column doesn't exist)
     await pool.execute(
-      'UPDATE jobs SET status = ?, updated_at = NOW() WHERE id = ?',
+      `UPDATE jobs SET status = ?${expirationExtension}, updated_at = NOW() WHERE id = ?`,
       [status, jobId]
     );
 
     res.json({
       success: true,
-      message: `Job status updated to ${status} successfully`
+      message: `Job status updated to ${status} successfully${shouldExtendExpiration ? ' with 30-day expiration extension' : ''}`
     });
   } catch (error) {
     console.error('Admin update job status error:', error);
